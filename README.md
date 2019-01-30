@@ -10,7 +10,7 @@ These utils are useful for scanning, loading and building a GraphQL schema from 
 
 You can either specify a GraphQL endpoint, local introspection JSON file, code file that `export`s a GraphQLSchema, AST string and `.graphql` files (with support for `glob` expression).
 
-It also merges all found schema files into a complete schema, and has support for `#import` syntax (using `[graphql-import](https://github.com/prisma/graphql-import)`).
+It also merges all found schema files into a complete schema, and has support for `#import` syntax (using [`graphql-import`](https://github.com/prisma/graphql-import)).
 
 You can also extend the loads by implementing you own loader (implement the interface `SchemaLoader`).
 
@@ -36,7 +36,7 @@ Similar to documents loading - but meant to use for GraphQL documents (query/mut
 
 You an specify any input as source, and this utils will detect it automatically. 
 
-It also extracts usages of `gql` from code files using `[graphql-tag-pluck](https://github.com/DAB0mB/graphql-tag-pluck)`.
+It also extracts usages of `gql` from code files using [`graphql-tag-pluck`](https://github.com/DAB0mB/graphql-tag-pluck).
 
 Usage:
 
