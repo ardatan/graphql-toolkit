@@ -108,3 +108,11 @@ It's useful for getting an easy-to-use structure of the directives that are deco
 #### `getImplementingTypes`
 
 This method accepts `GraphQLSchema` object and a name of a GraphQL interface, and returns an array of all the GraphQL types that are implementing the GraphQL `interface`.
+
+#### `getSchemaDirectiveFromDirectiveResolver`
+
+This method accepts a name of a GraphQL Directive and its resolver function; using this method you can easily generate `SchemaDirective` with a single resolver function.
+
+#### `composeResolvers`
+
+This method accepts `IResolvers` object and mappings for composition functions that would be run before resolver itself.
