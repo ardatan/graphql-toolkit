@@ -1,6 +1,6 @@
 # graphql-toolkit
 
-A set of utils for faster development of GraphQL tools.
+A set of utils for faster development of GraphQL tools. Use these utils if you are creating a tool that loads schema/documents, merges schemas, scan for schema/documenta/resolvers files.
 
 Included tools:
 
