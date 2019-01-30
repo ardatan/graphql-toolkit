@@ -3,12 +3,16 @@ import { SchemaLoader } from './schema-loader';
 import { GraphQLSchema, introspectionQuery, buildClientSchema } from 'graphql';
 import { isUri } from 'valid-url';
 
-export class IntrospectionFromUrlLoader implements SchemaLoader {
+export interface IntrospectionFromUrlLoaderOptions {
+  headers?: { [key: string]: string }[] | { [key: string]: string };
+}
+
+export class IntrospectionFromUrlLoader implements SchemaLoader<IntrospectionFromUrlLoaderOptions> {
   canHandle(pointerToSchema: string): boolean {
     return !!isUri(pointerToSchema);
   }
 
-  handle(url: string, schemaOptions: any): Promise<GraphQLSchema> {
+  handle(url: string, schemaOptions: IntrospectionFromUrlLoaderOptions): Promise<GraphQLSchema> {
     let headers = {};
 
     if (Array.isArray(schemaOptions.headers)) {
@@ -52,6 +56,10 @@ export class IntrospectionFromUrlLoader implements SchemaLoader {
             reject('Unable to download schema from remote: ' + errorMessage);
 
             return;
+          }
+
+          if (!bodyJson.__schema) {
+            throw new Error('Invalid schema provided!');
           }
 
           resolve(buildClientSchema(bodyJson));

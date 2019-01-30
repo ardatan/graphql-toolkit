@@ -43,6 +43,10 @@ export class IntrospectionFromFileLoader implements SchemaLoader {
             introspection = introspection.data;
           }
 
+          if (!introspection.__schema) {
+            throw new Error('Invalid schema provided!');
+          }
+
           resolve(buildClientSchema(introspection));
         } catch (e) {
           reject(e);
