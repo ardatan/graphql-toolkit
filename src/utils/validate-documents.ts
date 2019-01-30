@@ -1,5 +1,5 @@
 import { validate, GraphQLSchema, GraphQLError, specifiedRules } from 'graphql';
-import { DocumentFile } from './document-loader';
+import { DocumentFile } from '../loaders/documents';
 
 const rulesToIgnore = ['KnownFragmentNames', 'NoUnusedFragments', 'NoUnusedVariables', 'KnownDirectives'];
 const effectiveRules = specifiedRules.filter((f: Function) => !rulesToIgnore.includes(f.name));
