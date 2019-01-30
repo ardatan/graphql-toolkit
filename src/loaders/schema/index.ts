@@ -11,21 +11,12 @@ export { SchemaFromString } from './schema-from-string';
 export { SchemaFromTypedefs } from './schema-from-typedefs';
 export { SchemaFromExport } from './schema-from-export';
 
-export const loadSchema = async (
-  schemaDef: string | object,
+export const loadSchema = async <T = any>(
+  pointToSchema: string,
+  options: T,
   schemaHandlers = [new IntrospectionFromUrlLoader(), new IntrospectionFromFileLoader(), new SchemaFromString(), new SchemaFromTypedefs(), new SchemaFromExport()]
 ): Promise<GraphQLSchema | DocumentNode> => {
   for (const handler of schemaHandlers) {
-    let pointToSchema: string = null;
-    let options: any = {};
-
-    if (typeof schemaDef === 'string') {
-      pointToSchema = schemaDef as string;
-    } else if (typeof schemaDef === 'object') {
-      pointToSchema = Object.keys(schemaDef)[0];
-      options = schemaDef[pointToSchema];
-    }
-
     if (await handler.canHandle(pointToSchema)) {
       return handler.handle(pointToSchema, options);
     }
