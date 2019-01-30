@@ -14,7 +14,7 @@ It also merges all found schema files into a complete schema, and has support fo
 
 You can also extend the loads by implementing you own loader (implement the interface `SchemaLoader`).
 
-The schema loading util is using loaders, and implemented using chain-of-responsibility pattern (https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern). 
+The schema loading util is using loaders, and implemented using [chain-of-responsibility pattern](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern). 
 
 You don't have to specify which loader to use - just provide your input and this utils will detect it automatically.
 
