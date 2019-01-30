@@ -8,7 +8,9 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "release": "npm publish",
+    "ci:release:canary": "npm version from-git && npm publish"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
