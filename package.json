@@ -21,12 +21,12 @@
     "graphql": "^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"
   },
   "devDependencies": {
-    "semver": "5.6.0",
     "@types/deepmerge": "2.2.0",
     "@types/glob": "7.1.1",
     "@types/graphql": "14.0.5",
     "@types/is-glob": "4.0.0",
     "@types/jest": "23.3.13",
+    "@types/lodash": "4.14.120",
     "@types/node": "10.12.21",
     "@types/request": "2.48.1",
     "@types/valid-url": "1.0.2",
@@ -34,6 +34,7 @@
     "graphql-tag": "2.10.1",
     "graphql-tools": "4.0.4",
     "jest": "24.0.0",
+    "semver": "5.6.0",
     "ts-jest": "23.10.5",
     "typescript": "3.3.1"
   },
@@ -44,6 +45,7 @@
     "graphql-tag-pluck": "0.5.0",
     "is-glob": "4.0.0",
     "is-valid-path": "0.1.1",
+    "lodash": "4.17.11",
     "request": "2.88.0",
     "valid-url": "1.0.9"
   }
