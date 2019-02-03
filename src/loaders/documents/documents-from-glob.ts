@@ -35,6 +35,12 @@ export class DocumentsFromGlob implements DocumentLoader {
       const fileContent = readFileSync(filePath, 'utf8');
       const fileExt = extname(filePath);
 
+      if (!fileContent || fileContent.trim() === '') {
+        console['warn'](`Empty file found: "${filePath}", skipping...`);
+
+        return null;
+      }
+
       if (graphQLExtensions.includes(fileExt)) {
         return parse(new Source(fileContent, filePath));
       }
