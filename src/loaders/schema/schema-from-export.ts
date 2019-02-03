@@ -45,9 +45,16 @@ export class SchemaFromExport implements SchemaLoader {
     return typeof obj === 'string';
   }
 
-  isSchemaJson(obj: any): obj is { data: IntrospectionQuery } {
+  isWrappedSchemaJson(obj: any): obj is { data: IntrospectionQuery } {
     const json = obj as { data: IntrospectionQuery };
+
     return json.data !== undefined && json.data.__schema !== undefined;
+  }
+
+  isSchemaJson(obj: any): obj is IntrospectionQuery {
+    const json = obj as IntrospectionQuery;
+
+    return json !== undefined && json.__schema !== undefined;
   }
 
   isSchemaObject(obj: any): obj is GraphQLSchema {
@@ -70,8 +77,10 @@ export class SchemaFromExport implements SchemaLoader {
     } else if (this.isSchemaText(schema)) {
       const ast = parse(schema);
       return buildASTSchema(ast);
-    } else if (this.isSchemaJson(schema)) {
+    } else if (this.isWrappedSchemaJson(schema)) {
       return buildClientSchema(schema.data);
+    } else if (this.isSchemaJson(schema)) {
+      return buildClientSchema(schema);
     } else {
       throw new Error('Unexpected schema type provided!');
     }
