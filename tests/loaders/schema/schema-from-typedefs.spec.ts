@@ -26,6 +26,17 @@ describe('schema from typedefs', () => {
     }).toThrow(`All found files for glob expression "./tests/loaders/schema/test-files/schema-dir/*.empty.graphql" are not valid or empty, please check it and try again!`);
   });
 
+  it('should ignore graphql documents when loading a scehma', () => {
+    const glob = './tests/loaders/schema/test-files/schema-dir/*.non-schema.graphql';
+    const handler = new SchemaFromTypedefs();
+    const canHandle = handler.canHandle(glob);
+    expect(canHandle).toBeTruthy();
+
+    expect(() => {
+      handler.handle(glob);
+    }).toThrow(`All found files for glob expression "./tests/loaders/schema/test-files/schema-dir/*.non-schema.graphql" are not valid or empty, please check it and try again!`);
+  });
+
   it('should work with graphql-tag', () => {
     const schemaPath = './tests/loaders/schema/test-files/schema-dir/*.ts';
     const handler = new SchemaFromTypedefs();

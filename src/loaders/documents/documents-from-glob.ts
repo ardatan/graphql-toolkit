@@ -1,5 +1,5 @@
 import { DocumentLoader, DocumentFile } from './document-loader';
-import { parse, Source, DocumentNode } from 'graphql';
+import { parse, Source, DocumentNode, Kind } from 'graphql';
 import * as isGlob from 'is-glob';
 import * as glob from 'glob';
 import { existsSync, readFileSync } from 'fs';
@@ -7,7 +7,8 @@ import { extname } from 'path';
 import * as isValidPath from 'is-valid-path';
 import { extractDocumentStringFromCodeFile } from '../../utils/extract-document-string-from-code-file';
 
-export const graphQLExtensions = ['.graphql', '.graphqls', '.gql'];
+const VALID_DOCUMENT_KINDS: string[] = [Kind.OPERATION_DEFINITION, Kind.FRAGMENT_DEFINITION];
+const GQL_EXTENSIONS: string[] = ['.graphql', '.graphqls', '.gql'];
 
 export class DocumentsFromGlob implements DocumentLoader {
   canHandle(doc: string): Promise<boolean> | boolean {
@@ -41,7 +42,7 @@ export class DocumentsFromGlob implements DocumentLoader {
         return null;
       }
 
-      if (graphQLExtensions.includes(fileExt)) {
+      if (GQL_EXTENSIONS.includes(fileExt)) {
         return parse(new Source(fileContent, filePath));
       }
 
@@ -58,7 +59,21 @@ export class DocumentsFromGlob implements DocumentLoader {
   }
 
   loadDocumentsSources(filePaths: string[]): DocumentFile[] {
-    return filePaths.map(filePath => ({ filePath, content: this.loadFileContent(filePath) })).filter(result => result.content);
+    return filePaths.map(filePath => ({ filePath, content: this.loadFileContent(filePath) })).filter(result => {
+      if (!result.content) {
+        return false;
+      }
+
+      const invalidDefinitions = result.content.definitions.filter(definition => !VALID_DOCUMENT_KINDS.includes(definition.kind));
+
+      if (invalidDefinitions.length === 0) {
+        return true;
+      } else {
+        console['warn'](`File "${result.filePath}" was filtered because it contains an invalid GraphQL document definition!`);
+
+        return false;
+      }
+    });
   }
 
   async handle(doc: string): Promise<DocumentFile[]> {

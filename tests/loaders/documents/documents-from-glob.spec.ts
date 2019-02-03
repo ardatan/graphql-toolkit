@@ -31,4 +31,13 @@ describe('documentsFromGlob', () => {
     const result = await handler.handle(glob);
     expect(result.length).toBe(0);
   });
+
+  it('Should ignore schema definitions', async () => {
+    const glob = join(__dirname, './test-files/', '*.graphql');
+    const handler = new DocumentsFromGlob();
+    const canHandle = handler.canHandle(glob);
+    expect(canHandle).toBeTruthy();
+    const result = await handler.handle(glob);
+    expect(result.length).toBe(2);
+  });
 });
