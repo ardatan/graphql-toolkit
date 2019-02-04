@@ -108,3 +108,11 @@ It's useful for getting an easy-to-use structure of the directives that are deco
 #### `getImplementingTypes`
 
 This method accepts `GraphQLSchema` object and a name of a GraphQL interface, and returns an array of all the GraphQL types that are implementing the GraphQL `interface`.
+
+#### `extractResolversFromSchema`
+
+This methods accepts `GraphQLSchema` object, and returns a map with field resolver functions of all types inside the schema as in [`IResolvers` interface of `graphql-tools`.](https://www.apollographql.com/docs/graphql-tools/resolvers.html)
+
+#### `extractFieldResolversFromObjectType`
+
+This methods accepts `GraphQLObjectType` or `GraphQLInterfaceType` object, and returns a map with field resolvers of given type.
