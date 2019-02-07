@@ -25,7 +25,7 @@
     "@types/glob": "7.1.1",
     "@types/graphql": "14.0.5",
     "@types/is-glob": "4.0.0",
-    "@types/jest": "23.3.13",
+    "@types/jest": "24.0.0",
     "@types/lodash": "4.14.120",
     "@types/node": "10.12.21",
     "@types/request": "2.48.1",
