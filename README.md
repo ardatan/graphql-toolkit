@@ -181,3 +181,11 @@ const resolversComposition = {
 
 const composedResolvers = composeResolvers(resolvers, resolversComposition);
 ```
+
+#### `extractResolversFromSchema`
+
+This methods accepts `GraphQLSchema` object, and returns a map with field resolver functions of all types inside the schema as in [`IResolvers` interface of `graphql-tools`.](https://www.apollographql.com/docs/graphql-tools/resolvers.html)
+
+#### `extractFieldResolversFromObjectType`
+
+This methods accepts `GraphQLObjectType` or `GraphQLInterfaceType` object, and returns a map with field resolvers of given type.
