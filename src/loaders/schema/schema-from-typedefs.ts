@@ -1,4 +1,4 @@
-import { mergeGraphQLSchemas } from '../../epoxy';
+import { mergeTypeDefs } from '../../epoxy';
 import { SchemaLoader } from './schema-loader';
 import * as isGlob from 'is-glob';
 import * as isValidPath from 'is-valid-path';
@@ -71,6 +71,6 @@ export class SchemaFromTypedefs implements SchemaLoader {
       throw new Error(`All found files for glob expression "${globPath}" are not valid or empty, please check it and try again!`);
     }
 
-    return mergeGraphQLSchemas(filesContent.map(f => f.content));
+    return mergeTypeDefs(filesContent.map(f => f.content));
   }
 }

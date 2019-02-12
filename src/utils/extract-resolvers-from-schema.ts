@@ -6,11 +6,13 @@ export function extractResolversFromSchema(schema: GraphQLSchema): IResolvers {
     const resolvers: IResolvers = {};
     const typeMap = schema.getTypeMap();
     for (const typeName in typeMap) {
-        const typeDef = typeMap[typeName];
-        if (typeDef instanceof GraphQLScalarType) {
-            resolvers[typeName] = typeDef as GraphQLScalarType;
-        } else if (typeDef instanceof GraphQLObjectType || typeDef instanceof GraphQLInterfaceType) {
-            resolvers[typeName] = extractFieldResolversFromObjectType(typeDef);
+        if (!typeName.startsWith('__')){
+            const typeDef = typeMap[typeName];
+            if (typeDef instanceof GraphQLScalarType) {
+                resolvers[typeName] = typeDef as GraphQLScalarType;
+            } else if (typeDef instanceof GraphQLObjectType || typeDef instanceof GraphQLInterfaceType) {
+                resolvers[typeName] = extractFieldResolversFromObjectType(typeDef);
+            }
         }
     }
     return resolvers;

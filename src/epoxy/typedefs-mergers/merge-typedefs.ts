@@ -22,7 +22,7 @@ interface Config {
   useSchemaDefinition?: boolean;
 }
 
-export function mergeGraphQLSchemas(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Partial<Config>): DocumentNode {
+export function mergeTypeDefs(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Partial<Config>): DocumentNode {
   return {
     kind: 'Document',
     definitions: mergeGraphQLTypes(types, {
