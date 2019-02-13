@@ -1,11 +1,11 @@
-import { mergeGraphQLSchemas, mergeGraphQLTypes } from '../../src/epoxy/schema-mergers/merge-schema';
+import { mergeTypeDefs, mergeGraphQLTypes } from '../../src/epoxy/typedefs-mergers/merge-typedefs';
 import { makeExecutableSchema } from 'graphql-tools';
 import { buildSchema, buildClientSchema, print } from 'graphql';
 import { stripWhitespaces } from './utils';
 import gql from 'graphql-tag';
 import * as introspectionSchema from './schema.json';
 
-describe('Merge Schema', () => {
+describe('Merge TypeDefs', () => {
   describe('AST Schema Fixing', () => {
     it('Should handle correctly schema without valid root AST node', () => {
       const schema = buildSchema(`
@@ -77,7 +77,7 @@ describe('Merge Schema', () => {
     });
 
     it('should accept root schema object', () => {
-      const mergedSchema = mergeGraphQLSchemas([
+      const mergedSchema = mergeTypeDefs([
         'type RootQuery { f1: String }',
         'type RootQuery { f2: String }',
         'schema { query: RootQuery }',
@@ -113,9 +113,9 @@ describe('Merge Schema', () => {
     });
   });
 
-  describe('mergeGraphQLSchemas', () => {
+  describe('mergeTypeDefs', () => {
     it('should return a Document with the correct values', () => {
-      const merged = mergeGraphQLSchemas([
+      const merged = mergeTypeDefs([
         'type Query { f1: String }',
         'type Query { f2: String }',
         'type MyType { field: Int } type Query { f3: MyType }',
@@ -138,7 +138,7 @@ describe('Merge Schema', () => {
     });
 
     it('should skip printing schema definition object on session', () => {
-      const merged = mergeGraphQLSchemas([
+      const merged = mergeTypeDefs([
         'type Query { f1: String }',
         'type Query { f2: String }',
         'type MyType { field: Int } type Query { f3: MyType }',
@@ -163,7 +163,7 @@ describe('Merge Schema', () => {
     });
 
     it('should keep scalars', () => {
-      const mergedSchema = mergeGraphQLSchemas([
+      const mergedSchema = mergeTypeDefs([
         buildSchema('scalar UniqueId'),
       ]);
 
@@ -177,7 +177,7 @@ describe('Merge Schema', () => {
     });
 
     it('should merge descriptions', () => {
-      const merged = mergeGraphQLSchemas([
+      const merged = mergeTypeDefs([
         `
           " She's my type "
           type MyType { field1: Int }
@@ -210,7 +210,7 @@ describe('Merge Schema', () => {
     });
 
     it('should merge everything correctly', () => {
-      const merged = mergeGraphQLSchemas([
+      const merged = mergeTypeDefs([
         'type Query @test { f1: String }',
         'type Query @test2 { f2: String }',
         'type MyType { field: Int } type Query { f3: MyType } union MyUnion = MyType',
@@ -254,7 +254,7 @@ describe('Merge Schema', () => {
     });
 
     it('should include directives', () => {
-      const merged = mergeGraphQLSchemas([
+      const merged = mergeTypeDefs([
         `directive @id on FIELD_DEFINITION`,
         `type MyType { id: Int @id }`,
         `type Query { f1: MyType }`,
@@ -280,7 +280,7 @@ describe('Merge Schema', () => {
     });
 
     it('should append and extend directives', () => {
-      const merged = mergeGraphQLSchemas([
+      const merged = mergeTypeDefs([
         `directive @id(primitiveArg: String, arrayArg: [String]) on FIELD_DEFINITION`,
         `type MyType { id: Int }`,
         `type MyType { id: Int @id }`,
@@ -311,7 +311,7 @@ describe('Merge Schema', () => {
 
     it('should fail if inputs of the same directive are different from each other', (done: jest.DoneCallback) => {
       try {
-        mergeGraphQLSchemas([
+        mergeTypeDefs([
           `directive @id on FIELD_DEFINITION`,
           `directive @id(name: String) on FIELD_DEFINITION`,
           `type MyType { id: Int @id }`,
@@ -331,7 +331,7 @@ describe('Merge Schema', () => {
     });
 
     it('should merge the same directives', () => {
-      const merged = mergeGraphQLSchemas([
+      const merged = mergeTypeDefs([
         `directive @id on FIELD_DEFINITION`,
         `directive @id on FIELD_DEFINITION`,
         `type MyType { id: Int @id }`,
@@ -358,7 +358,7 @@ describe('Merge Schema', () => {
     });
 
     it('should merge two GraphQLSchema with directives correctly', () => {
-      const merged = mergeGraphQLSchemas([
+      const merged = mergeTypeDefs([
         makeExecutableSchema({
           typeDefs: [
             `type Query { f1: MyType }`,
@@ -377,7 +377,7 @@ describe('Merge Schema', () => {
     });
 
     it('should merge the same directives and its locations', () => {
-      const merged = mergeGraphQLSchemas([
+      const merged = mergeTypeDefs([
         `directive @id on FIELD_DEFINITION`,
         `directive @id on OBJECT`,
         `type MyType { id: Int @id }`,
@@ -406,7 +406,7 @@ describe('Merge Schema', () => {
 
   describe('input arguments', () => {
     it('should handle string correctly', () => {
-      const merged = mergeGraphQLSchemas([
+      const merged = mergeTypeDefs([
         'type Query { f1: String }',
       ]);
 
@@ -421,7 +421,7 @@ describe('Merge Schema', () => {
     });
 
     it('should handle compiled gql correctly', () => {
-      const merged = mergeGraphQLSchemas([
+      const merged = mergeTypeDefs([
         gql`
           type Query { f1: String }
         `,
@@ -438,7 +438,7 @@ describe('Merge Schema', () => {
     });
 
     it('should handle compiled gql and strings correctly', () => {
-      const merged = mergeGraphQLSchemas([
+      const merged = mergeTypeDefs([
         gql`
           type Query { f1: String }
         `,
@@ -457,7 +457,7 @@ describe('Merge Schema', () => {
     });
 
     it('should handle GraphQLSchema correctly', () => {
-      const merged = mergeGraphQLSchemas([
+      const merged = mergeTypeDefs([
         makeExecutableSchema({
           typeDefs: [
             'type Query { f1: String }',
@@ -479,7 +479,7 @@ describe('Merge Schema', () => {
     });
 
     it('should merge GraphQL Schemas that have schema definition', () => {
-      const merged = mergeGraphQLSchemas([
+      const merged = mergeTypeDefs([
         makeExecutableSchema({
           typeDefs: [
             'type RootQuery { f1: String }',
@@ -507,7 +507,7 @@ describe('Merge Schema', () => {
     });
 
     it('should handle all merged correctly', () => {
-      const merged = mergeGraphQLSchemas([
+      const merged = mergeTypeDefs([
         makeExecutableSchema({
           typeDefs: [
             'type Query { f1: String }',
@@ -533,7 +533,7 @@ describe('Merge Schema', () => {
     });
 
     it('should allow GraphQLSchema with empty Query', () => {
-      const merged = mergeGraphQLSchemas([
+      const merged = mergeTypeDefs([
         makeExecutableSchema({
           typeDefs: [
             'type MyType { f1: String }',
@@ -548,7 +548,7 @@ describe('Merge Schema', () => {
     });
 
     it('should allow GraphQLSchema with empty Query', () => {
-      const merged = mergeGraphQLSchemas([
+      const merged = mergeTypeDefs([
         makeExecutableSchema({
           typeDefs: [
             'type MyType { f1: String }',
@@ -568,7 +568,7 @@ describe('Merge Schema', () => {
         `));
     });
     it('should handle extend types', () => {
-      const merged = mergeGraphQLSchemas([`
+      const merged = mergeTypeDefs([`
         type Test {
           foo: String
         }
@@ -604,7 +604,7 @@ describe('Merge Schema', () => {
           }
         `],
       });
-      const merged = mergeGraphQLSchemas([schema]);
+      const merged = mergeTypeDefs([schema]);
       const printed = stripWhitespaces(print(merged));
 
       expect(printed).toContain(stripWhitespaces(`
@@ -623,7 +623,7 @@ describe('Merge Schema', () => {
 
     it('should fail when a field is already defined and has a different type', () => {
       expect(() => {
-        mergeGraphQLSchemas([`
+        mergeTypeDefs([`
           type Query {
             foo: String
           }
@@ -637,7 +637,7 @@ describe('Merge Schema', () => {
     });
 
     it('should preserve an extend keyword if there is no base', () => {
-      const merged = mergeGraphQLSchemas([`
+      const merged = mergeTypeDefs([`
         extend type Query {
           foo: String
         }
@@ -658,7 +658,7 @@ describe('Merge Schema', () => {
     });
 
     it('should handle extend inputs', () => {
-      const merged = mergeGraphQLSchemas([`
+      const merged = mergeTypeDefs([`
         input TestInput {
           foo: String
         }
@@ -675,7 +675,7 @@ describe('Merge Schema', () => {
       `));
     });
     it('should extend extension types', () => {
-      const merged = mergeGraphQLSchemas([`
+      const merged = mergeTypeDefs([`
         extend type Test {
           foo: String
         }
@@ -692,7 +692,7 @@ describe('Merge Schema', () => {
       `));
     });
     it('should extend extension input types', () => {
-      const merged = mergeGraphQLSchemas([`
+      const merged = mergeTypeDefs([`
         extend input TestInput {
           foo: String
         }
