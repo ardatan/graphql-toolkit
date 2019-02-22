@@ -1,6 +1,7 @@
 import { extractResolversFromSchema } from '../../src/utils/extract-resolvers-from-schema';
 import { makeExecutableSchema } from 'graphql-tools';
 import gql from 'graphql-tag';
+import { printSchema } from 'graphql';
 
 describe('extractResolversFromSchema', async () => {
     it('should extract correct resolvers from a schema with correct type mapping', async () => {
@@ -59,7 +60,7 @@ describe('extractResolversFromSchema', async () => {
                 }
             `
         });
-        
+
         expect(TypeBResolvers['Query']['typeA']).toBeFalsy();
         expect(TypeBResolvers['TypeA']).toBeFalsy();
         expect(TypeBResolvers['Query']['typeB']().id).toBe('1');

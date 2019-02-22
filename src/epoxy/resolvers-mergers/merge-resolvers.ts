@@ -1,8 +1,29 @@
 import { IResolvers } from 'graphql-tools';
 import * as deepMerge from 'deepmerge';
+import { GraphQLScalarType } from 'graphql';
 
 export type ResolversFactory<TSource, TContext> = (...args: any[]) => IResolvers<TSource, TContext>;
 export type ResolversDefinition<TSource, TContext> = IResolvers<TSource, TContext> | ResolversFactory<TSource, TContext>;
+
+const isMergeableObject = (target: any): target is object => {
+  if(!target) {
+    return false;
+  }
+  if (typeof target !== 'object') {
+    return false;
+  }
+  const stringValue = Object.prototype.toString.call(target);
+  if (stringValue === '[object RegExp]') {
+    return false;
+  }
+  if (stringValue === '[object Date]') {
+    return false;
+  }
+  if (target instanceof GraphQLScalarType) {
+    return false;
+  }
+  return true;
+} 
 
 export function mergeResolvers<TSource, TContext, T extends ResolversDefinition<TSource, TContext>>(resolversDefinitions: T[]): T {
   if (!resolversDefinitions || resolversDefinitions.length === 0) {
@@ -26,9 +47,9 @@ export function mergeResolvers<TSource, TContext, T extends ResolversDefinition<
   if (resolversFactories.length) {
     return ((...args: any[]) => {
       const resultsOfFactories = resolversFactories.map(factory => factory(...args));
-      return deepMerge.all([...resolvers, ...resultsOfFactories]) as any;
+      return deepMerge.all([...resolvers, ...resultsOfFactories], { isMergeableObject }) as any;
     }) as any;
   } else {
-    return deepMerge.all(resolvers) as IResolvers<TSource, TContext> as T;
+    return deepMerge.all(resolvers, { isMergeableObject }) as IResolvers<TSource, TContext> as T;
   }
 }
