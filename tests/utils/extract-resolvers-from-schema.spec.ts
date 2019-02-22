@@ -19,4 +19,50 @@ describe('extractResolversFromSchema', async () => {
         const fieldResolvers = extractResolversFromSchema(schema);
         expect((fieldResolvers.Query['foo'] as Function)()).toBe('FOO');
     });
+    it('should extract correct resolvers from a schema with selectedTypeDefs', async () => {
+        const schema = makeExecutableSchema({
+            typeDefs: gql`
+                type TypeA {
+                    id: ID
+                    fieldA: String
+                }
+                type TypeB {
+                    id: ID
+                    fieldB: String
+                }
+                type Query {
+                    typeA: TypeA
+                    typeB: TypeB
+                }
+            `,
+            resolvers: {
+                Query: {
+                    typeA: () => ({ id: '0' }),
+                    typeB: () => ({ id: '1' })
+                },
+                TypeA: {
+                    fieldA: ({ id }) => 'fieldAOf' + id,
+                },
+                TypeB: {
+                    fieldB: ({ id }) => 'fieldBOf' + id
+                }
+            }
+        });
+        const TypeBResolvers = extractResolversFromSchema(schema, {
+            selectedTypeDefs: gql`
+                type TypeB {
+                    id: ID
+                    fieldB: String
+                }
+                type Query {
+                    typeB: TypeB
+                }
+            `
+        });
+        
+        expect(TypeBResolvers['Query']['typeA']).toBeFalsy();
+        expect(TypeBResolvers['TypeA']).toBeFalsy();
+        expect(TypeBResolvers['Query']['typeB']().id).toBe('1');
+        expect(TypeBResolvers['TypeB']['fieldB']({ id: '1' })).toBe('fieldBOf1');
+    });
 });

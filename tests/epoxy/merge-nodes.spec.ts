@@ -1,4 +1,4 @@
-import { mergeGraphQLNodes } from '../../src/epoxy/schema-mergers/merge-nodes';
+import { mergeGraphQLNodes } from '../../src/epoxy/typedefs-mergers/merge-nodes';
 import { parse } from 'graphql';
 
 describe('Merge Nodes', () => {
