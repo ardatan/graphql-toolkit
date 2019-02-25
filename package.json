@@ -2,17 +2,18 @@
   "name": "graphql-toolkit",
   "version": "0.0.5",
   "description": "A set of utils for faster development of GraphQL tools",
-  "main": "dist/index.js",
   "repository": "git@github.com:dotansimha/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc -p tsconfig.es2015.json",
     "test": "jest",
     "prepare-release": "yarn build && yarn test",
     "release": "yarn prepare-release && npm publish",
     "ci:release:canary": "yarn prepare-release && node bump.js && npm publish --tag alpha"
   },
+  "main": "dist/index.js",
+  "module": "dist/es2015/index.js",
   "typings": "dist/index.d.ts",
   "typescript": {
     "definition": "dist/index.d.ts"
