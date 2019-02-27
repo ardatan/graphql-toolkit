@@ -22,7 +22,7 @@ interface Config {
   useSchemaDefinition?: boolean;
 }
 
-export function mergeGraphQLSchemas(...args: ArgsType<typeof mergeGraphQLTypes>): ReturnType<typeof mergeGraphQLTypes> {
+export function mergeGraphQLSchemas(...args: Array<typeof mergeGraphQLTypes>): typeof mergeGraphQLTypes {
   console.info(`
     GraphQL Toolkit/Epoxy 
     Deprecation Notice;
