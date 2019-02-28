@@ -30,7 +30,9 @@ function loadSchemaFile(filepath: string, options?: ExtractOptions): string {
       return foundDoc;
     }
 
-    return content;
+    if (isGraphQLFile(filepath)) {
+      return content;
+    }
   } else {
     console['warn'](`Empty schema file found: "${filepath}", skipping...`);
   }
