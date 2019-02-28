@@ -17,7 +17,7 @@ export class DocumentFromString implements DocumentLoader {
     }
   }
 
-  handle(doc: string): Promise<DocumentFile[]> | DocumentFile[] {
+  handle(doc: string, _options?: any): Promise<DocumentFile[]> | DocumentFile[] {
     return [{ filePath: 'document.graphql', content: parse(doc) }];
   }
 }

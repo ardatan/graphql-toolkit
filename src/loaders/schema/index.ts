@@ -13,7 +13,7 @@ export { SchemaFromExport } from './schema-from-export';
 
 export const loadSchema = async <T = any>(
   pointToSchema: string,
-  options: T,
+  options?: T,
   schemaHandlers = [new IntrospectionFromUrlLoader(), new IntrospectionFromFileLoader(), new SchemaFromString(), new SchemaFromTypedefs(), new SchemaFromExport()]
 ): Promise<GraphQLSchema | DocumentNode> => {
   for (const handler of schemaHandlers) {

@@ -25,7 +25,7 @@ export class IntrospectionFromFileLoader implements SchemaLoader {
     return isValidPath(pointerToSchema) && existsSync(pointerToSchema) && extname(pointerToSchema) === '.json';
   }
 
-  handle(pointerToSchema: string): Promise<GraphQLSchema> {
+  handle(pointerToSchema: string, _options?: any): Promise<GraphQLSchema> {
     return new Promise<GraphQLSchema>((resolve, reject) => {
       const fullPath = isAbsolute(pointerToSchema) ? pointerToSchema : resolvePath(process.cwd(), pointerToSchema);
 

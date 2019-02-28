@@ -5,7 +5,7 @@ import * as isValidPath from 'is-valid-path';
 import { DocumentNode, parse, Source, Kind } from 'graphql';
 import * as glob from 'glob';
 import { readFileSync } from 'fs';
-import { extractDocumentStringFromCodeFile } from '../../utils/extract-document-string-from-code-file';
+import { extractDocumentStringFromCodeFile, ExtractOptions } from '../../utils/extract-document-string-from-code-file';
 
 const GQL_EXTENSIONS = ['.graphql', '.graphqls', '.gql'];
 const INVALID_SCHEMA_KINDS: string[] = [Kind.OPERATION_DEFINITION, Kind.FRAGMENT_DEFINITION];
@@ -14,7 +14,7 @@ function isGraphQLFile(globPath: string): boolean {
   return GQL_EXTENSIONS.some(ext => globPath.endsWith(ext));
 }
 
-function loadSchemaFile(filepath: string): string {
+function loadSchemaFile(filepath: string, options?: ExtractOptions): string {
   const content = readFileSync(filepath, 'utf-8');
 
   if (content && content.trim() !== '') {
@@ -24,7 +24,7 @@ function loadSchemaFile(filepath: string): string {
       return importSchema(filepath);
     }
 
-    const foundDoc = extractDocumentStringFromCodeFile(new Source(content, filepath));
+    const foundDoc = extractDocumentStringFromCodeFile(new Source(content, filepath), options);
 
     if (foundDoc) {
       return foundDoc;
@@ -43,29 +43,31 @@ export class SchemaFromTypedefs implements SchemaLoader {
     return isGlob(globPath) || (isValidPath(globPath) && isGraphQLFile(globPath));
   }
 
-  handle(globPath: string): DocumentNode {
+  handle(globPath: string, options?: ExtractOptions): DocumentNode {
     const globFiles = glob.sync(globPath, { cwd: process.cwd() });
 
     if (!globFiles || globFiles.length === 0) {
       throw new Error(`Unable to find matching files for glob: ${globPath} in directory: ${process.cwd()}`);
     }
 
-    const filesContent = globFiles.map(filePath => ({ filePath, content: loadSchemaFile(filePath)})).filter((file) => {
-      if (!file.content) {
-        return false;
-      }
+    const filesContent = globFiles
+      .map(filePath => ({ filePath, content: loadSchemaFile(filePath, options) }))
+      .filter(file => {
+        if (!file.content) {
+          return false;
+        }
 
-      const node = parse(file.content);
-      const invalidSchemaDefinitions = node.definitions.filter(def => INVALID_SCHEMA_KINDS.includes(def.kind));
+        const node = parse(file.content);
+        const invalidSchemaDefinitions = node.definitions.filter(def => INVALID_SCHEMA_KINDS.includes(def.kind));
 
-      if (invalidSchemaDefinitions.length === 0) {
-        return true;
-      } else {
-        console['warn'](`File "${file.filePath}" was filtered because it contains an invalid GraphQL schema definition!`);
+        if (invalidSchemaDefinitions.length === 0) {
+          return true;
+        } else {
+          console['warn'](`File "${file.filePath}" was filtered because it contains an invalid GraphQL schema definition!`);
 
-        return false;
-      }
-    });
+          return false;
+        }
+      });
 
     if (filesContent.length === 0) {
       throw new Error(`All found files for glob expression "${globPath}" are not valid or empty, please check it and try again!`);
