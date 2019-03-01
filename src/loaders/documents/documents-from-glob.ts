@@ -5,7 +5,7 @@ import * as glob from 'glob';
 import { existsSync, readFileSync } from 'fs';
 import { extname } from 'path';
 import * as isValidPath from 'is-valid-path';
-import { extractDocumentStringFromCodeFile } from '../../utils/extract-document-string-from-code-file';
+import { extractDocumentStringFromCodeFile, ExtractOptions } from '../../utils/extract-document-string-from-code-file';
 
 const VALID_DOCUMENT_KINDS: string[] = [Kind.OPERATION_DEFINITION, Kind.FRAGMENT_DEFINITION];
 const GQL_EXTENSIONS: string[] = ['.graphql', '.graphqls', '.gql'];
@@ -31,7 +31,7 @@ export class DocumentsFromGlob implements DocumentLoader {
     });
   }
 
-  loadFileContent(filePath: string): DocumentNode | null {
+  loadFileContent(filePath: string, options?: ExtractOptions): DocumentNode | null {
     if (existsSync(filePath)) {
       const fileContent = readFileSync(filePath, 'utf8');
       const fileExt = extname(filePath);
@@ -46,7 +46,7 @@ export class DocumentsFromGlob implements DocumentLoader {
         return parse(new Source(fileContent, filePath));
       }
 
-      const foundDoc = extractDocumentStringFromCodeFile(new Source(fileContent, filePath));
+      const foundDoc = extractDocumentStringFromCodeFile(new Source(fileContent, filePath), options);
 
       if (foundDoc) {
         return parse(new Source(foundDoc, filePath));
@@ -58,27 +58,29 @@ export class DocumentsFromGlob implements DocumentLoader {
     }
   }
 
-  loadDocumentsSources(filePaths: string[]): DocumentFile[] {
-    return filePaths.map(filePath => ({ filePath, content: this.loadFileContent(filePath) })).filter(result => {
-      if (!result.content) {
-        return false;
-      }
+  loadDocumentsSources(filePaths: string[], options?: ExtractOptions): DocumentFile[] {
+    return filePaths
+      .map(filePath => ({ filePath, content: this.loadFileContent(filePath, options) }))
+      .filter(result => {
+        if (!result.content) {
+          return false;
+        }
 
-      const invalidDefinitions = result.content.definitions.filter(definition => !VALID_DOCUMENT_KINDS.includes(definition.kind));
+        const invalidDefinitions = result.content.definitions.filter(definition => !VALID_DOCUMENT_KINDS.includes(definition.kind));
 
-      if (invalidDefinitions.length === 0) {
-        return true;
-      } else {
-        console['warn'](`File "${result.filePath}" was filtered because it contains an invalid GraphQL document definition!`);
+        if (invalidDefinitions.length === 0) {
+          return true;
+        } else {
+          console['warn'](`File "${result.filePath}" was filtered because it contains an invalid GraphQL document definition!`);
 
-        return false;
-      }
-    });
+          return false;
+        }
+      });
   }
 
-  async handle(doc: string): Promise<DocumentFile[]> {
+  async handle(doc: string, options?: ExtractOptions): Promise<DocumentFile[]> {
     const foundDocumentsPaths = await this.documentsFromGlobs(doc);
 
-    return this.loadDocumentsSources(foundDocumentsPaths);
+    return this.loadDocumentsSources(foundDocumentsPaths, options);
   }
 }

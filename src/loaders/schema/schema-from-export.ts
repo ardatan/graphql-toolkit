@@ -11,7 +11,7 @@ export class SchemaFromExport implements SchemaLoader {
     return isValidPath(pointerToSchema) && existsSync(fullPath) && extname(pointerToSchema) !== '.json';
   }
 
-  async handle(file: string): Promise<GraphQLSchema> {
+  async handle(file: string, _options?: any): Promise<GraphQLSchema> {
     const fullPath = isAbsolute(file) ? file : resolvePath(process.cwd(), file);
 
     if (existsSync(fullPath)) {
