@@ -257,10 +257,10 @@ acorn@^6.0.1:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-6.0.5.tgz#81730c0815f3f3b34d8efa95cb7430965f4d887a"
   integrity sha512-i33Zgp3XWtmZBMNvCr4azvOFeWVw1Rk6p3hfi3LUDvIFraOMywb1kAtrbi+med14m4Xfpqm3zRZMT+c0FNE7kg==
 
-aggregate-error@2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/aggregate-error/-/aggregate-error-2.0.0.tgz#65bd82beba40097eacb2f1077a5b55c593b18abc"
-  integrity sha512-xA1VQPApQdDehIIpS3gBFkMGDRb9pDYwZPVUOoX8A0lU3GB0mjiACqsa9ByBurU53erhjamf5I4VNRitCfXhjg==
+aggregate-error@2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/aggregate-error/-/aggregate-error-2.1.0.tgz#051a9a733ad2e95ab503d84fb81989e6419b8f09"
+  integrity sha512-rIZJqC4XACGWwmPpi18IhDjIzXTJ93KQwYHXuyMCa0Ak9mtzLIbykuei+0i5EnGDy6ts8JVnSyRnZc2cVIMvVg==
   dependencies:
     clean-stack "^2.0.0"
     indent-string "^3.0.0"
