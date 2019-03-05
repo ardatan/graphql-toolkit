@@ -41,8 +41,8 @@ function loadSchemaFile(filepath: string, options?: ExtractOptions): string {
 }
 
 export class SchemaFromTypedefs implements SchemaLoader {
-  canHandle(globPath: string): boolean {
-    return isGlob(globPath) || (isValidPath(globPath) && isGraphQLFile(globPath));
+  canHandle(globOrValidPath: string): boolean {
+    return isGlob(globOrValidPath) || isValidPath(globOrValidPath);
   }
 
   handle(globPath: string, options?: ExtractOptions): DocumentNode {
