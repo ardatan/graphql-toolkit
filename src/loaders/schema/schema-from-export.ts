@@ -8,7 +8,13 @@ export class SchemaFromExport implements SchemaLoader {
   canHandle(pointerToSchema: string): boolean {
     const fullPath = isAbsolute(pointerToSchema) ? pointerToSchema : resolvePath(process.cwd(), pointerToSchema);
 
-    return isValidPath(pointerToSchema) && existsSync(fullPath) && extname(pointerToSchema) !== '.json';
+    if (isValidPath(pointerToSchema) && existsSync(fullPath) && extname(pointerToSchema) !== '.json') {
+      const exports = require(fullPath);
+      const rawExport = exports.default || exports.schema || exports;
+      return rawExport instanceof GraphQLSchema;
+    } else {
+      return false;
+    }
   }
 
   async handle(file: string, _options?: any): Promise<GraphQLSchema> {
