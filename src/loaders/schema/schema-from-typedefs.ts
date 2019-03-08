@@ -10,7 +10,7 @@ import { extractDocumentStringFromCodeFile, ExtractOptions } from '../../utils/e
 const GQL_EXTENSIONS = ['.graphql', '.graphqls', '.gql'];
 const INVALID_SCHEMA_KINDS: string[] = [Kind.OPERATION_DEFINITION, Kind.FRAGMENT_DEFINITION];
 
-function isGraphQLFile(globPath: string): boolean {
+export function isGraphQLFile(globPath: string): boolean {
   return GQL_EXTENSIONS.some(ext => globPath.endsWith(ext));
 }
 

@@ -3,12 +3,13 @@ import { extname, isAbsolute, resolve as resolvePath } from 'path';
 import * as isValidPath from 'is-valid-path';
 import { buildASTSchema, buildClientSchema, DocumentNode, GraphQLSchema, IntrospectionQuery, parse } from 'graphql';
 import { SchemaLoader } from './schema-loader';
+import { isGraphQLFile } from './schema-from-typedefs';
 
 export class SchemaFromExport implements SchemaLoader {
   canHandle(pointerToSchema: string): boolean {
     const fullPath = isAbsolute(pointerToSchema) ? pointerToSchema : resolvePath(process.cwd(), pointerToSchema);
 
-    if (isValidPath(pointerToSchema) && existsSync(fullPath) && extname(pointerToSchema) !== '.json') {
+    if (isValidPath(pointerToSchema) && existsSync(fullPath) && extname(pointerToSchema) !== '.json' && !isGraphQLFile(fullPath)) {
       const exports = require(fullPath);
       const rawExport = exports.default || exports.schema || exports;
       return rawExport instanceof GraphQLSchema;
