@@ -11,8 +11,10 @@ export class SchemaFromExport implements SchemaLoader {
 
     if (isValidPath(pointerToSchema) && existsSync(fullPath) && extname(pointerToSchema) !== '.json' && !isGraphQLFile(fullPath)) {
       const exports = require(fullPath);
-      const rawExport = exports.default || exports.schema || exports;
-      return rawExport instanceof GraphQLSchema;
+      const schema = exports.default || exports.schema || exports;
+
+      return this.isSchemaObject(schema) || this.isSchemaAst(schema) || this.isSchemaText(schema) ||
+        this.isWrappedSchemaJson(schema) || this.isSchemaJson(schema);
     } else {
       return false;
     }
