@@ -22,14 +22,14 @@ interface Config {
   useSchemaDefinition?: boolean;
 }
 
-export function mergeGraphQLSchemas(...args: ArgsType<typeof mergeGraphQLTypes>): ReturnType<typeof mergeGraphQLTypes> {
+export function mergeGraphQLSchemas(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Partial<Config>) {
   console.info(`
     GraphQL Toolkit/Epoxy 
     Deprecation Notice;
     'mergeGraphQLSchemas' is deprecated and will be removed in the next version.
     Please use 'mergeTypeDefs' instead!
   `);
-  return mergeGraphQLTypes(...args);
+  return mergeGraphQLTypes(types, config);
 }
 
 export function mergeTypeDefs(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Partial<Config>): DocumentNode {

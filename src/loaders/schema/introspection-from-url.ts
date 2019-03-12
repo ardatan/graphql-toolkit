@@ -12,13 +12,15 @@ export class IntrospectionFromUrlLoader implements SchemaLoader<IntrospectionFro
     return !!isUri(pointerToSchema);
   }
 
-  handle(url: string, schemaOptions: IntrospectionFromUrlLoaderOptions): Promise<GraphQLSchema> {
+  handle(url: string, schemaOptions?: IntrospectionFromUrlLoaderOptions): Promise<GraphQLSchema> {
     let headers = {};
 
-    if (Array.isArray(schemaOptions.headers)) {
-      headers = schemaOptions.headers.reduce((prev: object, v: object) => ({ ...prev, ...v }), {});
-    } else if (typeof schemaOptions.headers === 'object') {
-      headers = schemaOptions.headers;
+    if (schemaOptions) {
+      if (Array.isArray(schemaOptions.headers)) {
+        headers = schemaOptions.headers.reduce((prev: object, v: object) => ({ ...prev, ...v }), {});
+      } else if (typeof schemaOptions.headers === 'object') {
+        headers = schemaOptions.headers;
+      }
     }
 
     let extraHeaders = {

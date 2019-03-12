@@ -5,7 +5,7 @@ export interface DocumentFile {
   content: DocumentNode;
 }
 
-export interface DocumentLoader {
+export interface DocumentLoader<TOptions = any> {
   canHandle(doc: string): Promise<boolean> | boolean;
-  handle(doc: string): Promise<DocumentFile[]> | DocumentFile[];
+  handle(doc: string, options?: TOptions): Promise<DocumentFile[]> | DocumentFile[];
 }
