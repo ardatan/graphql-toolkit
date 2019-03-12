@@ -4,7 +4,7 @@ module.exports = {
   testPathIgnorePatterns: ['/node_modules/', '/test-assets'],
   globals: {
     'ts-jest': {
-      diagnostics: false,
+      diagnostics: false
     }
   }
 };

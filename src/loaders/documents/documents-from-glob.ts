@@ -4,7 +4,7 @@ import * as isGlob from 'is-glob';
 import * as glob from 'glob';
 import { existsSync, readFileSync } from 'fs';
 import { extname } from 'path';
-import * as isValidPath from 'is-valid-path';
+import isValidPath from 'is-valid-path';
 import { extractDocumentStringFromCodeFile } from '../../utils/extract-document-string-from-code-file';
 
 const VALID_DOCUMENT_KINDS: string[] = [Kind.OPERATION_DEFINITION, Kind.FRAGMENT_DEFINITION];

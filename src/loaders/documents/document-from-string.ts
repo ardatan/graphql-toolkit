@@ -1,5 +1,5 @@
 import { DocumentLoader, DocumentFile } from './document-loader';
-import isValidPath = require('is-valid-path');
+import isValidPath from 'is-valid-path';
 import { parse } from 'graphql';
 
 export class DocumentFromString implements DocumentLoader {
