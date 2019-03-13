@@ -1,7 +1,7 @@
 import { GraphQLSchema, buildClientSchema } from 'graphql';
 import { SchemaLoader } from './schema-loader';
 import { existsSync, readFileSync } from 'fs';
-import * as isValidPath from 'is-valid-path';
+import isValidPath from 'is-valid-path';
 import { extname, isAbsolute, resolve as resolvePath } from 'path';
 
 export class IntrospectionFromFileLoader implements SchemaLoader {

@@ -1,5 +1,4 @@
 import { Source, parse } from 'graphql';
-import gqlPluck from 'graphql-tag-pluck';
 
 export interface ExtractOptions {
   tagPluck?: {
@@ -41,7 +40,7 @@ function calculateOptions(options?: ExtractOptions) {
   }, {});
 }
 
-export function extractDocumentStringFromCodeFile(source: Source, options?: ExtractOptions): string | void {
+export async function extractDocumentStringFromCodeFile(source: Source, options?: ExtractOptions): Promise<string | void> {
   try {
     const parsed = parse(source.body);
 
@@ -50,7 +49,8 @@ export function extractDocumentStringFromCodeFile(source: Source, options?: Extr
     }
   } catch (e) {
     try {
-      return gqlPluck.fromFile.sync(source.name, calculateOptions(options)) || null;
+      const { default: gqlPluck } = await import('graphql-tag-pluck');
+      return gqlPluck.fromFile(source.name, calculateOptions(options)) || null;
     } catch (e) {
       throw new e.constructor(`${e.message} at ${source.name}`);
     }

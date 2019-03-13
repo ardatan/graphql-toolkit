@@ -1,9 +1,8 @@
 import { extractResolversFromSchema } from '../../src/utils/extract-resolvers-from-schema';
 import { makeExecutableSchema } from 'graphql-tools';
 import gql from 'graphql-tag';
-import { printSchema } from 'graphql';
 
-describe('extractResolversFromSchema', async () => {
+describe('extractResolversFromSchema', () => {
     it('should extract correct resolvers from a schema with correct type mapping', async () => {
         const schema = makeExecutableSchema({
             typeDefs: gql`

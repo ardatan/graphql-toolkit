@@ -1,16 +1,16 @@
 import { existsSync } from 'fs';
 import { extname, isAbsolute, resolve as resolvePath } from 'path';
-import * as isValidPath from 'is-valid-path';
+import isValidPath from 'is-valid-path';
 import { buildASTSchema, buildClientSchema, DocumentNode, GraphQLSchema, IntrospectionQuery, parse } from 'graphql';
 import { SchemaLoader } from './schema-loader';
 import { isGraphQLFile } from './schema-from-typedefs';
 
 export class SchemaFromExport implements SchemaLoader {
-  canHandle(pointerToSchema: string): boolean {
+  async canHandle(pointerToSchema: string): Promise<boolean> {
     const fullPath = isAbsolute(pointerToSchema) ? pointerToSchema : resolvePath(process.cwd(), pointerToSchema);
 
     if (isValidPath(pointerToSchema) && existsSync(fullPath) && extname(pointerToSchema) !== '.json' && !isGraphQLFile(fullPath)) {
-      const exports = require(fullPath);
+      const exports = await import(fullPath);
       const schema = exports.default || exports.schema || exports;
 
       return this.isSchemaObject(schema) || this.isSchemaAst(schema) || this.isSchemaText(schema) ||
@@ -24,14 +24,13 @@ export class SchemaFromExport implements SchemaLoader {
     const fullPath = isAbsolute(file) ? file : resolvePath(process.cwd(), file);
 
     if (existsSync(fullPath)) {
-      const exports = require(fullPath);
+      const exports = await import(fullPath);
 
       if (exports) {
         let rawExport = exports.default || exports.schema || exports;
 
         if (rawExport) {
           let schema = await rawExport;
-
           try {
             const schemaResult = await this.resolveSchema(schema);
 

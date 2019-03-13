@@ -1,1 +1,1 @@
-module.exports = require('esm')(module)('../dist/index.js');
+module.exports = require('esm')(module, { force: true })('../dist/index.js');

@@ -1,9 +1,9 @@
 import { mergeTypeDefs } from '../../epoxy';
 import { SchemaLoader } from './schema-loader';
-import * as isGlob from 'is-glob';
-import * as isValidPath from 'is-valid-path';
+import isGlob from 'is-glob';
+import isValidPath from 'is-valid-path';
 import { DocumentNode, parse, Source, Kind } from 'graphql';
-import * as glob from 'glob';
+import glob from 'glob';
 import { readFileSync } from 'fs';
 import { extractDocumentStringFromCodeFile, ExtractOptions } from '../../utils/extract-document-string-from-code-file';
 
@@ -14,17 +14,17 @@ export function isGraphQLFile(globPath: string): boolean {
   return GQL_EXTENSIONS.some(ext => globPath.endsWith(ext));
 }
 
-function loadSchemaFile(filepath: string, options?: ExtractOptions): string {
+async function loadSchemaFile(filepath: string, options?: ExtractOptions): Promise<string> {
   const content = readFileSync(filepath, 'utf-8');
 
   if (content && content.trim() !== '') {
     if (/^\#.*import /i.test(content.trimLeft())) {
-      const { importSchema } = require('graphql-import');
+      const { importSchema } = await import('graphql-import');
 
       return importSchema(filepath);
     }
 
-    const foundDoc = extractDocumentStringFromCodeFile(new Source(content, filepath), options);
+    const foundDoc = await extractDocumentStringFromCodeFile(new Source(content, filepath), options);
 
     if (foundDoc) {
       return foundDoc;
@@ -45,15 +45,18 @@ export class SchemaFromTypedefs implements SchemaLoader {
     return isGlob(globOrValidPath) || isValidPath(globOrValidPath);
   }
 
-  handle(globPath: string, options?: ExtractOptions): DocumentNode {
+  async handle(globPath: string, options?: ExtractOptions): Promise<DocumentNode> {
     const globFiles = glob.sync(globPath, { cwd: process.cwd() });
 
     if (!globFiles || globFiles.length === 0) {
       throw new Error(`Unable to find matching files for glob: ${globPath} in directory: ${process.cwd()}`);
     }
 
-    const filesContent = globFiles
-      .map(filePath => ({ filePath, content: loadSchemaFile(filePath, options) }))
+    const filesContent$ = Promise.all(
+      globFiles
+      .map(async filePath => ({ filePath, content: await loadSchemaFile(filePath, options) }))
+    );
+    const filesContent = (await filesContent$)
       .filter(file => {
         if (!file.content) {
           return false;
