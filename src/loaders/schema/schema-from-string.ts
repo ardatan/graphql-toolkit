@@ -21,7 +21,7 @@ export class SchemaFromString implements SchemaLoader {
     }
   }
 
-  handle(str: string): DocumentNode {
+  handle(str: string, _options?: any): DocumentNode {
     return parse(str);
   }
 }

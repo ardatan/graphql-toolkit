@@ -1,3 +1,4 @@
+import * as AggregateError from 'aggregate-error';
 import { validate, GraphQLSchema, GraphQLError, specifiedRules } from 'graphql';
 import { DocumentFile } from '../loaders/documents';
 
@@ -19,19 +20,23 @@ export const validateGraphQlDocuments = (schema: GraphQLSchema, documentFiles: D
 
 export function checkValidationErrors(loadDocumentErrors: ReadonlyArray<LoadDocumentError>): void | never {
   if (loadDocumentErrors.length > 0) {
-    const errors: string[] = [];
-    let errorCount = 0;
+    const errors: Error[] = [];
 
     for (const loadDocumentError of loadDocumentErrors) {
       for (const graphQLError of loadDocumentError.errors) {
-        errors.push(`
-          ${loadDocumentError.filePath}: 
-            ${graphQLError.message}
-        `);
-        errorCount++;
+        const error = new Error()
+        error.name = 'GraphQLDocumentError'
+        error.message = `${error.name}: ${graphQLError.message}`
+        error.stack = error.message
+
+        graphQLError.locations.forEach(location =>
+          error.stack += `\n    at ${loadDocumentError.filePath}:${location.line}:${location.column}`
+        );
+
+        errors.push(error);
       }
     }
 
-    throw new Error(`Found ${errorCount} error${errorCount > 1 ? 's' : ''} in your documents!`);
+    throw new AggregateError(errors);
   }
 }
