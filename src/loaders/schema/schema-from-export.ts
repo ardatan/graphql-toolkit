@@ -31,6 +31,8 @@ export class SchemaFromExport implements SchemaLoader {
 
         if (rawExport) {
           let schema = await rawExport;
+          schema = schema.default || schema.schema || schema;
+          schema = await schema;
           try {
             const schemaResult = await this.resolveSchema(schema);
 

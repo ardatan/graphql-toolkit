@@ -46,7 +46,6 @@ describe('checkValidationErrors', () => {
     try {
       checkValidationErrors(loadDocumentErrors as any);
     } catch (_errors) {
-      console.log(errors);
       errors = _errors;
     }
 
