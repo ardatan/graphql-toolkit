@@ -1,10 +1,10 @@
 import { DocumentLoader, DocumentFile } from './document-loader';
 import { parse, Source, DocumentNode, Kind } from 'graphql';
-import isGlob from 'is-glob';
-import glob from 'glob';
+import * as isGlob from 'is-glob';
+import * as glob from 'glob';
 import { existsSync, readFileSync } from 'fs';
 import { extname } from 'path';
-import isValidPath from 'is-valid-path';
+import * as isValidPath from 'is-valid-path';
 import { extractDocumentStringFromCodeFile, ExtractOptions } from '../../utils/extract-document-string-from-code-file';
 
 const VALID_DOCUMENT_KINDS: string[] = [Kind.OPERATION_DEFINITION, Kind.FRAGMENT_DEFINITION];

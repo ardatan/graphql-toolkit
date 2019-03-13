@@ -1,6 +1,6 @@
 import { existsSync } from 'fs';
 import { extname, isAbsolute, resolve as resolvePath } from 'path';
-import isValidPath from 'is-valid-path';
+import * as isValidPath from 'is-valid-path';
 import { buildASTSchema, buildClientSchema, DocumentNode, GraphQLSchema, IntrospectionQuery, parse } from 'graphql';
 import { SchemaLoader } from './schema-loader';
 import { isGraphQLFile } from './schema-from-typedefs';
