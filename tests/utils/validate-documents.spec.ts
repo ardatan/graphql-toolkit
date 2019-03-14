@@ -1,8 +1,7 @@
-import * as AggregateError from 'aggregate-error';
 import { checkValidationErrors } from '../../src/utils/validate-documents';
 
 describe('checkValidationErrors', () => {
-  it('Should throw errors source files and locations', () => {
+  it('Should throw errors source files and locations', async () => {
     const loadDocumentErrors = [
       {
         filePath: 'packages/server/src/modules/github-check-run/providers/documents/create-check-run.mutation.graphql',
@@ -45,11 +44,12 @@ describe('checkValidationErrors', () => {
 
     let errors
     try {
-      checkValidationErrors(loadDocumentErrors);
+      checkValidationErrors(loadDocumentErrors as any);
     } catch (_errors) {
       errors = _errors;
     }
 
+    const { default: AggregateError } = await import('aggregate-error');
     expect(errors).toBeInstanceOf(AggregateError);
 
     let error;

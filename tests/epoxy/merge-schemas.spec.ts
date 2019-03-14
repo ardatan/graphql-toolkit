@@ -3,7 +3,7 @@ import { mergeSchemas } from '../../src/epoxy';
 import gql from "graphql-tag";
 import { graphql } from "graphql";
 
-describe('Merge Schemas', async () => {
+describe('Merge Schemas', () => {
     it('should merge two valid executable schemas', async () => {
         const fooSchema = makeExecutableSchema({
             typeDefs: gql`
