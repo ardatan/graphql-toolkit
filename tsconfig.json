@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
-    "module": "commonjs",
+    "module": "esnext",
     "target": "es2018",
     "lib": ["es6", "esnext", "es2015", "es2017.object"],
     "suppressImplicitAnyIndexErrors": true,

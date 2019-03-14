@@ -31,7 +31,7 @@ export class DocumentsFromGlob implements DocumentLoader {
     });
   }
 
-  loadFileContent(filePath: string, options?: ExtractOptions): DocumentNode | null {
+  async loadFileContent(filePath: string, options?: ExtractOptions): Promise<DocumentNode | null> {
     if (existsSync(filePath)) {
       const fileContent = readFileSync(filePath, 'utf8');
       const fileExt = extname(filePath);
@@ -46,7 +46,7 @@ export class DocumentsFromGlob implements DocumentLoader {
         return parse(new Source(fileContent, filePath));
       }
 
-      const foundDoc = extractDocumentStringFromCodeFile(new Source(fileContent, filePath), options);
+      const foundDoc = await extractDocumentStringFromCodeFile(new Source(fileContent, filePath), options);
 
       if (foundDoc) {
         return parse(new Source(foundDoc, filePath));
@@ -58,9 +58,12 @@ export class DocumentsFromGlob implements DocumentLoader {
     }
   }
 
-  loadDocumentsSources(filePaths: string[], options?: ExtractOptions): DocumentFile[] {
-    return filePaths
-      .map(filePath => ({ filePath, content: this.loadFileContent(filePath, options) }))
+  async loadDocumentsSources(filePaths: string[], options?: ExtractOptions): Promise<DocumentFile[]> {
+    const sources$ = Promise.all(
+      filePaths
+      .map(async filePath => ({ filePath, content: await this.loadFileContent(filePath, options) }))
+    );
+    return (await sources$)
       .filter(result => {
         if (!result.content) {
           return false;
