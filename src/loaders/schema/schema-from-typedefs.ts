@@ -5,7 +5,7 @@ import * as isValidPath from 'is-valid-path';
 import { DocumentNode, parse, Source, Kind } from 'graphql';
 import * as glob from 'glob';
 import { readFileSync } from 'fs';
-import { extractDocumentStringFromCodeFile, ExtractOptions } from '../../utils/extract-document-string-from-code-file';
+import { extractDocumentStringFromCodeFile, ExtractOptions } from '../../utils';
 
 const GQL_EXTENSIONS = ['.graphql', '.graphqls', '.gql'];
 const INVALID_SCHEMA_KINDS: string[] = [Kind.OPERATION_DEFINITION, Kind.FRAGMENT_DEFINITION];
@@ -52,11 +52,9 @@ export class SchemaFromTypedefs implements SchemaLoader {
       throw new Error(`Unable to find matching files for glob: ${globPath} in directory: ${process.cwd()}`);
     }
 
-    const filesContent$ = Promise.all(
-      globFiles
-      .map(async filePath => ({ filePath, content: await loadSchemaFile(filePath, options) }))
-    );
-    const filesContent = (await filesContent$)
+    const filesContent = (await Promise.all(globFiles
+      .map(async filePath => ({ filePath, content: await loadSchemaFile(filePath, options) })),
+    ))
       .filter(file => {
         if (!file.content) {
           return false;
@@ -69,7 +67,6 @@ export class SchemaFromTypedefs implements SchemaLoader {
           return true;
         } else {
           console['warn'](`File "${file.filePath}" was filtered because it contains an invalid GraphQL schema definition!`);
-
           return false;
         }
       });

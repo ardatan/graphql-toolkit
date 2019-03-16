@@ -31,12 +31,9 @@ export class SchemaFromExport implements SchemaLoader {
 
         if (rawExport) {
           let schema = await rawExport;
-          schema = schema.default || schema.schema || schema;
-          schema = await schema;
+          schema = await (schema.default || schema.schema || schema);
           try {
-            const schemaResult = await this.resolveSchema(schema);
-
-            return schemaResult;
+            return await this.resolveSchema(schema);
           } catch (e) {
             throw new Error('Exported schema must be of type GraphQLSchema, text, AST, or introspection JSON.');
           }
