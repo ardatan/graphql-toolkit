@@ -1,4 +1,4 @@
-import { GraphQLSchema, GraphQLScalarType, GraphQLObjectType, GraphQLInterfaceType, DocumentNode, buildASTSchema } from "graphql";
+import { GraphQLSchema, GraphQLScalarType, GraphQLObjectType, GraphQLInterfaceType, DocumentNode, buildASTSchema, GraphQLEnumType, GraphQLUnionType } from "graphql";
 import { IResolvers } from "graphql-tools";
 import { extractFieldResolversFromObjectType } from "./extract-field-resolvers-from-object-type";
 
@@ -26,6 +26,16 @@ export function extractResolversFromSchema(schema: GraphQLSchema, options ?: Ext
                 resolvers[typeName] = extractFieldResolversFromObjectType(typeDef, {
                     selectedTypeDefs: options && options.selectedTypeDefs
                 });
+            } else if (typeDef instanceof GraphQLEnumType) {
+                const enumValues = typeDef.getValues();
+                resolvers[typeName] = {};
+                for (const { name, value } of enumValues) {
+                    resolvers[typeName][name] = value;
+                }
+            } else if (typeDef instanceof GraphQLUnionType) {
+                resolvers[typeName] = {
+                    __resolveType: typeDef.resolveType,
+                };
             }
         }
     }

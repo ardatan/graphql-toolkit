@@ -197,4 +197,75 @@ describe('Merge Schemas', () => {
         expect(data.bar).toBe('BAR');
         expect(data.qux).toBe('QUX');
     });
+    it('should merge valid schemas with interfaces correctly', async () => {
+        const fooSchema = makeExecutableSchema({
+            typeDefs: gql`
+                interface Foo {
+                    foo: String
+                }
+                type Bar implements Foo {
+                    foo: String
+                    bar: String
+                }
+                type Qux implements Foo {
+                    foo: String
+                    qux: String
+                }
+            `
+        })
+        const barSchema = makeExecutableSchema({
+            typeDefs: gql`
+                interface Foo {
+                    foo: String
+                }
+                type Query {
+                    bar: Foo
+                    qux: Foo
+                }
+            `,
+            resolvers: {
+                Foo: {
+                    __resolveType: (root: any) => {
+                        if ('bar' in root) {
+                            return 'Bar';
+                        }
+                        if ('qux' in root) {
+                            return 'Qux';
+                        }
+                        return null;
+                    }
+                },
+                Query: {
+                    bar: () => ({ foo: 'foo', bar: 'bar' }),
+                    qux: () => ({ foo: 'foo', qux: 'qux'})
+                }
+            }
+        });
+        const { errors, data } = await graphql({
+            schema: mergeSchemas({
+                schemas: [fooSchema, barSchema]
+            }),
+            source: `
+                {
+                    bar {
+                        foo
+                        ... on Bar {
+                            bar
+                        }
+                    }
+                    qux {
+                        foo
+                        ... on Qux {
+                            qux
+                        }
+                    }
+                }
+            `
+        });
+        expect(errors).toBeFalsy();
+        expect(data.bar.foo).toBe('foo');
+        expect(data.bar.bar).toBe('bar');
+        expect(data.qux.foo).toBe('foo');
+        expect(data.qux.qux).toBe('qux');
+    })
 })

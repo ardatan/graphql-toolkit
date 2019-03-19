@@ -1,7 +1,7 @@
 import { GraphQLObjectType, GraphQLInterfaceType, DocumentNode, buildASTSchema } from "graphql";
 
 export interface IFieldResolvers {
-    [fieldName: string]: ((...args: any[]) => any) | { subscribe: (...args: any[]) => any };
+    [fieldName: string]: { subscribe: (...args: any[]) => any, resolve: (...args: any[]) => any } | ((...args: any[]) => any);
 }
 
 export interface ExtractFieldResolversFromObjectType {
@@ -27,13 +27,16 @@ export function extractFieldResolversFromObjectType(objectType: GraphQLObjectTyp
             continue;
         }
         const fieldDefinition = fieldMap[fieldName];
-        if ('subscribe' in fieldDefinition) {
-            fieldResolvers[fieldName] = {
-                subscribe: fieldDefinition.subscribe,
-            }
-        } else if ('resolve' in fieldDefinition) {
-            fieldResolvers[fieldName] = fieldDefinition.resolve;
+        fieldResolvers[fieldName] = {
+            subscribe: fieldDefinition.subscribe,
+            resolve: fieldDefinition.resolve,
         }
+    }
+    if ('resolveType' in objectType) {
+        fieldResolvers['__resolveType'] = objectType.resolveType;
+    }
+    if ('isTypeOf' in objectType) {
+        fieldResolvers['__isTypeOf'] = objectType.isTypeOf;
     }
     return fieldResolvers;
 }

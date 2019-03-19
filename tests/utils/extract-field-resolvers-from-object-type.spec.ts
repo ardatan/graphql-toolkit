@@ -13,6 +13,6 @@ describe('extractFieldResolversFromObjectType', () => {
             }
         });
         const fieldResolvers = extractFieldResolversFromObjectType(objectType);
-        expect((fieldResolvers.foo as Function)()).toBe('FOO');
+        expect((fieldResolvers.foo['resolve'] as Function)()).toBe('FOO');
     });
 });
