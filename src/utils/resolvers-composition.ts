@@ -19,7 +19,17 @@ function resolveRelevantMappings<TSource, TContext>(resolvers: IResolvers<TSourc
         .map(field => `${typeName}.${field}`)
         .filter(mapItem => !allMappings[mapItem]);
     } else {
-      return [path];
+      const paths = [];
+      if ('subscribe' in resolvers[typeName][fieldName]) {
+        paths.push(path + '.subscribe');
+      }
+      if ('resolve' in resolvers[typeName][fieldName]) {
+        paths.push(path + '.resolve');
+      }
+      if (typeof resolvers[typeName][fieldName] === 'function') {
+        paths.push(path);
+      }
+      return paths;
     }
   }
 
