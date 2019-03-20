@@ -1,7 +1,7 @@
 import gql from "graphql-tag";
 import { composeResolvers } from "../../src/utils";
 import { makeExecutableSchema } from "graphql-tools";
-import { execute, subscribe, ExecutionResult } from "graphql";
+import { execute } from "graphql";
 import { $$asyncIterator, createAsyncIterator } from 'iterall';
 
 describe('Resolvers composition', () => {
@@ -74,14 +74,6 @@ describe('Resolvers composition', () => {
     it('should compose subscription resolvers', async () => {
         const array1 = [1, 2];
         const array2 = [3, 4];
-        const typeDefs = gql`
-            type Query {
-                foo: String
-            }
-            type Subscription {
-                foo: Int
-            }
-        `;
         const resolvers = {
             Subscription: {
                 foo: {
@@ -117,19 +109,8 @@ describe('Resolvers composition', () => {
             },
         }
         const composedResolvers = composeResolvers(resolvers, resolversComposition);
-        const schema = makeExecutableSchema({
-            typeDefs,
-            resolvers: composedResolvers,
-        });
-        const result = await subscribe({
-            schema,
-            document: gql`subscription { foo }`
-        }) as AsyncIterator<ExecutionResult<{ foo: number }>>
-        
-        const firstResult = await result.next();
-        console.log(firstResult);
-        expect(firstResult.value.data.foo).toBe(4);
-        const secondResult = await result.next();
-        expect(secondResult.value.data.foo).toBe(6);
+        const asyncIterator = composedResolvers.Subscription['foo'].subscribe()
+        expect((await asyncIterator.next()).value).toBe(4);
+        expect((await asyncIterator.next()).value).toBe(6);
     })
 })
