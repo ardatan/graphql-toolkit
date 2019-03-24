@@ -68,7 +68,7 @@ export class SchemaFromExport implements SchemaLoader {
     return obj instanceof GraphQLSchema;
   }
 
-  isSchemaAst(obj: string | DocumentNode): obj is DocumentNode {
+  isSchemaAst(obj: any): obj is DocumentNode {
     return (obj as DocumentNode).kind !== undefined;
   }
 
@@ -76,7 +76,7 @@ export class SchemaFromExport implements SchemaLoader {
     return !!obj && (typeof obj === 'object' || typeof obj === 'function') && typeof obj.then === 'function';
   }
 
-  async resolveSchema(schema: any): Promise<any> {
+  async resolveSchema(schema: GraphQLSchema | DocumentNode | string | { data: IntrospectionQuery } | IntrospectionQuery) {
     if (this.isSchemaObject(schema)) {
       return schema;
     } else if (this.isSchemaAst(schema)) {
