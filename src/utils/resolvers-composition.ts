@@ -4,10 +4,10 @@ import { chainFunctions, asArray } from './helpers';
 
 export type ResolversComposition<Resolver extends ((...args: any[]) => any) = IFieldResolver<any, any>> = (next: Resolver) => Resolver;
 
-export type ResolversComposerMapping<Resolvers = IResolvers> = {
-  [TypeName in keyof Resolvers]?: {
+export type ResolversComposerMapping<Resolvers extends { [key: string]: any } = IResolvers> = {
+  [TypeName in string]?: TypeName extends keyof Resolvers ? {
     [FieldName in keyof Resolvers[TypeName]]?: ResolversComposition<Resolvers[TypeName][FieldName] & ((...args: any[]) => any)> | Array<ResolversComposition<Resolvers[TypeName][FieldName] & Resolvers[TypeName][FieldName] & ((...args: any[]) => any)>>
-  }
+  } : any
 };
 
 function resolveRelevantMappings<Resolvers>(resolvers: Resolvers, path: string, allMappings: ResolversComposerMapping<Resolvers>): string[] {

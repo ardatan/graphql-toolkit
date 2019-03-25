@@ -3,13 +3,13 @@ import { IResolvers, SchemaDirectiveVisitor, makeExecutableSchema, IResolverVali
 import { mergeTypeDefs } from "./typedefs-mergers/merge-typedefs";
 import { asArray } from "../utils/helpers";
 import { mergeResolvers } from "./resolvers-mergers/merge-resolvers";
-import { extractResolversFromSchema, IResolversComposerMapping, composeResolvers } from "../utils";
+import { extractResolversFromSchema, ResolversComposerMapping, composeResolvers } from "../utils";
 
-export interface MergeSchemasConfig {
+export interface MergeSchemasConfig<Resolvers = IResolvers> {
     schemas: GraphQLSchema[];
     typeDefs?: (DocumentNode | string)[] | DocumentNode | string;
-    resolvers?: IResolvers | IResolvers[];
-    resolversComposition?: IResolversComposerMapping;
+    resolvers?: Resolvers | Resolvers[];
+    resolversComposition?: ResolversComposerMapping<Resolvers>;
     schemaDirectives ?: { [directiveName: string] : typeof SchemaDirectiveVisitor };
     resolverValidationOptions ?: IResolverValidationOptions;
     logger?: ILogger;
