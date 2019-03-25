@@ -5,7 +5,7 @@ import { asArray } from "../utils/helpers";
 import { mergeResolvers } from "./resolvers-mergers/merge-resolvers";
 import { extractResolversFromSchema, ResolversComposerMapping, composeResolvers } from "../utils";
 
-export interface MergeSchemasConfig<Resolvers = IResolvers> {
+export interface MergeSchemasConfig<Resolvers extends IResolvers = IResolvers> {
     schemas: GraphQLSchema[];
     typeDefs?: (DocumentNode | string)[] | DocumentNode | string;
     resolvers?: Resolvers | Resolvers[];

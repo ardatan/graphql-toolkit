@@ -2,15 +2,17 @@ import { get, set } from 'lodash';
 import { IResolvers, IFieldResolver, } from 'graphql-tools';
 import { chainFunctions, asArray } from './helpers';
 
-export type ResolversComposition<Resolver extends ((...args: any[]) => any) = IFieldResolver<any, any>> = (next: Resolver) => Resolver;
+export type ResolversComposition<Resolver extends IFieldResolver<any, any> = IFieldResolver<any, any>> = (next: Resolver) => Resolver;
 
-export type ResolversComposerMapping<Resolvers extends { [key: string]: any } = IResolvers> = {
-  [TypeName in string]?: TypeName extends keyof Resolvers ? {
-    [FieldName in keyof Resolvers[TypeName]]?: ResolversComposition<Resolvers[TypeName][FieldName] & ((...args: any[]) => any)> | Array<ResolversComposition<Resolvers[TypeName][FieldName] & Resolvers[TypeName][FieldName] & ((...args: any[]) => any)>>
-  } : any
+export type ResolversComposerMapping<Resolvers extends IResolvers = IResolvers> = {
+  [TypeName in keyof Resolvers]?: {
+    [FieldName in keyof Resolvers[TypeName]]: Resolvers[TypeName][FieldName] extends IFieldResolver<any, any> ? ResolversComposition<Resolvers[TypeName][FieldName]> | Array<ResolversComposition<Resolvers[TypeName][FieldName]>> : ResolversComposition | ResolversComposition[];
+  };
+} | {
+  [path: string]: ResolversComposition | ResolversComposition[];
 };
 
-function resolveRelevantMappings<Resolvers>(resolvers: Resolvers, path: string, allMappings: ResolversComposerMapping<Resolvers>): string[] {
+function resolveRelevantMappings<Resolvers extends IResolvers>(resolvers: Resolvers, path: string, allMappings: ResolversComposerMapping<Resolvers>): string[] {
   const splitted = path.split('.');
 
   if (splitted.length === 2) {
@@ -53,14 +55,25 @@ function resolveRelevantMappings<Resolvers>(resolvers: Resolvers, path: string, 
  * @param mapping - resolvers composition mapping
  * @hidden
  */
-export function composeResolvers<Resolvers>(resolvers: Resolvers, mapping: ResolversComposerMapping<Resolvers> = {}): Resolvers {
+export function composeResolvers<Resolvers extends IResolvers>(resolvers: Resolvers, mapping: ResolversComposerMapping<Resolvers> = {}): Resolvers {
   Object.keys(mapping).map((resolverPath: string) => {
-    const composeFns = mapping[resolverPath];
-    const relevantFields = resolveRelevantMappings(resolvers, resolverPath, mapping);
-    relevantFields.forEach((path: string) => {
-      const fns = chainFunctions([...asArray(composeFns), () => get(resolvers, path)]);
-      set(resolvers as any, path, fns());
-    });
+    if (mapping[resolverPath] instanceof Array || typeof mapping[resolverPath] === 'function') {
+      const composeFns = mapping[resolverPath] as ResolversComposition | ResolversComposition[];
+      const relevantFields = resolveRelevantMappings(resolvers, resolverPath, mapping);
+      relevantFields.forEach((path: string) => {
+        const fns = chainFunctions([...asArray(composeFns), () => get(resolvers, path)]);
+        set(resolvers, path, fns());
+      });
+    } else {
+      Object.keys(mapping[resolverPath]).map(fieldName => {
+        const composeFns = mapping[resolverPath][fieldName];
+        const relevantFields = resolveRelevantMappings(resolvers, resolverPath + '.' + fieldName, mapping);
+        relevantFields.forEach((path: string) => {
+          const fns = chainFunctions([...asArray(composeFns), () => get(resolvers, path)]);
+          set(resolvers, path, fns());
+        });
+      })
+    }
   });
   return resolvers;
 }
