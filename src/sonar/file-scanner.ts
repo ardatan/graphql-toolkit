@@ -1,7 +1,8 @@
-import { IOptions, sync } from 'glob';
+import glob, { IOptions, sync } from 'glob';
 import { extname } from 'path';
 import { readFileSync } from 'fs';
 import { print } from 'graphql';
+import { IResolvers } from 'graphql-tools';
 
 const DEFAULT_SCHEMA_EXTENSIONS = ['gql', 'graphql', 'graphqls', 'ts', 'js'];
 const DEFAULT_IGNORED_RESOLVERS_EXTENSIONS = ['spec', 'test', 'd'];
@@ -104,7 +105,57 @@ export function loadResolversFiles(basePath: string, options: LoadResolversFiles
       return extractExports(fileExports);
     } catch (e) {
       throw new Error(`Unable to load resolver file: ${path}, error: ${e}`);
-      return null;
     }
   }).filter(t => t);
+}
+
+function scanForFilesAsync(globStr: string, globOptions: IOptions = {}): Promise<string[]> {
+  return new Promise((resolve, reject) => glob(globStr, { absolute: true, ...globOptions }, (err, matches) => {
+    if(err) {
+      reject(err);
+    }
+    resolve(matches);
+  }));
+}
+
+export async function loadSchemaFilesAsync(basePath: string, options: LoadSchemaFilesOptions = LoadSchemaFilesDefaultOptions): Promise<string[]> {
+  const execOptions = { ...LoadSchemaFilesDefaultOptions, ...options };
+  const relevantPaths = await scanForFilesAsync(buildGlob(basePath, execOptions.extensions, []), options.globOptions);
+
+  const require$ = (path: string) => import(path);
+  
+
+  return Promise.all(relevantPaths.map(async path => {
+    const extension = extname(path);
+
+    if (extension === '.js' || extension === '.ts' || execOptions.useRequire) {
+      const fileExports = await (execOptions.requireMethod ? execOptions.requireMethod : require$)(path);
+      const extractedExport = extractExports(fileExports);
+
+      if (extractedExport && extractedExport.kind === 'Document') {
+        return print(extractedExport);
+      }
+
+      return extractedExport;
+    } else {
+      return readFileSync(path, { encoding: 'utf-8' });
+    }
+  }));
+}
+
+export async function loadResolversFilesAsync<Resolvers = IResolvers[]>(basePath: string, options: LoadResolversFilesOptions = LoadResolversFilesDefaultOptions): Promise<Resolvers[]> {
+  const execOptions = { ...LoadResolversFilesDefaultOptions, ...options };
+  const relevantPaths = await scanForFilesAsync(buildGlob(basePath, execOptions.extensions, []), options.globOptions);
+
+  const require$ = (path: string) => import(path);
+
+  return Promise.all(relevantPaths.map(async path => {
+    try {
+      const fileExports = await (execOptions.requireMethod ? execOptions.requireMethod : require$)(path);
+
+      return extractExports(fileExports);
+    } catch (e) {
+      throw new Error(`Unable to load resolver file: ${path}, error: ${e}`);
+    }
+  }));
 }

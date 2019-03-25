@@ -10,8 +10,8 @@ export interface MergeSchemasConfig<Resolvers extends IResolvers = IResolvers> {
     typeDefs?: (DocumentNode | string)[] | DocumentNode | string;
     resolvers?: Resolvers | Resolvers[];
     resolversComposition?: ResolversComposerMapping<Resolvers>;
-    schemaDirectives ?: { [directiveName: string] : typeof SchemaDirectiveVisitor };
-    resolverValidationOptions ?: IResolverValidationOptions;
+    schemaDirectives?: { [directiveName: string]: typeof SchemaDirectiveVisitor };
+    resolverValidationOptions?: IResolverValidationOptions;
     logger?: ILogger;
 }
 
@@ -30,7 +30,7 @@ export function mergeSchemas({
             ...typeDefs ? asArray(typeDefs) : []
         ]),
         resolvers: composeResolvers(
-                mergeResolvers([
+            mergeResolvers([
                 ...schemas.map(schema => extractResolversFromSchema(schema)),
                 ...resolvers ? asArray<IResolvers>(resolvers) : []
             ]),
@@ -55,26 +55,19 @@ export async function mergeSchemasAsync({
         typeDefsOutput,
         resolversOutput,
     ] = await Promise.all([
-            mergeTypeDefs([
-                ...schemas,
-                ...typeDefs ? asArray(typeDefs) : []
-            ]),
-            new Promise<IResolvers>(async (resolve, reject) => {
-                try {
-                    const extractedResolvers = await Promise.all(schemas.map(async schema => extractResolversFromSchema(schema)))
-                    resolve(
-                        composeResolvers(
-                                mergeResolvers([
-                                    ...extractedResolvers,
-                                    ...resolvers ? asArray<IResolvers>(resolvers) : []
-                                ]),
-                            resolversComposition || {}
-                        )
-                    )
-                }catch(e) {
-                    reject(e);
-                }
-            }),
+        mergeTypeDefs([
+            ...schemas,
+            ...typeDefs ? asArray(typeDefs) : []
+        ]),
+        Promise
+            .all(schemas.map(async schema => extractResolversFromSchema(schema)))
+            .then(extractedResolvers => composeResolvers(
+                mergeResolvers([
+                    ...extractedResolvers,
+                    ...resolvers ? asArray<IResolvers>(resolvers) : []
+                ]),
+                resolversComposition || {}
+            )),
     ])
     return makeExecutableSchema({
         typeDefs: typeDefsOutput,
