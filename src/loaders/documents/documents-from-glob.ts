@@ -10,14 +10,22 @@ import { extractDocumentStringFromCodeFile, ExtractOptions } from '../../utils/e
 const VALID_DOCUMENT_KINDS: string[] = [Kind.OPERATION_DEFINITION, Kind.FRAGMENT_DEFINITION];
 const GQL_EXTENSIONS: string[] = ['.graphql', '.graphqls', '.gql'];
 
+export interface DocumentsFromGlobOptions extends ExtractOptions {
+  ignore?: string | ReadonlyArray<string>;
+}
+
 export class DocumentsFromGlob implements DocumentLoader {
   canHandle(doc: string): Promise<boolean> | boolean {
     return isGlob(doc) || isValidPath(doc);
   }
 
-  documentsFromGlobs(documentGlob: string): Promise<string[]> {
+  documentsFromGlobs(documentGlob: string, options?: DocumentsFromGlobOptions): Promise<string[]> {
+    const globOptions: glob.IOptions = {};
+    if (options && 'ignore' in options) {
+      globOptions.ignore = options.ignore;
+    }
     return new Promise<string[]>((resolve, reject) => {
-      glob(documentGlob, (err, files) => {
+      glob(documentGlob, globOptions, (err, files) => {
         if (err) {
           reject(err);
         }
@@ -31,7 +39,7 @@ export class DocumentsFromGlob implements DocumentLoader {
     });
   }
 
-  async loadFileContent(filePath: string, options?: ExtractOptions): Promise<DocumentNode | null> {
+  async loadFileContent(filePath: string, options?: DocumentsFromGlobOptions): Promise<DocumentNode | null> {
     if (existsSync(filePath)) {
       const fileContent = readFileSync(filePath, 'utf8');
       const fileExt = extname(filePath);
@@ -58,7 +66,7 @@ export class DocumentsFromGlob implements DocumentLoader {
     }
   }
 
-  async loadDocumentsSources(filePaths: string[], options?: ExtractOptions): Promise<DocumentFile[]> {
+  async loadDocumentsSources(filePaths: string[], options?: DocumentsFromGlobOptions): Promise<DocumentFile[]> {
     const sources$ = Promise.all(
       filePaths
       .map(async filePath => ({ filePath, content: await this.loadFileContent(filePath, options) }))
@@ -81,8 +89,8 @@ export class DocumentsFromGlob implements DocumentLoader {
       });
   }
 
-  async handle(doc: string, options?: ExtractOptions): Promise<DocumentFile[]> {
-    const foundDocumentsPaths = await this.documentsFromGlobs(doc);
+  async handle(doc: string, options?: DocumentsFromGlobOptions): Promise<DocumentFile[]> {
+    const foundDocumentsPaths = await this.documentsFromGlobs(doc, options);
 
     return this.loadDocumentsSources(foundDocumentsPaths, options);
   }

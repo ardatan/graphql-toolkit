@@ -81,4 +81,15 @@ describe('documentsFromGlob', () => {
     const result = await handler.handle(glob);
     expect(result.length).toBe(2);
   });
+  it('Should ignore files that is added to ignore glob', async () => {
+    const glob = join(__dirname, './test-files/', '*.graphql');
+    const ignoreGlob = join(__dirname, './test-files/', '*.query.graphql');
+    const handler = new DocumentsFromGlob();
+    const canHandle = await handler.canHandle(glob);
+    expect(canHandle).toBeTruthy();
+    const result = await handler.handle(glob, {
+      ignore: ignoreGlob
+    });
+    expect(result.length).toBe(1);
+  })
 });
