@@ -41,3 +41,46 @@ export function mergeSchemas({
         logger
     })
 }
+
+export async function mergeSchemasAsync({
+    schemas,
+    typeDefs,
+    resolvers,
+    resolversComposition,
+    schemaDirectives,
+    resolverValidationOptions,
+    logger
+}: MergeSchemasConfig) {
+    const [
+        typeDefsOutput,
+        resolversOutput,
+    ] = await Promise.all([
+            mergeTypeDefs([
+                ...schemas,
+                ...typeDefs ? asArray(typeDefs) : []
+            ]),
+            new Promise<IResolvers>(async (resolve, reject) => {
+                try {
+                    const extractedResolvers = await Promise.all(schemas.map(async schema => extractResolversFromSchema(schema)))
+                    resolve(
+                        composeResolvers(
+                                mergeResolvers([
+                                    ...extractedResolvers,
+                                    ...resolvers ? asArray<IResolvers>(resolvers) : []
+                                ]),
+                            resolversComposition || {}
+                        )
+                    )
+                }catch(e) {
+                    reject(e);
+                }
+            }),
+    ])
+    return makeExecutableSchema({
+        typeDefs: typeDefsOutput,
+        resolvers: resolversOutput,
+        schemaDirectives,
+        resolverValidationOptions,
+        logger
+    })
+}
