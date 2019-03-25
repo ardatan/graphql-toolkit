@@ -2,6 +2,7 @@ import { makeExecutableSchema } from "graphql-tools";
 import { mergeSchemas } from '../../src/epoxy';
 import gql from "graphql-tag";
 import { graphql } from "graphql";
+import { mergeSchemasAsync } from "../../src/epoxy/merge-schemas";
 
 describe('Merge Schemas', () => {
     it('should merge two valid executable schemas', async () => {
@@ -31,6 +32,46 @@ describe('Merge Schemas', () => {
         });
         const { errors, data } = await graphql({
             schema: mergeSchemas({
+                schemas: [fooSchema, barSchema]
+            }),
+            source: `
+                {
+                    foo
+                    bar
+                }
+            `
+        });
+        expect(errors).toBeFalsy();
+        expect(data.foo).toBe('FOO');
+        expect(data.bar).toBe('BAR');
+    });
+    it('should merge two valid executable schemas async', async () => {
+        const fooSchema = makeExecutableSchema({
+            typeDefs: gql`
+                type Query {
+                    foo: String
+                }
+            `,
+            resolvers: {
+                Query: {
+                    foo: () => 'FOO'
+                }
+            }
+        });
+        const barSchema = makeExecutableSchema({
+            typeDefs: gql`
+                type Query {
+                    bar: String
+                }
+            `,
+            resolvers: {
+                Query: {
+                    bar: () => 'BAR'
+                }
+            }
+        });
+        const { errors, data } = await graphql({
+            schema: await mergeSchemasAsync({
                 schemas: [fooSchema, barSchema]
             }),
             source: `
