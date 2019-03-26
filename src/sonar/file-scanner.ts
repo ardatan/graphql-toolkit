@@ -1,6 +1,7 @@
-import glob, { IOptions, sync } from 'glob';
+import { IOptions, sync } from 'glob';
+import * as glob from 'glob';
 import { extname } from 'path';
-import { readFileSync } from 'fs';
+import { readFileSync, readFile } from 'fs';
 import { print } from 'graphql';
 import { IResolvers } from 'graphql-tools';
 
@@ -138,12 +139,19 @@ export async function loadSchemaFilesAsync(basePath: string, options: LoadSchema
 
       return extractedExport;
     } else {
-      return readFileSync(path, { encoding: 'utf-8' });
+      return new Promise((resolve, reject) => {
+        readFile(path, { encoding: 'utf-8' }, (err, data) => {
+          if (err) {
+            reject(err);
+          }
+          resolve(data);
+        })
+      });
     }
   }));
 }
 
-export async function loadResolversFilesAsync<Resolvers = IResolvers[]>(basePath: string, options: LoadResolversFilesOptions = LoadResolversFilesDefaultOptions): Promise<Resolvers[]> {
+export async function loadResolversFilesAsync<Resolvers = IResolvers>(basePath: string, options: LoadResolversFilesOptions = LoadResolversFilesDefaultOptions): Promise<Resolvers[]> {
   const execOptions = { ...LoadResolversFilesDefaultOptions, ...options };
   const relevantPaths = await scanForFilesAsync(buildGlob(basePath, execOptions.extensions, []), options.globOptions);
 
