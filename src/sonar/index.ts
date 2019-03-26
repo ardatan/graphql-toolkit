@@ -1,1 +1,1 @@
-export { loadSchemaFiles, loadResolversFiles } from './file-scanner';
+export { loadSchemaFiles, loadSchemaFilesAsync, loadResolversFiles, loadResolversFilesAsync } from './file-scanner';
