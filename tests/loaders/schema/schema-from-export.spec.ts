@@ -23,4 +23,12 @@ describe('Schema From Export', () => {
     const result: any = await instance.handle('./tests/loaders/schema/test-files/loaders/promise-export.js');
     expect(result instanceof GraphQLSchema).toBeTruthy();
   });
+
+  it('should work with glob patterns', async () => {
+    const schemaPath = './tests/loaders/schema/test-files/loaders/*.js';
+    const canHandle = await instance.canHandle(schemaPath);
+    expect(canHandle).toBeTruthy();
+    const schema = await instance.handle(schemaPath);
+    expect(schema instanceof GraphQLSchema).toBeTruthy();
+  });
 });

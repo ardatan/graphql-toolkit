@@ -19,7 +19,12 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "resolveJsonModule": true,
-    "importHelpers": true
+    "importHelpers": true,
+    "typeRoots": [ "./types", "./node_modules/@types"],
+    "baseUrl": ".",
+    "paths": {
+      "*": ["./types/*"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]
