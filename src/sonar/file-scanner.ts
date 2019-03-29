@@ -95,7 +95,7 @@ const LoadResolversFilesDefaultOptions: LoadResolversFilesOptions = {
   globOptions: {},
 };
 
-export function loadResolversFiles(basePath: string, options: LoadResolversFilesOptions = LoadResolversFilesDefaultOptions): any[] {
+export function loadResolversFiles<Resolvers extends IResolvers = IResolvers>(basePath: string, options: LoadResolversFilesOptions = LoadResolversFilesDefaultOptions): Resolvers[] {
   const execOptions = { ...LoadResolversFilesDefaultOptions, ...options };
   const relevantPaths = scanForFiles(buildGlob(basePath, execOptions.extensions, execOptions.ignoredExtensions), execOptions.globOptions);
 
@@ -151,7 +151,7 @@ export async function loadSchemaFilesAsync(basePath: string, options: LoadSchema
   }));
 }
 
-export async function loadResolversFilesAsync<Resolvers = IResolvers>(basePath: string, options: LoadResolversFilesOptions = LoadResolversFilesDefaultOptions): Promise<Resolvers[]> {
+export async function loadResolversFilesAsync<Resolvers extends IResolvers = IResolvers>(basePath: string, options: LoadResolversFilesOptions = LoadResolversFilesDefaultOptions): Promise<Resolvers[]> {
   const execOptions = { ...LoadResolversFilesDefaultOptions, ...options };
   const relevantPaths = await scanForFilesAsync(buildGlob(basePath, execOptions.extensions, []), options.globOptions);
 
