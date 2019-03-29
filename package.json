@@ -40,7 +40,7 @@
     "jest": "24.5.0",
     "semver": "6.0.0",
     "ts-jest": "24.0.0",
-    "typescript": "3.3.4000"
+    "typescript": "3.4.1"
   },
   "dependencies": {
     "aggregate-error": "2.2.0",
