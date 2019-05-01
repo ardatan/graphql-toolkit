@@ -32,6 +32,8 @@ export class SchemaFromExport implements SchemaLoader {
             this.isWrappedSchemaJson(schema) || this.isSchemaJson(schema)) {
             return true;
           }
+          
+          console.warn(`Invalid export from export file ${fullPath}: missing default export or 'schema' export!`);
         }
       } catch (err) {}
     }
