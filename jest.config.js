@@ -3,6 +3,7 @@ module.exports = {
   testEnvironment: 'node',
   globals: {
     'ts-jest': {
+      diagnostics: false,
       tsConfig: {
         module: 'commonjs'
       }
