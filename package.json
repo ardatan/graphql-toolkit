@@ -1,6 +1,6 @@
 {
   "name": "graphql-toolkit",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": "git@github.com:dotansimha/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
