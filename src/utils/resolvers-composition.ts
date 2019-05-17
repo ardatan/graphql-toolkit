@@ -32,10 +32,10 @@ function resolveRelevantMappings<Resolvers extends IResolvers>(resolvers: Resolv
       const paths = [];
 
       if (resolvers[typeName] && resolvers[typeName][fieldName]) {
-        if ('subscribe' in resolvers[typeName][fieldName]) {
+        if (resolvers[typeName][fieldName]['subscribe']) {
           paths.push(path + '.subscribe');
         }
-        if ('resolve' in resolvers[typeName][fieldName]) {
+        if (resolvers[typeName][fieldName]['resolve']) {
           paths.push(path + '.resolve');
         }
         if (typeof resolvers[typeName][fieldName] === 'function') {
