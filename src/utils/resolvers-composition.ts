@@ -64,24 +64,31 @@ function resolveRelevantMappings<Resolvers extends IResolvers>(resolvers: Resolv
  * @hidden
  */
 export function composeResolvers<Resolvers extends IResolvers>(resolvers: Resolvers, mapping: ResolversComposerMapping<Resolvers> = {}): Resolvers {
+  const mappingResult: { [path: string]: Function[] } = {};
+
   Object.keys(mapping).map((resolverPath: string) => {
     if (mapping[resolverPath] instanceof Array || typeof mapping[resolverPath] === 'function') {
       const composeFns = mapping[resolverPath] as ResolversComposition | ResolversComposition[];
       const relevantFields = resolveRelevantMappings(resolvers, resolverPath, mapping);
       relevantFields.forEach((path: string) => {
-        const fns = chainFunctions([...asArray(composeFns), () => get(resolvers, path)]);
-        set(resolvers, path, fns());
+        mappingResult[path] = asArray(composeFns);
       });
     } else {
       Object.keys(mapping[resolverPath]).map(fieldName => {
         const composeFns = mapping[resolverPath][fieldName];
         const relevantFields = resolveRelevantMappings(resolvers, resolverPath + '.' + fieldName, mapping);
         relevantFields.forEach((path: string) => {
-          const fns = chainFunctions([...asArray(composeFns), () => get(resolvers, path)]);
-          set(resolvers, path, fns());
+          mappingResult[path] = asArray(composeFns);
         });
       });
     }
   });
+
+  Object.keys(mappingResult).forEach(path => {
+    const fns = chainFunctions([...asArray(mappingResult[path]), () => get(resolvers, path)]);
+
+    set(resolvers, path, fns());
+  });
+
   return resolvers;
 }
