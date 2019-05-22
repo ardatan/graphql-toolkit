@@ -31,7 +31,7 @@
     "@types/graphql": "14.2.0",
     "@types/is-glob": "4.0.1",
     "@types/jest": "24.0.13",
-    "@types/lodash": "4.14.129",
+    "@types/lodash": "4.14.130",
     "@types/node": "10.14.6",
     "@types/request": "2.48.1",
     "@types/valid-url": "1.0.2",
