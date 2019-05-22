@@ -1,20 +1,21 @@
 import { get, set } from 'lodash';
 import { IResolvers, IFieldResolver } from 'graphql-tools';
 import { chainFunctions, asArray } from './helpers';
+import { flattenArray } from './flatten-array';
 
 export type ResolversComposition<Resolver extends IFieldResolver<any, any> = IFieldResolver<any, any>> = (next: Resolver) => Resolver;
 
 export type ResolversComposerMapping<Resolvers extends IResolvers = IResolvers> =
   | {
-      [TypeName in keyof Resolvers]?: {
-        [FieldName in keyof Resolvers[TypeName]]: Resolvers[TypeName][FieldName] extends IFieldResolver<any, any>
-          ? ResolversComposition<Resolvers[TypeName][FieldName]> | Array<ResolversComposition<Resolvers[TypeName][FieldName]>>
-          : ResolversComposition | ResolversComposition[]
-      }
+    [TypeName in keyof Resolvers]?: {
+      [FieldName in keyof Resolvers[TypeName]]: Resolvers[TypeName][FieldName] extends IFieldResolver<any, any>
+      ? ResolversComposition<Resolvers[TypeName][FieldName]> | Array<ResolversComposition<Resolvers[TypeName][FieldName]>>
+      : ResolversComposition | ResolversComposition[]
     }
+  }
   | {
-      [path: string]: ResolversComposition | ResolversComposition[];
-    };
+    [path: string]: ResolversComposition | ResolversComposition[];
+  };
 
 function resolveRelevantMappings<Resolvers extends IResolvers>(resolvers: Resolvers, path: string, allMappings: ResolversComposerMapping<Resolvers>): string[] {
   const splitted = path.split('.');
@@ -24,9 +25,10 @@ function resolveRelevantMappings<Resolvers extends IResolvers>(resolvers: Resolv
     const fieldName = splitted[1];
 
     if (fieldName === '*') {
-      return Object.keys(resolvers[typeName])
-        .map(field => resolveRelevantMappings(resolvers, `${typeName}.${field}`, allMappings))
-        .flat()
+      return flattenArray(
+        Object.keys(resolvers[typeName])
+          .map(field => resolveRelevantMappings(resolvers, `${typeName}.${field}`, allMappings))
+      )
         .filter(mapItem => !allMappings[mapItem]);
     } else {
       const paths = [];
@@ -47,9 +49,10 @@ function resolveRelevantMappings<Resolvers extends IResolvers>(resolvers: Resolv
     }
   } else if (splitted.length === 1) {
     const typeName = splitted[0];
-    return Object.keys(resolvers[typeName])
-      .map(fieldName => resolveRelevantMappings(resolvers, `${typeName}.${fieldName}`, allMappings))
-      .flat();
+    return flattenArray(
+      Object.keys(resolvers[typeName])
+        .map(fieldName => resolveRelevantMappings(resolvers, `${typeName}.${fieldName}`, allMappings))
+    );
   }
 
   return [];
