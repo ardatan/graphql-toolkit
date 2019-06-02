@@ -2,7 +2,7 @@ import AggregateError from 'aggregate-error';
 import { existsSync } from 'fs';
 import { extname, isAbsolute, resolve as resolvePath } from 'path';
 import * as isValidPath from 'is-valid-path';
-import { buildASTSchema, buildClientSchema, DocumentNode, GraphQLSchema, IntrospectionQuery, parse } from 'graphql';
+import { buildASTSchema, buildClientSchema, DocumentNode, GraphQLSchema, IntrospectionQuery, parse, FieldsOnCorrectTypeRule } from 'graphql';
 import { SchemaLoader } from './schema-loader';
 import { isGraphQLFile } from './schema-from-typedefs';
 import * as isGlob from 'is-glob';
@@ -20,6 +20,22 @@ export class SchemaFromExport implements SchemaLoader {
     ).filter(file => !file.includes('node_modules') && !file.endsWith('.d.ts') && !file.endsWith('.spec.ts'));
   }
 
+  async resolveExports(file: string): Promise<{ ok: boolean; export?: any }> {
+    const fullPath = isAbsolute(file) ? file : resolvePath(process.cwd(), file);
+
+    if (isValidPath(file) && existsSync(fullPath) && extname(file) !== '.json' && !isGraphQLFile(fullPath)) {
+      try {
+        const fileExport = await import(fullPath);
+
+        return { ok: true, export: fileExport };
+      } catch (e) {
+        return { ok: false };
+      }
+    }
+
+    return { ok: false };
+  }
+
   async canHandle(globOrValidPath: string): Promise<boolean> {
     const files = SchemaFromExport.getFiles(globOrValidPath);
 
@@ -27,14 +43,13 @@ export class SchemaFromExport implements SchemaLoader {
       const fullPath = isAbsolute(file) ? file : resolvePath(process.cwd(), file);
 
       if (isValidPath(file) && existsSync(fullPath) && extname(file) !== '.json' && !isGraphQLFile(fullPath)) {
-        let fileExports: any;
+        const validRequire = await this.resolveExports(file);
 
-        try {
-          fileExports = await import(fullPath);
-        } catch (e) {
+        if (!validRequire.ok) {
           return false;
         }
 
+        const fileExports = validRequire.export;
         const schema = await (fileExports.default || fileExports.schema || fileExports);
 
         if (this.isSchemaObject(schema) || this.isSchemaAst(schema) || this.isSchemaText(schema) || this.isWrappedSchemaJson(schema) || this.isSchemaJson(schema)) {

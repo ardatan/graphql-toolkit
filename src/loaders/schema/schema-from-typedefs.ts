@@ -6,6 +6,7 @@ import { DocumentNode, parse, Source, Kind } from 'graphql';
 import * as glob from 'glob';
 import { readFileSync } from 'fs';
 import { extractDocumentStringFromCodeFile, ExtractOptions } from '../../utils';
+import { SchemaFromExport } from './schema-from-export';
 
 const GQL_EXTENSIONS = ['.graphql', '.graphqls', '.gql'];
 const INVALID_SCHEMA_KINDS: string[] = [Kind.OPERATION_DEFINITION, Kind.FRAGMENT_DEFINITION];
@@ -41,8 +42,9 @@ async function loadSchemaFile(filepath: string, options?: ExtractOptions): Promi
 }
 
 export class SchemaFromTypedefs implements SchemaLoader {
-  canHandle(globOrValidPath: string): boolean {
-    return isGlob(globOrValidPath) || isValidPath(globOrValidPath);
+  async canHandle(globOrValidPath: string): Promise<boolean> {
+    const schemaLoader = new SchemaFromExport();
+    return (isGlob(globOrValidPath) || isValidPath(globOrValidPath)) && !(await schemaLoader.canHandle(globOrValidPath));
   }
 
   async handle(globPath: string, options?: ExtractOptions): Promise<DocumentNode> {
