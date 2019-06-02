@@ -31,23 +31,23 @@ export class SchemaFromExport implements SchemaLoader {
         try {
           const exports = await import(fullPath);
           const schema = await (exports.default || exports.schema || exports);
-
+  
           if (this.isSchemaObject(schema) || this.isSchemaAst(schema) || this.isSchemaText(schema) || this.isWrappedSchemaJson(schema) || this.isSchemaJson(schema)) {
             return true;
           }
-
-          console.warn(`Invalid export from export file ${fullPath}: missing default export or 'schema' export!`);
         } catch (e) {
-          throw new AggregateError([new Error(`Unable to load schem from file "${file}" due to import error: ${e}`), e]);
+          console.warn(`Unable to import from file ${fullPath}: ${e}`);
+          
+          return false;
         }
       }
     }
+
     return false;
   }
 
   async handle(globOrValidPath: string, _options?: any): Promise<GraphQLSchema> {
     const files = SchemaFromExport.getFiles(globOrValidPath);
-
     const filtered = await filter(files, async file => await this.canHandle(file));
 
     const schemas = await Promise.all(
@@ -55,24 +55,30 @@ export class SchemaFromExport implements SchemaLoader {
         const fullPath = isAbsolute(file) ? file : resolvePath(process.cwd(), file);
 
         if (existsSync(fullPath)) {
-          const exports = await import(fullPath);
+          try {
+            const exports = await import(fullPath);
 
-          if (exports) {
-            let rawExport = exports.default || exports.schema || exports;
+            if (exports) {
+              let rawExport = exports.default || exports.schema || exports;
 
-            if (rawExport) {
-              let schema = await rawExport;
-              schema = await (schema.default || schema.schema || schema);
-              try {
-                return await this.resolveSchema(schema);
-              } catch (e) {
-                throw new Error('Exported schema must be of type GraphQLSchema, text, AST, or introspection JSON.');
+              if (rawExport) {
+                let schema = await rawExport;
+                schema = await (schema.default || schema.schema || schema);
+                try {
+                  return await this.resolveSchema(schema);
+                } catch (e) {
+                  throw new Error('Exported schema must be of type GraphQLSchema, text, AST, or introspection JSON.');
+                }
+              } else {
+                throw new Error(`Invalid export from export file ${fullPath}: missing default export or 'schema' export!`);
               }
             } else {
-              throw new Error(`Invalid export from export file ${fullPath}: missing default export or 'schema' export!`);
+              throw new Error(`Invalid export from export file ${fullPath}: empty export!`);
             }
-          } else {
-            throw new Error(`Invalid export from export file ${fullPath}: empty export!`);
+          } catch (e) {
+            console.warn(`Invalid export from export file ${fullPath}: missing default export or 'schema' export!`);
+
+            throw new AggregateError([new Error(`Unable to load schema from file "${file}" due to import error: ${e}`), e]);
           }
         } else {
           throw new Error(`Unable to locate introspection from export file: ${fullPath}`);
