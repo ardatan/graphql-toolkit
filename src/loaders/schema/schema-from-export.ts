@@ -2,7 +2,7 @@ import AggregateError from 'aggregate-error';
 import { existsSync } from 'fs';
 import { extname, isAbsolute, resolve as resolvePath } from 'path';
 import * as isValidPath from 'is-valid-path';
-import { buildASTSchema, buildClientSchema, DocumentNode, GraphQLSchema, IntrospectionQuery, parse, FieldsOnCorrectTypeRule } from 'graphql';
+import { buildASTSchema, buildClientSchema, DocumentNode, GraphQLSchema, IntrospectionQuery, parse } from 'graphql';
 import { SchemaLoader } from './schema-loader';
 import { isGraphQLFile } from './schema-from-typedefs';
 import * as isGlob from 'is-glob';
