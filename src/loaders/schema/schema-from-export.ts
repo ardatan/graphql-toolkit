@@ -8,7 +8,6 @@ import { isGraphQLFile } from './schema-from-typedefs';
 import * as isGlob from 'is-glob';
 import { sync as globSync } from 'glob';
 import { mergeTypeDefs } from '../../epoxy';
-import { filter } from 'asyncro';
 
 export class SchemaFromExport implements SchemaLoader {
   static getFiles(globOrValidPath: string): string[] {
@@ -28,30 +27,33 @@ export class SchemaFromExport implements SchemaLoader {
       const fullPath = isAbsolute(file) ? file : resolvePath(process.cwd(), file);
 
       if (isValidPath(file) && existsSync(fullPath) && extname(file) !== '.json' && !isGraphQLFile(fullPath)) {
+        let fileExports: any;
+
         try {
-          const exports = await import(fullPath);
-          const schema = await (exports.default || exports.schema || exports);
-  
-          if (this.isSchemaObject(schema) || this.isSchemaAst(schema) || this.isSchemaText(schema) || this.isWrappedSchemaJson(schema) || this.isSchemaJson(schema)) {
-            return true;
-          }
+          fileExports = await import(fullPath);
         } catch (e) {
-          console.warn(`Unable to import from file ${fullPath}: ${e}`);
-          
           return false;
         }
+
+        const schema = await (fileExports.default || fileExports.schema || fileExports);
+
+        if (this.isSchemaObject(schema) || this.isSchemaAst(schema) || this.isSchemaText(schema) || this.isWrappedSchemaJson(schema) || this.isSchemaJson(schema)) {
+          return true;
+        }
+
+        return false;
       }
     }
 
     return false;
   }
 
-  async handle(globOrValidPath: string, _options?: any): Promise<GraphQLSchema> {
+  async handle(globOrValidPath: string, _options?: any): Promise<GraphQLSchema | DocumentNode> {
     const files = SchemaFromExport.getFiles(globOrValidPath);
-    const filtered = await filter(files, async file => await this.canHandle(file));
+    const filtered = await files.filter(async (file: string) => await this.canHandle(file));
 
-    const schemas = await Promise.all(
-      filtered.map(async file => {
+    const schemas: Array<GraphQLSchema | DocumentNode> = await Promise.all(
+      filtered.map<Promise<GraphQLSchema | DocumentNode>>(async (file: string) => {
         const fullPath = isAbsolute(file) ? file : resolvePath(process.cwd(), file);
 
         if (existsSync(fullPath)) {
