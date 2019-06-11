@@ -93,18 +93,19 @@ export function mergeGraphQLTypes(types: Array<string | Source | DocumentNode | 
           subscription: schema.getSubscriptionType(),
         });
         const allTypesPrinted = Object.keys(typesMap)
-          .map(key => typesMap[key])
-          .filter(type => {
+          .map(typeName => {
+            const type = typesMap[typeName];
             const isPredefinedScalar = type instanceof GraphQLScalarType && isSpecifiedScalarType(type);
             const isIntrospection = isIntrospectionType(type);
 
-            return !isPredefinedScalar && !isIntrospection;
-          })
-          .map(type => {
+            if (isPredefinedScalar || isIntrospection) {
+              return null;
+            }
             if (type.astNode) {
               return print(type.extensionASTNodes ? extendDefinition(type) : type.astNode);
             } else {
-              return printType(type);
+              // KAMIL: we might want to turn on descriptions in future
+              return printType(correctType(typeName, typesMap));
             }
           })
           .filter(e => e);
@@ -179,4 +180,12 @@ function extendDefinition(type: GraphQLNamedType): GraphQLNamedType['astNode'] {
     default:
       return type.astNode;
   }
+}
+
+function correctType<TMap extends { [key: string]: GraphQLNamedType }, TName extends keyof TMap>(typeName: TName, typesMap: TMap): TMap[TName] {
+  const type = typesMap[typeName];
+
+  type.name = typeName.toString();
+
+  return type;
 }

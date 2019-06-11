@@ -1,7 +1,7 @@
 import { makeExecutableSchema } from "graphql-tools";
 import { mergeSchemas } from '../../src/epoxy';
 import gql from "graphql-tag";
-import { graphql } from "graphql";
+import { graphql, GraphQLScalarType, Kind } from "graphql";
 import { mergeSchemasAsync } from "../../src/epoxy/merge-schemas";
 
 describe('Merge Schemas', () => {
@@ -308,5 +308,53 @@ describe('Merge Schemas', () => {
         expect(data.bar.bar).toBe('bar');
         expect(data.qux.foo).toBe('foo');
         expect(data.qux.qux).toBe('qux');
+    })
+
+    it('should merge scalars (part of resolvers)', async () => {
+        const now = new Date();
+        const schemaA = makeExecutableSchema({
+            typeDefs: [`scalar Date`, `type Query { a: Date }`],
+            resolvers: {
+                Query: {
+                    a: () => now,
+                },
+                Date: new GraphQLScalarType({
+                    name: 'DateTime',
+                    serialize(value) {
+                        return new Date(value).toISOString()
+                    },
+                    parseValue(value) {
+                        return new Date(value);
+                    },
+                    parseLiteral(ast) {
+                        if (ast.kind !== Kind.STRING) {
+                            throw new TypeError(`Date cannot represent non string type`);
+                        }
+                        return new Date(ast.value);
+                    }
+                })
+            }
+        });
+        const schemaB = makeExecutableSchema({
+            typeDefs: [`type Query { b: String }`],
+        });
+
+        const schema = mergeSchemas({ schemas: [schemaA, schemaB] });
+
+        // original schema A
+        const { data: dataA } = await graphql({
+            schema: schemaA,
+            source: /* GraphQL */` { a } `
+        });
+
+        expect(dataA.a).toEqual(now.toISOString());
+
+        // merged schema
+        const { data } = await graphql({
+            schema,
+            source: /* GraphQL */` { a } `
+        });
+
+        expect(data.a).toEqual(now.toISOString());
     })
 })
