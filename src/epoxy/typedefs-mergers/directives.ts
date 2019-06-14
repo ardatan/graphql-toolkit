@@ -19,10 +19,14 @@ function mergeArguments(a1: ArgumentNode[], a2: ArgumentNode[]): ArgumentNode[] 
       const existingArg = result[existingIndex];
 
       if (existingArg.value.kind === 'ListValue') {
-        (existingArg.value as any).values = [
-          ...existingArg.value.values,
-          ...(argument.value as ListValueNode).values,
-        ];
+        const source = (existingArg.value as any).values;
+        const target = (argument.value as ListValueNode).values;
+
+        // merge values of two lists
+        (existingArg.value as any).values = deduplicateLists(source, target, (targetVal, source) => {
+          const value = (targetVal as any).value;
+          return !value || !source.some((sourceVal: any) => sourceVal.value === value);
+        });
       } else {
         (existingArg as any).value = argument.value;
       }
@@ -53,7 +57,7 @@ export function mergeDirectives(d1: ReadonlyArray<DirectiveNode>, d2: ReadonlyAr
 function validateInputs(node: DirectiveDefinitionNode, existingNode: DirectiveDefinitionNode): void | never {
   const printedNode = print(node);
   const printedExistingNode = print(existingNode);
-  const leaveInputs = new RegExp('(directive @\w*\d*)|( on .*$)', 'g');
+  const leaveInputs = new RegExp('(directive @w*d*)|( on .*$)', 'g');
   const sameArguments = printedNode.replace(leaveInputs, '') === printedExistingNode.replace(leaveInputs, '');
 
   if (!sameArguments) {
@@ -63,17 +67,17 @@ function validateInputs(node: DirectiveDefinitionNode, existingNode: DirectiveDe
 
 export function mergeDirective(node: DirectiveDefinitionNode, existingNode?: DirectiveDefinitionNode): DirectiveDefinitionNode {
   if (existingNode) {
-
     validateInputs(node, existingNode);
 
     return {
       ...node,
-      locations: [
-        ...existingNode.locations,
-        ...(node.locations.filter(name => !nameAlreadyExists(name, existingNode.locations))),
-      ],
+      locations: [...existingNode.locations, ...node.locations.filter(name => !nameAlreadyExists(name, existingNode.locations))],
     };
   }
 
   return node;
+}
+
+function deduplicateLists<T>(source: readonly T[], target: readonly T[], filterFn: (val: T, source: readonly T[]) => boolean): T[] {
+  return source.concat(target.filter(val => filterFn(val, source)));
 }
