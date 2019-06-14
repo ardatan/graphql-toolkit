@@ -1,5 +1,5 @@
 import { mergeTypeDefs, mergeGraphQLTypes } from '../../src/epoxy/typedefs-mergers/merge-typedefs';
-import { makeExecutableSchema } from 'graphql-tools';
+import { makeExecutableSchema } from '@kamilkisiela/graphql-tools';
 import { buildSchema, buildClientSchema, print } from 'graphql';
 import { stripWhitespaces } from './utils';
 import gql from 'graphql-tag';
@@ -327,6 +327,30 @@ describe('Merge TypeDefs', () => {
       ]);
 
       expect(print(merged)).toContain('f2: String @id');
+    });
+
+    it('should merge when directive uses enum', () => {
+      const merged = mergeTypeDefs([
+        gql`
+          directive @date(format: DateFormat) on FIELD_DEFINITION
+          enum DateFormat {
+            LOCAL
+            ISO
+          }
+        `,
+          gql`
+            scalar Date
+
+            type Query {
+              today: Date @date
+            }
+        `,
+      ]);
+
+      const printed = print(merged);
+
+      expect(printed).toContain('directive @date(format: DateFormat) on FIELD_DEFINITION');
+      expect(printed).toContain('today: Date @date');
     });
 
     it('should merge the same directives and its locations', () => {

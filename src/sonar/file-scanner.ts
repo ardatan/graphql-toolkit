@@ -3,7 +3,7 @@ import * as glob from 'glob';
 import { extname } from 'path';
 import { readFileSync, readFile } from 'fs';
 import { print } from 'graphql';
-import { IResolvers } from 'graphql-tools';
+import { IResolvers } from '@kamilkisiela/graphql-tools';
 
 const DEFAULT_SCHEMA_EXTENSIONS = ['gql', 'graphql', 'graphqls', 'ts', 'js'];
 const DEFAULT_IGNORED_RESOLVERS_EXTENSIONS = ['spec', 'test', 'd'];

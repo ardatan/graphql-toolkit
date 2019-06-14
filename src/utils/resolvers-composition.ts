@@ -1,5 +1,5 @@
 import { get, set } from 'lodash';
-import { IResolvers, IFieldResolver } from 'graphql-tools';
+import { IResolvers, IFieldResolver } from '@kamilkisiela/graphql-tools';
 import { chainFunctions, asArray } from './helpers';
 import { flattenArray } from './flatten-array';
 

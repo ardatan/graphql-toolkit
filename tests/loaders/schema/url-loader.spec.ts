@@ -1,6 +1,6 @@
 jest.mock('request');
 import { IntrospectionFromUrlLoader } from '../../../src/loaders/schema/introspection-from-url';
-import { makeExecutableSchema } from 'graphql-tools';
+import { makeExecutableSchema } from '@kamilkisiela/graphql-tools';
 import { introspectionFromSchema, GraphQLSchema } from 'graphql';
 
 const SHOULD_NOT_GET_HERE_ERROR = 'SHOULD_NOT_GET_HERE';

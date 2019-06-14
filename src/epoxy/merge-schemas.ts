@@ -1,5 +1,5 @@
 import { GraphQLSchema, DocumentNode } from "graphql";
-import { IResolvers, SchemaDirectiveVisitor, makeExecutableSchema, IResolverValidationOptions, ILogger } from "graphql-tools";
+import { IResolvers, SchemaDirectiveVisitor, makeExecutableSchema, IResolverValidationOptions, ILogger } from "@kamilkisiela/graphql-tools";
 import { mergeTypeDefs } from "./typedefs-mergers/merge-typedefs";
 import { asArray } from "../utils/helpers";
 import { mergeResolvers } from "./resolvers-mergers/merge-resolvers";

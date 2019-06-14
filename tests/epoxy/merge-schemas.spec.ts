@@ -1,7 +1,7 @@
-import { makeExecutableSchema } from "graphql-tools";
+import { makeExecutableSchema } from "@kamilkisiela/graphql-tools";
 import { mergeSchemas } from '../../src/epoxy';
 import gql from "graphql-tag";
-import { graphql, buildSchema, GraphQLScalarType, Kind, GraphQLSchema, ListValueNode } from "graphql";
+import { graphql, buildSchema, GraphQLScalarType, Kind, buildASTSchema, GraphQLSchema, ListValueNode } from "graphql";
 import { mergeSchemasAsync } from "../../src/epoxy/merge-schemas";
 
 describe('Merge Schemas', () => {
@@ -358,22 +358,43 @@ describe('Merge Schemas', () => {
         expect(data.a).toEqual(now.toISOString());
     })
 
-    it('should merge a lot of directives but without high memory usage', () => {
-        let num = 100;
-        const base = buildSchema(/* GraphQL */`
-          directive @access(roles: [String]) on FIELD_DEFINITION
+    it('should merge when directive uses enum', () => {
+        const merged = mergeSchemas({
+            schemas: [buildASTSchema(gql`
+                directive @date(format: DateFormat) on FIELD_DEFINITION
+                
+                enum DateFormat {
+                    LOCAL
+                    ISO
+                }
+            `)],
+            typeDefs: gql`
+                scalar Date
+
+                type Query {
+                    today: Date @date
+                }
+            `
+        });
   
-          type Query {
-            test: Boolean @access(roles: ["Admin"])
+        expect(merged.getDirective('date')).toBeDefined();
+      });
+      it('should merge a lot of directives but without high memory usage', () => {
+          let num = 100;
+          const base = buildSchema(/* GraphQL */`
+              directive @access(roles: [String]) on FIELD_DEFINITION
+  
+              type Query {
+                test: Boolean @access(roles: ["Admin"])
+              }
+          `);
+
+          let prev: GraphQLSchema = base;
+
+          while(num--) {
+              prev = mergeSchemas({schemas: [prev, base]})
           }
-        `);
-
-        let prev: GraphQLSchema = base;
-
-        while(num--) {
-            prev = mergeSchemas({schemas: [prev, base]})
-        }
 
         expect((prev.getQueryType().getFields().test.astNode.directives[0].arguments[0].value as ListValueNode).values).toHaveLength(1);
-    });
+      });
 })

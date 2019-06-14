@@ -1,4 +1,4 @@
-import { IResolvers } from 'graphql-tools';
+import { IResolvers } from '@kamilkisiela/graphql-tools';
 import * as deepMerge from 'deepmerge';
 import { GraphQLScalarType } from 'graphql';
 
