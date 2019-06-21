@@ -1406,16 +1406,15 @@ graphql-import@0.7.1:
     lodash "^4.17.4"
     resolve-from "^4.0.0"
 
-graphql-tag-pluck@0.8.1:
-  version "0.8.1"
-  resolved "https://registry.yarnpkg.com/graphql-tag-pluck/-/graphql-tag-pluck-0.8.1.tgz#1740e491acf148ccb3fe31a56e58bff000dfe7ed"
-  integrity sha512-325c//mVY02YpgEstW/9l/Bx4MI3Cyb8mJ8xVJbfptEFEk2Ezk3aKJs9/SxL4W0/q6Cbli7QRL7JgPaFMFFQvg==
+graphql-tag-pluck@0.8.2:
+  version "0.8.2"
+  resolved "https://registry.yarnpkg.com/graphql-tag-pluck/-/graphql-tag-pluck-0.8.2.tgz#06df48acd53328c57eab57354f93310f2b0e03bb"
+  integrity sha512-womfoS2E3VOutVRBHjejlBvhZjeBv7KIuxQtfjP++vJMmPtQWJFHHQ8dOjSBKzkMHuZIgx1lxedGg0XKJNuvIg==
   dependencies:
     "@babel/parser" "^7.4.4"
     "@babel/traverse" "^7.4.4"
     "@babel/types" "^7.4.4"
     source-map-support "^0.5.12"
-    typescript "^3.4.5"
 
 graphql-tag@2.10.1:
   version "2.10.1"
@@ -3628,11 +3627,6 @@ typescript@3.5.2:
   version "3.5.2"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.5.2.tgz#a09e1dc69bc9551cadf17dba10ee42cf55e5d56c"
   integrity sha512-7KxJovlYhTX5RaRbUdkAXN1KUZ8PwWlTzQdHV6xNqvuFOs7+WBo10TQUqT19Q/Jz2hk5v9TQDIhyLhhJY4p5AA==
-
-typescript@^3.4.5:
-  version "3.4.5"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.4.5.tgz#2d2618d10bb566572b8d7aad5180d84257d70a99"
-  integrity sha512-YycBxUb49UUhdNMU5aJ7z5Ej2XGmaIBL0x34vZ82fn3hGvD+bgrMrVDpatgz2f7YxUMJxMkbWxJZeAvDxVe7Vw==
 
 uglify-js@^3.1.4:
   version "3.5.12"
