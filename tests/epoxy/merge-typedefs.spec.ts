@@ -1,9 +1,132 @@
 import { mergeTypeDefs, mergeGraphQLTypes } from '../../src/epoxy/typedefs-mergers/merge-typedefs';
 import { makeExecutableSchema } from '@kamilkisiela/graphql-tools';
-import { buildSchema, buildClientSchema, print } from 'graphql';
+import { buildSchema, buildClientSchema, print, parse } from 'graphql';
 import { stripWhitespaces } from './utils';
 import gql from 'graphql-tag';
 import * as introspectionSchema from './schema.json';
+
+const clientType = /* GraphQL */ `
+  type Client {
+    id: ID!
+    name: String
+    age: Int
+    dob: Date
+    settings: JSON
+    products: [Product]
+  }
+
+  # Comments on top of type definition
+  # Second comment line
+  # Third comment line
+  # Fourth comment line
+  type ClientWithCommentOnTop {
+    # ClientID
+    id: ID!
+    # Name
+    name: String
+  }
+
+  type ClientWithComment {
+    # ClientID
+    # Second comment line
+    # Third comment line
+    # Fourth comment line
+    id: ID!
+    # Name
+    name: String
+  }
+
+  type Query {
+    clients: [Client]
+    client(id: ID!): Client
+  }
+
+  type Mutation {
+    # Creates a new client with their name & age
+    create_client(name: String!, age: Int!): Client
+    update_client(id: ID!, name: String!, age: Int!): Client
+  }
+
+  type Subscription {
+    activeClients: [Client]
+    inactiveClients: [Client]
+  }
+
+  input ClientForm {
+    name: String!
+    age: Int!
+  }
+
+  input ClientAgeForm {
+    age: Int!
+  }
+
+  input ClientFormInputWithComment {
+    # Name
+    name: String!
+    # Age
+    age: Int!
+  }
+
+  enum ClientStatus {
+    NEW
+    ACTIVE
+    INACTIVE
+  }
+
+  scalar Date
+
+  scalar JSON
+`;
+
+const productType = /* GraphQL */ `
+  type Product {
+    id: ID!
+    description: String
+    price: Int
+    tag: TAG
+    clients: [Client]
+  }
+
+  type Query {
+    products: [Product]
+    product(id: ID!): Product
+  }
+
+  type Mutation {
+    # Creates a new product with it's description & price
+    create_product(description: String!, price: Int!): Product
+    update_product(
+      # product id
+      id: ID!
+      # product description
+      description: String!
+      # product price
+      price: Int!
+    ): Product
+  }
+
+  type Subscription {
+    activeProducts: [Product]
+  }
+
+  enum ProductTypes {
+    # New
+    NEW
+    # Used
+    USED
+    # Refurbished
+    REFURBISHED
+  }
+
+  scalar TAG
+
+  enum ProductPriceType {
+    REGULAR
+    PROMOTION
+    SALE
+  }
+`;
 
 describe('Merge TypeDefs', () => {
   describe('AST Schema Fixing', () => {
@@ -264,7 +387,7 @@ describe('Merge TypeDefs', () => {
           directive @id(primitiveArg: String, arrayArg: [String]) on FIELD_DEFINITION
 
           type MyType {
-            id: Int @id(arrayArg: ["2", "1"], primitiveArg: "1")
+            id: Int @id(primitiveArg: "1", arrayArg: ["1", "2"])
           }
 
           type Query {
@@ -316,6 +439,35 @@ describe('Merge TypeDefs', () => {
       );
     });
 
+    it('stacks all directives on fields', () => {
+      const types = [
+        /* GraphQL */ `
+          type Client {
+            id: ID!
+            name: String
+            age: Int
+          }
+
+          type Query {
+            client: Client @foo @foo
+          }
+
+          type Query {
+            client: Client @bar
+          }
+
+          type Query {
+            client: Client @foo @bar
+          }
+        `,
+      ];
+      const merged = print(mergeTypeDefs(types));
+
+      expect(merged.match(/\@foo/g)).toHaveLength(1);
+      expect(merged.match(/\@bar/g)).toHaveLength(1);
+      expect(merged).toContain('client: Client @foo @bar');
+    });
+
     it('should merge two GraphQLSchema with directives correctly', () => {
       const merged = mergeTypeDefs([
         makeExecutableSchema({
@@ -338,12 +490,12 @@ describe('Merge TypeDefs', () => {
             ISO
           }
         `,
-          gql`
-            scalar Date
+        gql`
+          scalar Date
 
-            type Query {
-              today: Date @date
-            }
+          type Query {
+            today: Date @date
+          }
         `,
       ]);
 
@@ -678,9 +830,7 @@ describe('Merge TypeDefs', () => {
 
       const printed = stripWhitespaces(print(merged));
 
-      expect(printed).toContain(
-        stripWhitespaces(`union MyUnion = A | B | C`)
-      );
+      expect(printed).toContain(stripWhitespaces(`union MyUnion = A | B | C`));
     });
 
     it('should merge unions correctly without extend', () => {
@@ -707,9 +857,7 @@ describe('Merge TypeDefs', () => {
 
       const printed = stripWhitespaces(print(merged));
 
-      expect(printed).toContain(
-        stripWhitespaces(`union MyUnion = A | B | C`)
-      );
+      expect(printed).toContain(stripWhitespaces(`union MyUnion = A | B | C`));
     });
 
     it('should handle extend inputs', () => {
@@ -778,5 +926,142 @@ describe('Merge TypeDefs', () => {
       `)
       );
     });
+  });
+
+  describe('comments', () => {
+    it('includes mutationType', () => {
+      const types = [clientType, productType];
+      const mergedTypes = mergeTypeDefs(types, { commentDescriptions: true });
+      const expectedMutationType = stripWhitespaces(`
+        type Mutation {
+      
+          # Creates a new client with their name & age
+          create_client(name: String!, age: Int!): Client
+          update_client(id: ID!, name: String!, age: Int!): Client
+          
+          # Creates a new product with it's description & price
+          create_product(description: String!, price: Int!): Product
+          update_product(
+            # product id
+            id: ID!, 
+            # product description
+            description: String!, 
+            # product price
+            price: Int!): Product
+        }
+      `);
+      const schema = stripWhitespaces(mergedTypes);
+
+      expect(schema).toContain(expectedMutationType);
+    });
+
+    it('includes first product ENUM type', () => {
+      const types = [clientType, productType];
+      const mergedTypes = mergeTypeDefs(types, { commentDescriptions: true });
+      const expectedEnumType = stripWhitespaces(`
+        enum ProductTypes {
+          # New
+          NEW
+          # Used
+          USED
+          # Refurbished
+          REFURBISHED
+        }
+      `);
+      const separateTypes = stripWhitespaces(mergedTypes);
+
+      expect(separateTypes).toContain(expectedEnumType);
+    });
+
+    it('preserves the field comments', () => {
+      const types = [clientType, productType];
+      const mergedTypes = mergeTypeDefs(types, { commentDescriptions: true });
+      const expectedClientType = stripWhitespaces(`
+        type ClientWithComment {
+          # ClientID
+          # Second comment line
+          # Third comment line
+          # Fourth comment line
+          id: ID!
+          # Name
+          name: String
+        }
+      `);
+      const separateTypes = stripWhitespaces(mergedTypes);
+
+      expect(separateTypes).toContain(expectedClientType);
+    });
+
+    it('preserves the type comments', () => {
+      const types = [clientType, productType];
+      const mergedTypes = mergeTypeDefs(types, { commentDescriptions: true });
+      const expectedClientType = stripWhitespaces(`
+        # Comments on top of type definition
+        # Second comment line
+        # Third comment line
+        # Fourth comment line
+        type ClientWithCommentOnTop {
+          # ClientID
+          id: ID!
+          # Name
+          name: String
+        }
+      `);
+      const separateTypes = stripWhitespaces(mergedTypes);
+
+      expect(separateTypes).toContain(expectedClientType);
+    });
+
+    it('preserves the input field comments', () => {
+      const types = [clientType, productType];
+      const s = mergeTypeDefs(types, { commentDescriptions: true });
+      const mergedTypes = mergeTypeDefs(types, { commentDescriptions: true });
+      const expectedClientType = stripWhitespaces(`
+        input ClientFormInputWithComment {
+          # Name
+          name: String!
+          # Age
+          age: Int!
+        }
+      `);
+      const separateTypes = stripWhitespaces(mergedTypes);
+
+      expect(separateTypes).toContain(expectedClientType);
+    });
+
+    it('supports already parsed documents', () => {
+      const parsedClientType = parse(clientType);
+      const types = [parsedClientType, productType];
+      const mergedTypes = mergeTypeDefs(types, { commentDescriptions: true });
+      const expectedClientType = stripWhitespaces(`
+        input ClientFormInputWithComment {
+          # Name
+          name: String!
+          # Age
+          age: Int!
+        }
+      `);
+      const separateTypes = stripWhitespaces(mergedTypes);
+
+      expect(separateTypes).toContain(expectedClientType);
+    });
+  });
+
+  it('supports already parsed documents', () => {
+    const parsedClientType = parse(clientType);
+    const types = [parsedClientType, productType];
+    const mergedTypes = mergeTypeDefs(types, { commentDescriptions: true });
+    const expectedClientType = stripWhitespaces(`
+      input ClientFormInputWithComment {
+        # Name
+        name: String!
+        # Age
+        age: Int!
+      }
+    `);
+    const separateTypes = stripWhitespaces(mergedTypes);
+
+    expect(separateTypes).not.toContain('[object Object]');
+    expect(separateTypes).toContain(expectedClientType);
   });
 });

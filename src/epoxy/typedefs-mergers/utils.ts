@@ -3,6 +3,8 @@ import {
   DefinitionNode,
   EnumTypeDefinitionNode,
   NamedTypeNode,
+  ListTypeNode,
+  NonNullTypeNode,
   ObjectTypeDefinitionNode,
   Source,
   UnionTypeDefinitionNode,
@@ -18,6 +20,7 @@ import {
   UnionTypeExtensionNode,
   ScalarTypeExtensionNode,
   InterfaceTypeExtensionNode,
+  Kind,
 } from 'graphql';
 
 export function isStringTypes(types: any): types is string {
@@ -96,4 +99,28 @@ export function extractType(type: TypeNode): NamedTypeNode {
 
 export function isSchemaDefinition(node: DefinitionNode): node is SchemaDefinitionNode {
   return node.kind === 'SchemaDefinition';
+}
+
+export function isWrappingTypeNode(type: TypeNode): type is ListTypeNode | NonNullTypeNode {
+  return type.kind !== Kind.NAMED_TYPE;
+}
+
+export function isListTypeNode(type: TypeNode): type is ListTypeNode {
+  return type.kind === Kind.LIST_TYPE;
+}
+
+export function isNonNullTypeNode(type: TypeNode): type is NonNullTypeNode {
+  return type.kind === Kind.NON_NULL_TYPE;
+}
+
+export function printTypeNode(type: TypeNode): string {
+  if (isListTypeNode(type)) {
+    return `[${printTypeNode(type.type)}]`;
+  }
+
+  if (isNonNullTypeNode(type)) {
+    return `${printTypeNode(type.type)}!`;
+  }
+
+  return type.name.value;
 }

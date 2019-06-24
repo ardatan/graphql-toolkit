@@ -14,15 +14,64 @@ import {
   printType,
   ObjectTypeExtensionNode,
   GraphQLNamedType,
+  Kind,
 } from 'graphql';
 import { isGraphQLSchema, isSourceTypes, isStringTypes, isSchemaDefinition } from './utils';
 import { MergedResultMap, mergeGraphQLNodes } from './merge-nodes';
+import { resetComments, printWithComments } from './comments';
 
-interface Config {
+type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;
+
+export interface Config {
+  /**
+   * Produces `schema { query: ..., mutation: ..., subscription: ... }`
+   *
+   * Default: true
+   */
   useSchemaDefinition?: boolean;
+  /**
+   * Creates schema definition, even when no types are available
+   * Produces: `schema { query: Query }`
+   *
+   * Default: false
+   */
+  forceSchemaDefinition?: boolean;
+  /**
+   * Throws an error on a merge conflict
+   *
+   * Default: false
+   */
+  throwOnConflict?: boolean;
+  /**
+   * Descriptions are defined as preceding string literals, however an older
+   * experimental version of the SDL supported preceding comments as
+   * descriptions. Set to true to enable this deprecated behavior.
+   * This option is provided to ease adoption and will be removed in v16.
+   *
+   * Default: false
+   */
+  commentDescriptions?: boolean;
+  /**
+   * Puts the next directive first.
+   * 
+   * Default: false
+   * 
+   * @example: 
+   * Given:
+   * ```graphql
+   *  type User { a: String @foo }
+   *  type User { a: String @bar }
+   * ```
+   * 
+   * Results:
+   * ```
+   *  type User { a: @bar @foo }
+   * ```
+   */
+  reverseDirectives?: boolean;
 }
 
-export function mergeGraphQLSchemas(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Partial<Config>) {
+export function mergeGraphQLSchemas(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Omit<Partial<Config>, 'commentDescriptions'>) {
   console.info(`
     GraphQL Toolkit/Epoxy 
     Deprecation Notice;
@@ -32,21 +81,46 @@ export function mergeGraphQLSchemas(types: Array<string | Source | DocumentNode 
   return mergeGraphQLTypes(types, config);
 }
 
-export function mergeTypeDefs(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Partial<Config>): DocumentNode {
-  return {
-    kind: 'Document',
+export function mergeTypeDefs(types: Array<string | Source | DocumentNode | GraphQLSchema>): DocumentNode;
+export function mergeTypeDefs(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Partial<Config> & { commentDescriptions: true }): string;
+export function mergeTypeDefs(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Omit<Partial<Config>, 'commentDescriptions'>): DocumentNode;
+export function mergeTypeDefs(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Partial<Config>): DocumentNode | string {
+  resetComments();
+  
+  const doc = {
+    kind: Kind.DOCUMENT,
     definitions: mergeGraphQLTypes(types, {
       useSchemaDefinition: true,
+      forceSchemaDefinition: false,
+      throwOnConflict: false,
+      commentDescriptions: false,
       ...config,
     }),
   };
+
+  let result: any;
+
+  if (config && config.commentDescriptions) {
+    result = printWithComments(doc);
+  } else {
+    result = doc;
+  }
+
+  resetComments();
+
+  return result;
 }
 
-function fixSchemaAst(schema: GraphQLSchema): GraphQLSchema {
-  return buildASTSchema(parse(printSchema(schema)));
+function fixSchemaAst(schema: GraphQLSchema, config: Config): GraphQLSchema {
+  return buildASTSchema(parse(printSchema(schema, { commentDescriptions: config.commentDescriptions })));
 }
 
-function createSchemaDefinition(def: { query: string | GraphQLObjectType | null; mutation: string | GraphQLObjectType | null; subscription: string | GraphQLObjectType | null }): string {
+function createSchemaDefinition(
+  def: { query: string | GraphQLObjectType | null; mutation: string | GraphQLObjectType | null; subscription: string | GraphQLObjectType | null },
+  config?: {
+    force?: boolean;
+  }
+): string {
   const schemaRoot: {
     query?: string;
     mutation?: string;
@@ -69,12 +143,16 @@ function createSchemaDefinition(def: { query: string | GraphQLObjectType | null;
 
   if (fields.length) {
     return `schema { ${fields.join('\n')} }`;
+  } else if (config && config.force) {
+    return ` schema { query: Query } `;
   }
 
   return undefined;
 }
 
 export function mergeGraphQLTypes(types: Array<string | Source | DocumentNode | GraphQLSchema>, config: Config): DefinitionNode[] {
+  resetComments();
+
   const allNodes: ReadonlyArray<DefinitionNode> = types
     .map<DocumentNode>(type => {
       if (isGraphQLSchema(type)) {
@@ -83,7 +161,7 @@ export function mergeGraphQLTypes(types: Array<string | Source | DocumentNode | 
         const validAstNodes = Object.keys(typesMap).filter(key => typesMap[key].astNode);
 
         if (validAstNodes.length === 0 && Object.keys(typesMap).length > 0) {
-          schema = fixSchemaAst(schema);
+          schema = fixSchemaAst(schema, config);
           typesMap = schema.getTypeMap();
         }
 
@@ -105,7 +183,7 @@ export function mergeGraphQLTypes(types: Array<string | Source | DocumentNode | 
               return print(type.extensionASTNodes ? extendDefinition(type) : type.astNode);
             } else {
               // KAMIL: we might want to turn on descriptions in future
-              return printType(correctType(typeName, typesMap));
+              return printType(correctType(typeName, typesMap), { commentDescriptions: config.commentDescriptions });
             }
           })
           .filter(e => e);
@@ -146,7 +224,7 @@ export function mergeGraphQLTypes(types: Array<string | Source | DocumentNode | 
       subscription: null,
     }
   );
-  const mergedNodes: MergedResultMap = mergeGraphQLNodes(allNodes);
+  const mergedNodes: MergedResultMap = mergeGraphQLNodes(allNodes, config);
   const allTypes = Object.keys(mergedNodes);
 
   if (config && config.useSchemaDefinition) {
@@ -160,7 +238,9 @@ export function mergeGraphQLTypes(types: Array<string | Source | DocumentNode | 
     };
   }
 
-  const schemaDefinition = createSchemaDefinition(schemaDef);
+  const schemaDefinition = createSchemaDefinition(schemaDef, {
+    force: config.forceSchemaDefinition,
+  });
 
   if (!schemaDefinition) {
     return Object.values(mergedNodes);

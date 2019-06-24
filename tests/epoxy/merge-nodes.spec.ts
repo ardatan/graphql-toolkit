@@ -102,6 +102,19 @@ describe('Merge Nodes', () => {
       expect(type.directives[1].name.value).toBe('test2');
     });
 
+    it('Should merge GraphQL Types and merge directives (reversed)', () => {
+      const type1 = parse(`type A @test { f1: String }`);
+      const type2 = parse(`type A @test2 { f2: Int}`);
+      const merged = mergeGraphQLNodes([...type1.definitions, ...type2.definitions], {
+        reverseDirectives: true
+      });
+      const type: any = merged['A'];
+
+      expect(type.directives.length).toBe(2);
+      expect(type.directives[0].name.value).toBe('test2');
+      expect(type.directives[1].name.value).toBe('test');
+    });
+
     it('Should merge GraphQL Types that extends the different interfaces', () => {
       const type1 = parse(`interface Base1 { f1: String } type A implements Base1 { f1: String }`);
       const type2 = parse(`interface Base2 { f2: Int } type A implements Base2 { f2: Int}`);

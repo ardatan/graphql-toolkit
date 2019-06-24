@@ -1,6 +1,8 @@
-import { FieldDefinitionNode } from 'graphql/language/ast';
-import { extractType } from './utils';
+import { Config } from './merge-typedefs';
+import { FieldDefinitionNode, InputValueDefinitionNode, TypeNode, NameNode } from 'graphql';
+import { extractType, isWrappingTypeNode, isListTypeNode, isNonNullTypeNode, printTypeNode } from './utils';
 import { mergeDirectives } from './directives';
+import { isNotEqual } from '../../utils/helpers';
 
 function fieldAlreadyExists(fieldsArr: ReadonlyArray<any>, otherField: any): boolean {
   const result: FieldDefinitionNode | null = fieldsArr.find(field => field.name.value === otherField.name.value);
@@ -17,17 +19,59 @@ function fieldAlreadyExists(fieldsArr: ReadonlyArray<any>, otherField: any): boo
   return !!result;
 }
 
-export function mergeFields<T>(f1: ReadonlyArray<T>, f2: ReadonlyArray<T>): T[] {
+export function mergeFields<T extends FieldDefinitionNode | InputValueDefinitionNode>(type: { name: NameNode }, f1: ReadonlyArray<T>, f2: ReadonlyArray<T>, config?: Config): T[] {
   const result: T[] = [...f2];
 
   for (const field of f1) {
     if (fieldAlreadyExists(result, field)) {
-      const existing = result.find((f: any) => f.name.value === (field as any).name.value);
-      existing['directives'] = mergeDirectives(field['directives'], existing['directives']);
+      const existing: any = result.find((f: any) => f.name.value === (field as any).name.value);
+
+      if (config && config.throwOnConflict) {
+        preventConflicts(type, existing, field);
+      }
+
+      existing['directives'] = mergeDirectives(field['directives'], existing['directives'], config);
     } else {
       result.push(field);
     }
   }
 
   return result;
+}
+
+function preventConflicts(type: { name: NameNode }, a: FieldDefinitionNode | InputValueDefinitionNode, b: FieldDefinitionNode | InputValueDefinitionNode) {
+  const aType = printTypeNode(a.type);
+  const bType = printTypeNode(b.type);
+
+  if (isNotEqual(aType, bType)) {
+    if (safeChangeForFieldType(a.type, b.type) === false) {
+      throw new Error(`Field '${type.name.value}.${a.name.value}' changed type from '${aType}' to '${bType}'`);
+    }
+  }
+}
+
+function safeChangeForFieldType(oldType: TypeNode, newType: TypeNode): boolean {
+  // both are named
+  if (!isWrappingTypeNode(oldType) && !isWrappingTypeNode(newType)) {
+    return oldType.toString() === newType.toString();
+  }
+
+  // new is non-null
+  if (isNonNullTypeNode(newType)) {
+    // I don't think it's a breaking change but `merge-graphql-schemas` needs it...
+    if (!isNonNullTypeNode(oldType)) {
+      return false;
+    }
+
+    const ofType = isNonNullTypeNode(oldType) ? oldType.type : oldType;
+
+    return safeChangeForFieldType(ofType, newType.type);
+  }
+
+  // old is list
+  if (isListTypeNode(oldType)) {
+    return (isListTypeNode(newType) && safeChangeForFieldType(oldType.type, newType.type)) || (isNonNullTypeNode(newType) && safeChangeForFieldType(oldType, newType.type));
+  }
+
+  return false;
 }

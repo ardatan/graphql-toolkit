@@ -1,5 +1,6 @@
 import { ArgumentNode, DirectiveNode } from 'graphql/language/ast';
 import { DirectiveDefinitionNode, ListValueNode, NameNode, print } from 'graphql';
+import { Config } from './merge-typedefs';
 
 function directiveAlreadyExists(directivesArr: ReadonlyArray<DirectiveNode>, otherDirective: DirectiveNode): boolean {
   return !!directivesArr.find(directive => directive.name.value === otherDirective.name.value);
@@ -38,14 +39,32 @@ function mergeArguments(a1: ArgumentNode[], a2: ArgumentNode[]): ArgumentNode[] 
   return result;
 }
 
-export function mergeDirectives(d1: ReadonlyArray<DirectiveNode>, d2: ReadonlyArray<DirectiveNode>): DirectiveNode[] {
-  const result = [...d2];
+function deduplicateDirectives(directives: ReadonlyArray<DirectiveNode>): DirectiveNode[] {
+  return directives.map((directive, i, all) => {
+    const firstAt = all.findIndex(d => d.name.value === directive.name.value);
 
-  for (const directive of d1) {
+    if (firstAt !== i) {
+      const dup = all[firstAt];
+
+      (directive as any).arguments = mergeArguments(directive.arguments as any, dup.arguments as any)
+      return null;
+    }
+
+    return directive;
+  }).filter(d => d);
+}
+
+export function mergeDirectives(d1: ReadonlyArray<DirectiveNode>, d2: ReadonlyArray<DirectiveNode>, config?: Config): DirectiveNode[] {
+  const reverseOrder: boolean = config && config.reverseDirectives;
+  const asNext = reverseOrder ? d1 : d2;
+  const asFirst = reverseOrder ? d2 : d1;
+  const result = deduplicateDirectives([...asNext]);
+
+  for (const directive of asFirst) {
     if (directiveAlreadyExists(result, directive)) {
       const existingDirectiveIndex = result.findIndex(d => d.name.value === directive.name.value);
       const existingDirective = result[existingDirectiveIndex];
-      (result[existingDirectiveIndex] as any).arguments = mergeArguments(existingDirective.arguments as any, directive.arguments as any);
+      (result[existingDirectiveIndex] as any).arguments = mergeArguments(directive.arguments as any, existingDirective.arguments as any);
     } else {
       result.push(directive);
     }

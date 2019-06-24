@@ -1,18 +1,19 @@
+import { Config } from './merge-typedefs';
 import { ObjectTypeDefinitionNode, ObjectTypeExtensionNode } from 'graphql';
 import { mergeFields } from './fields';
 import { mergeDirectives } from './directives';
 import { mergeNamedTypeArray } from './merge-named-type-array';
 
-export function mergeType(node: ObjectTypeDefinitionNode | ObjectTypeExtensionNode, existingNode: ObjectTypeDefinitionNode | ObjectTypeExtensionNode): ObjectTypeDefinitionNode | ObjectTypeExtensionNode {
+export function mergeType(node: ObjectTypeDefinitionNode | ObjectTypeExtensionNode, existingNode: ObjectTypeDefinitionNode | ObjectTypeExtensionNode, config?: Config): ObjectTypeDefinitionNode | ObjectTypeExtensionNode {
   if (existingNode) {
     try {
       return {
         name: node.name,
         description: node['description'] || existingNode['description'],
-        kind: (node.kind === 'ObjectTypeDefinition' || existingNode.kind === 'ObjectTypeDefinition') ? 'ObjectTypeDefinition' : 'ObjectTypeExtension',
+        kind: node.kind === 'ObjectTypeDefinition' || existingNode.kind === 'ObjectTypeDefinition' ? 'ObjectTypeDefinition' : 'ObjectTypeExtension',
         loc: node.loc,
-        fields: mergeFields(node.fields, existingNode.fields),
-        directives: mergeDirectives(node.directives, existingNode.directives),
+        fields: mergeFields(node, node.fields, existingNode.fields, config),
+        directives: mergeDirectives(node.directives, existingNode.directives, config),
         interfaces: mergeNamedTypeArray(node.interfaces, existingNode.interfaces),
       } as any;
     } catch (e) {
