@@ -49,7 +49,7 @@
     "glob": "7.1.4",
     "graphql-import": "0.7.1",
     "graphql-tag-pluck": "0.8.2",
-    "@kamilkisiela/graphql-tools": "4.0.5",
+    "@kamilkisiela/graphql-tools": "4.0.6",
     "is-glob": "4.0.1",
     "is-valid-path": "0.1.1",
     "lodash": "4.17.11",

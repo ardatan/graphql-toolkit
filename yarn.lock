@@ -285,10 +285,10 @@
     "@types/istanbul-reports" "^1.1.1"
     "@types/yargs" "^12.0.9"
 
-"@kamilkisiela/graphql-tools@4.0.5":
-  version "4.0.5"
-  resolved "https://registry.yarnpkg.com/@kamilkisiela/graphql-tools/-/graphql-tools-4.0.5.tgz#7c7a3d3928b7eb00e22925eab2f33d7d53536091"
-  integrity sha512-/AK2+e1hxvVweo/GOW2KHdlLnxZ7yUVGHshWRg9u0LfqTu8lniPh7/eA/WGiccuK8OH54AVxYPWJQZ0mbDbm1Q==
+"@kamilkisiela/graphql-tools@4.0.6":
+  version "4.0.6"
+  resolved "https://registry.yarnpkg.com/@kamilkisiela/graphql-tools/-/graphql-tools-4.0.6.tgz#6dcf4d18bedaf34f6ab1d5bad2414e530d0875d1"
+  integrity sha512-IPWa+dOFCE4zaCsrJrAMp7yWXnfOZLNhqoMEOmn958WkLM0mmsDc/W/Rh7/7xopIT6P0oizb6/N1iH5HnNXOUA==
   dependencies:
     apollo-link "^1.2.3"
     apollo-utilities "^1.0.1"
