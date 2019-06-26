@@ -28,7 +28,7 @@
     "@types/aggregate-error": "1.0.0",
     "@types/deepmerge": "2.2.0",
     "@types/glob": "7.1.1",
-    "@types/graphql": "14.2.1",
+    "@types/graphql": "14.2.2",
     "@types/is-glob": "4.0.1",
     "@types/jest": "24.0.15",
     "@types/lodash": "4.14.134",
