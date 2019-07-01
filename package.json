@@ -1,6 +1,6 @@
 {
   "name": "graphql-toolkit",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": "git@github.com:dotansimha/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
@@ -9,7 +9,7 @@
     "clean": "rm -rf dist",
     "prebuild": "yarn clean",
     "build": "tsc -m esnext --outDir dist/esnext && tsc -m commonjs --outDir dist/commonjs",
-    "test": "jest && yarn bundlesize",
+    "test": "jest --forceExit && yarn bundlesize",
     "prepare-release": "yarn build && yarn test",
     "release": "yarn prepare-release && npm publish",
     "ci:release:canary": "yarn prepare-release && node bump.js && npm publish --tag alpha",
@@ -42,6 +42,7 @@
     "typescript": "3.5.2"
   },
   "dependencies": {
+    "@kamilkisiela/graphql-tools": "4.0.6",
     "@types/glob": "7.1.1",
     "aggregate-error": "3.0.0",
     "asyncro": "^3.0.0",
@@ -49,7 +50,6 @@
     "glob": "7.1.4",
     "graphql-import": "0.7.1",
     "graphql-tag-pluck": "0.8.2",
-    "@kamilkisiela/graphql-tools": "4.0.6",
     "is-glob": "4.0.1",
     "is-valid-path": "0.1.1",
     "lodash": "4.17.11",
