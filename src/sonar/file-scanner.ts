@@ -34,7 +34,7 @@ function extractExports(fileExport: any, exportNames: string[]): any | null {
     return fileExport.default;
   }
 
-  
+
   for (const exportName of exportNames) {
     if (fileExport[exportName]) {
       return fileExport[exportName];
@@ -67,7 +67,7 @@ export function loadSchemaFiles(basePath: string, options: LoadSchemaFilesOption
   return relevantPaths.map(path => {
     const extension = extname(path);
 
-    if (extension === '.js' || extension === '.ts' || execOptions.useRequire) {
+    if (extension.endsWith('.js') || extension.endsWith('.ts') || execOptions.useRequire) {
       const fileExports = (execOptions.requireMethod ? execOptions.requireMethod : require)(path);
       const extractedExport = extractExports(fileExports, execOptions.exportNames);
 
@@ -115,7 +115,7 @@ export function loadResolversFiles<Resolvers extends IResolvers = IResolvers>(ba
 
 function scanForFilesAsync(globStr: string, globOptions: IOptions = {}): Promise<string[]> {
   return new Promise((resolve, reject) => glob(globStr, { absolute: true, ...globOptions }, (err, matches) => {
-    if(err) {
+    if (err) {
       reject(err);
     }
     resolve(matches);
@@ -127,12 +127,12 @@ export async function loadSchemaFilesAsync(basePath: string, options: LoadSchema
   const relevantPaths = await scanForFilesAsync(buildGlob(basePath, execOptions.extensions, []), options.globOptions);
 
   const require$ = (path: string) => import(path);
-  
+
 
   return Promise.all(relevantPaths.map(async path => {
     const extension = extname(path);
 
-    if (extension === '.js' || extension === '.ts' || execOptions.useRequire) {
+    if (extension.endsWith('.js') || extension.endsWith('.ts') || execOptions.useRequire) {
       const fileExports = await (execOptions.requireMethod ? execOptions.requireMethod : require$)(path);
       const extractedExport = extractExports(fileExports, execOptions.exportNames);
 
