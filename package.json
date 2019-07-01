@@ -9,10 +9,11 @@
     "clean": "rm -rf dist",
     "prebuild": "yarn clean",
     "build": "tsc -m esnext --outDir dist/esnext && tsc -m commonjs --outDir dist/commonjs",
-    "test": "jest",
+    "test": "jest && yarn bundlesize",
     "prepare-release": "yarn build && yarn test",
     "release": "yarn prepare-release && npm publish",
-    "ci:release:canary": "yarn prepare-release && node bump.js && npm publish --tag alpha"
+    "ci:release:canary": "yarn prepare-release && node bump.js && npm publish --tag alpha",
+    "bundlesize": "cd bundle-test/ && yarn && yarn test"
   },
   "sideEffects": false,
   "main": "dist/commonjs/index.js",
