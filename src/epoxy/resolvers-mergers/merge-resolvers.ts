@@ -2,8 +2,8 @@ import { IResolvers } from '@kamilkisiela/graphql-tools';
 import * as deepMerge from 'deepmerge';
 import { GraphQLScalarType } from 'graphql';
 
-export type ResolversFactory<TSource, TContext> = (...args: any[]) => IResolvers<TSource, TContext>;
-export type ResolversDefinition<TSource, TContext> = IResolvers<TSource, TContext> | ResolversFactory<TSource, TContext>;
+export type ResolversFactory<TContext> = (...args: any[]) => IResolvers<any, TContext>;
+export type ResolversDefinition<TContext> = IResolvers<any, TContext> | ResolversFactory<TContext>;
 
 const isMergeableObject = (target: any): target is object => {
   if(!target) {
@@ -29,7 +29,7 @@ export interface MergeResolversOptions {
   exclusions ?: string[];
 }
 
-export function mergeResolvers<TSource, TContext, T extends ResolversDefinition<TSource, TContext>>(resolversDefinitions: T[], options?: MergeResolversOptions): T {
+export function mergeResolvers<TContext, T extends ResolversDefinition<TContext>>(resolversDefinitions: T[], options?: MergeResolversOptions): T {
   if (!resolversDefinitions || resolversDefinitions.length === 0) {
     return {} as T;
   }
@@ -38,14 +38,14 @@ export function mergeResolvers<TSource, TContext, T extends ResolversDefinition<
     return resolversDefinitions[0];
   }
 
-  const resolversFactories = new Array<ResolversFactory<TSource, TContext>>();
-  const resolvers = new Array<IResolvers<TSource, TContext>>();
+  const resolversFactories = new Array<ResolversFactory<TContext>>();
+  const resolvers = new Array<IResolvers<any, TContext>>();
 
   for (const resolversDefinition of resolversDefinitions) {
     if (typeof resolversDefinition === 'function') {
-      resolversFactories.push(resolversDefinition as ResolversFactory<TSource, TContext>);
+      resolversFactories.push(resolversDefinition as ResolversFactory<TContext>);
     } else if (typeof resolversDefinition === 'object') {
-      resolvers.push(resolversDefinition as IResolvers<TSource, TContext>);
+      resolvers.push(resolversDefinition as IResolvers<any, TContext>);
     }
   }
   let result: T = {} as T;
@@ -55,7 +55,7 @@ export function mergeResolvers<TSource, TContext, T extends ResolversDefinition<
       return deepMerge.all([...resolvers, ...resultsOfFactories], { isMergeableObject }) as any;
     }) as any;
   } else {
-    result = deepMerge.all(resolvers, { isMergeableObject }) as IResolvers<TSource, TContext> as T;
+    result = deepMerge.all(resolvers, { isMergeableObject }) as IResolvers<any, TContext> as T;
   }
   if (options && options.exclusions) {
     for (const exclusion of options.exclusions) {
@@ -70,7 +70,7 @@ export function mergeResolvers<TSource, TContext, T extends ResolversDefinition<
   return result;
 }
 
-export async function mergeResolversAsync<TSource, TContext, T extends ResolversDefinition<TSource, TContext>>(resolversDefinitions: T[], options?: MergeResolversOptions): Promise<T> {
+export async function mergeResolversAsync<TContext, T extends ResolversDefinition<TContext>>(resolversDefinitions: T[], options?: MergeResolversOptions): Promise<T> {
   if (!resolversDefinitions || resolversDefinitions.length === 0) {
     return {} as T;
   }
@@ -79,14 +79,14 @@ export async function mergeResolversAsync<TSource, TContext, T extends Resolvers
     return resolversDefinitions[0];
   }
 
-  const resolversFactories = new Array<ResolversFactory<TSource, TContext>>();
-  const resolvers = new Array<IResolvers<TSource, TContext>>();
+  const resolversFactories = new Array<ResolversFactory<TContext>>();
+  const resolvers = new Array<IResolvers<any, TContext>>();
 
   for (const resolversDefinition of resolversDefinitions) {
     if (typeof resolversDefinition === 'function') {
-      resolversFactories.push(resolversDefinition as ResolversFactory<TSource, TContext>);
+      resolversFactories.push(resolversDefinition as ResolversFactory<TContext>);
     } else if (typeof resolversDefinition === 'object') {
-      resolvers.push(resolversDefinition as IResolvers<TSource, TContext>);
+      resolvers.push(resolversDefinition as IResolvers<any, TContext>);
     }
   }
   let result: T = {} as T;
@@ -96,7 +96,7 @@ export async function mergeResolversAsync<TSource, TContext, T extends Resolvers
       return deepMerge.all([...resolvers, ...resultsOfFactories], { isMergeableObject }) as any;
     }) as any;
   } else {
-    result = deepMerge.all(resolvers, { isMergeableObject }) as IResolvers<TSource, TContext> as T;
+    result = deepMerge.all(resolvers, { isMergeableObject }) as IResolvers<any, TContext> as T;
   }
   if (options && options.exclusions) {
     for (const exclusion of options.exclusions) {
