@@ -49,7 +49,7 @@ describe('checkValidationErrors', () => {
       errors = _errors;
     }
 
-    const { default: AggregateError } = await import('aggregate-error');
+    const AggregateError = await import('aggregate-error');
     expect(errors).toBeInstanceOf(AggregateError);
 
     let error;

@@ -1,4 +1,4 @@
-import AggregateError from 'aggregate-error';
+import * as AggregateError from 'aggregate-error';
 import { validate, GraphQLSchema, GraphQLError, specifiedRules } from 'graphql';
 import { DocumentFile } from '../loaders/documents';
 
@@ -36,7 +36,7 @@ export function checkValidationErrors(loadDocumentErrors: ReadonlyArray<LoadDocu
         errors.push(error);
       }
     }
-
+    
     throw new AggregateError(errors);
   }
 }
