@@ -69,6 +69,7 @@ export interface Config {
    * ```
    */
   reverseDirectives?: boolean;
+  exclusions ?: string[];
 }
 
 export function mergeGraphQLSchemas(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Omit<Partial<Config>, 'commentDescriptions'>) {

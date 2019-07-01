@@ -38,4 +38,26 @@ describe('Merge Resolvers', () => {
       }
     });
   });
+
+  it('should exclude types', () => {
+    expect(mergeResolvers([
+      { User: {} },
+      { MyType: {} }
+    ], {
+      exclusions: ['User.*']
+    })).toEqual({ MyType: {} });
+  });
+
+  it('should exclude fields', () => {
+    expect(mergeResolvers([
+      { User: { f1: 1 } },
+      { User: { f2: 2 } },
+    ], {
+      exclusions: ['User.f1']
+    })).toEqual({
+      User: {
+        f2: 2,
+      }
+    });
+  });
 });

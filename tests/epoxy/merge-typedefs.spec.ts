@@ -1064,4 +1064,36 @@ describe('Merge TypeDefs', () => {
     expect(separateTypes).not.toContain('[object Object]');
     expect(separateTypes).toContain(expectedClientType);
   });
+  it('excludes fields', () => {
+    const userF1Type = stripWhitespaces(`
+      type User {
+        f1: String
+      }
+    `);
+    const userF2Type = stripWhitespaces(`
+      type User {
+        f2: String
+      }
+    `);
+    const mergedTypes = mergeTypeDefs([userF1Type, userF2Type], {
+      exclusions: ['User.f1']
+    });
+    expect(stripWhitespaces(print(mergedTypes))).toBe(userF2Type);
+  });
+  it('excludes types', () => {
+    const queryType = stripWhitespaces(`
+      type Query {
+        user: User
+      }
+    `);
+    const userType = stripWhitespaces(`
+      type User {
+        name: String
+      }
+    `);
+    const mergedTypes = mergeTypeDefs([queryType, userType], {
+      exclusions: ['Query.*']
+    });
+    expect(stripWhitespaces(print(mergedTypes))).toBe(userType);
+  });
 });

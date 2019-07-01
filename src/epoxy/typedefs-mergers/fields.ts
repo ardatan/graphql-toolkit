@@ -36,6 +36,9 @@ export function mergeFields<T extends FieldDefinitionNode | InputValueDefinition
     }
   }
 
+  if (config && config.exclusions) {
+    return result.filter(field => !config.exclusions.includes(`${type.name.value}.${field.name.value}`));
+  }
   return result;
 }
 

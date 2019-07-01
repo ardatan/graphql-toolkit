@@ -36,7 +36,9 @@ export function mergeGraphQLNodes(nodes: ReadonlyArray<DefinitionNode>, config?:
         collectComment(node);
       }
 
-      if (isGraphQLType(nodeDefinition) || isGraphQLTypeExtension(nodeDefinition)) {
+      if (config && config.exclusions && (config.exclusions.includes(name + '.*') || config.exclusions.includes(name))) {
+        delete prev[name];
+      } else if (isGraphQLType(nodeDefinition) || isGraphQLTypeExtension(nodeDefinition)) {
         prev[name] = mergeType(nodeDefinition, prev[name] as any, config);
       } else if (isGraphQLEnum(nodeDefinition) || isGraphQLEnumExtension(nodeDefinition)) {
         prev[name] = mergeEnum(nodeDefinition, prev[name] as any, config);
