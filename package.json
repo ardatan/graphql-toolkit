@@ -41,7 +41,7 @@
     "jest": "24.8.0",
     "semver": "6.2.0",
     "ts-jest": "24.0.2",
-    "typescript": "3.5.2"
+    "typescript": "3.5.3"
   },
   "dependencies": {
     "@kamilkisiela/graphql-tools": "4.0.6",
