@@ -48,7 +48,7 @@
     "@types/glob": "7.1.1",
     "aggregate-error": "3.0.0",
     "asyncro": "^3.0.0",
-    "deepmerge": "3.3.0",
+    "deepmerge": "4.0.0",
     "glob": "7.1.4",
     "graphql-import": "0.7.1",
     "is-glob": "4.0.1",
