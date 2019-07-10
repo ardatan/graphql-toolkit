@@ -48,13 +48,13 @@
     "@types/glob": "7.1.1",
     "aggregate-error": "3.0.0",
     "asyncro": "^3.0.0",
+    "cross-fetch": "^3.0.4",
     "deepmerge": "4.0.0",
     "glob": "7.1.4",
     "graphql-import": "0.7.1",
     "is-glob": "4.0.1",
     "is-valid-path": "0.1.1",
     "lodash": "4.17.14",
-    "request": "2.88.0",
     "tslib": "^1.9.3",
     "valid-url": "1.0.9"
   }

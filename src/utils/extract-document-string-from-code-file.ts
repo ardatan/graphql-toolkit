@@ -49,8 +49,7 @@ export async function extractDocumentStringFromCodeFile(source: Source, options?
     }
   } catch (e) {
     try {
-      const requireFunc = true ? require : require;
-      const { gqlPluckFromFile } = requireFunc('graphql-tag-pluck');
+      const { gqlPluckFromFile } = eval(`require('graphql-tag-pluck')`);
       return gqlPluckFromFile(source.name, calculateOptions(options)) || null;
     } catch (e) {
       throw new e.constructor(`${e.message} at ${source.name}`);

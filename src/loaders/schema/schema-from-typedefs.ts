@@ -20,7 +20,7 @@ async function loadSchemaFile(filepath: string, options?: ExtractOptions): Promi
 
   if (content && content.trim() !== '') {
     if (/^\#.*import /i.test(content.trimLeft())) {
-      const { importSchema } = await import('graphql-import');
+      const { importSchema } = await eval(`require('graphql-import')`);
 
       return importSchema(filepath);
     }

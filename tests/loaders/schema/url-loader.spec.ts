@@ -1,4 +1,4 @@
-jest.mock('request');
+jest.mock('cross-fetch');
 import { IntrospectionFromUrlLoader } from '../../../src/loaders/schema/introspection-from-url';
 import { makeExecutableSchema } from '@kamilkisiela/graphql-tools';
 import { introspectionFromSchema, GraphQLSchema } from 'graphql';
@@ -6,9 +6,9 @@ import { introspectionFromSchema, GraphQLSchema } from 'graphql';
 const SHOULD_NOT_GET_HERE_ERROR = 'SHOULD_NOT_GET_HERE';
 
 describe('Schema URL Loader', () => {
-  const resetMocks = () => require('request').__resetMocks();
-  const mockRequest = (url: string, content: object) => require('request').__registerUrlRequestMock(url, content);
-  const getMockedCalls = (url: string) => require('request').__getCalls(url);
+  const resetMocks = () => require('cross-fetch').__resetMocks();
+  const mockRequest = (url: string, content: object) => require('cross-fetch').__registerUrlRequestMock(url, content);
+  const getMockedCalls = (url: string) => require('cross-fetch').__getCalls(url);
 
   beforeEach(() => {
     resetMocks();

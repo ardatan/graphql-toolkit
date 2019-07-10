@@ -1,4 +1,4 @@
-import { post } from 'request';
+import { fetch } from 'cross-fetch';
 import { SchemaLoader } from './schema-loader';
 import { GraphQLSchema, introspectionQuery, buildClientSchema } from 'graphql';
 import { isUri } from 'valid-url';
@@ -12,7 +12,7 @@ export class IntrospectionFromUrlLoader implements SchemaLoader<IntrospectionFro
     return !!isUri(pointerToSchema);
   }
 
-  handle(url: string, schemaOptions?: IntrospectionFromUrlLoaderOptions): Promise<GraphQLSchema> {
+  async handle(url: string, schemaOptions?: IntrospectionFromUrlLoaderOptions): Promise<GraphQLSchema> {
     let headers = {};
 
     if (schemaOptions) {
@@ -29,44 +29,32 @@ export class IntrospectionFromUrlLoader implements SchemaLoader<IntrospectionFro
       ...headers,
     };
 
-    return new Promise<GraphQLSchema>((resolve, reject) => {
-      post(
-        {
-          url: url,
-          json: {
-            query: introspectionQuery,
-          },
-          headers: extraHeaders,
-        },
-        (err, _response, body) => {
-          if (err) {
-            reject(err);
-
-            return;
-          }
-
-          const bodyJson = body.data;
-
-          let errorMessage;
-          if (body.errors && body.errors.length > 0) {
-            errorMessage = body.errors.map((item: Error) => item.message).join(', ');
-          } else if (!bodyJson) {
-            errorMessage = body;
-          }
-
-          if (errorMessage) {
-            reject('Unable to download schema from remote: ' + errorMessage);
-
-            return;
-          }
-
-          if (!bodyJson.__schema) {
-            throw new Error('Invalid schema provided!');
-          }
-
-          resolve(buildClientSchema(bodyJson));
-        }
-      );
+    const response = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({
+        query: introspectionQuery,
+      }),
+      headers: extraHeaders,
     });
+
+    const body = await response.json();
+    
+    let errorMessage;
+    if (body.errors && body.errors.length > 0) {
+      errorMessage = body.errors.map((item: Error) => item.message).join(', ');
+    } else if (!body.data) {
+      errorMessage = body;
+    }
+
+    if (errorMessage) {
+      throw ('Unable to download schema from remote: ' + errorMessage);
+    }
+
+    if (!body.data.__schema) {
+      throw new Error('Invalid schema provided!');
+    }
+
+    return buildClientSchema(body.data);
+
   }
 }

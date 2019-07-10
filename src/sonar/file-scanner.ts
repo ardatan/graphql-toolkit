@@ -68,7 +68,7 @@ export function loadSchemaFiles(basePath: string, options: LoadSchemaFilesOption
     const extension = extname(path);
 
     if (extension.endsWith('.js') || extension.endsWith('.ts') || execOptions.useRequire) {
-      const fileExports = (execOptions.requireMethod ? execOptions.requireMethod : require)(path);
+      const fileExports = (execOptions.requireMethod ? execOptions.requireMethod : eval('require'))(path);
       const extractedExport = extractExports(fileExports, execOptions.exportNames);
 
       if (extractedExport && extractedExport.kind === 'Document') {
@@ -104,7 +104,7 @@ export function loadResolversFiles<Resolvers extends IResolvers = IResolvers>(ba
 
   return relevantPaths.map(path => {
     try {
-      const fileExports = (execOptions.requireMethod ? execOptions.requireMethod : require)(path);
+      const fileExports = (execOptions.requireMethod ? execOptions.requireMethod : eval('require'))(path);
 
       return extractExports(fileExports, execOptions.exportNames);
     } catch (e) {
@@ -126,8 +126,7 @@ export async function loadSchemaFilesAsync(basePath: string, options: LoadSchema
   const execOptions = { ...LoadSchemaFilesDefaultOptions, ...options };
   const relevantPaths = await scanForFilesAsync(buildGlob(basePath, execOptions.extensions, []), options.globOptions);
 
-  const require$ = (path: string) => import(path);
-
+  const require$ = (path: string) => eval(`import('${path}')`);
 
   return Promise.all(relevantPaths.map(async path => {
     const extension = extname(path);
@@ -158,7 +157,7 @@ export async function loadResolversFilesAsync<Resolvers extends IResolvers = IRe
   const execOptions = { ...LoadResolversFilesDefaultOptions, ...options };
   const relevantPaths = await scanForFilesAsync(buildGlob(basePath, execOptions.extensions, []), options.globOptions);
 
-  const require$ = (path: string) => import(path);
+  const require$ = (path: string) => eval(`import('${path}')`);
 
   return Promise.all(relevantPaths.map(async path => {
     try {

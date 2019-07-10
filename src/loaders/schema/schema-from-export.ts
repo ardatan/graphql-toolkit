@@ -1,4 +1,4 @@
-import AggregateError from 'aggregate-error';
+import * as AggregateError from 'aggregate-error';
 import { existsSync } from 'fs';
 import { extname, isAbsolute, resolve as resolvePath } from 'path';
 import * as isValidPath from 'is-valid-path';
@@ -25,7 +25,7 @@ export class SchemaFromExport implements SchemaLoader {
 
     if (isValidPath(file) && existsSync(fullPath) && extname(file) !== '.json' && !isGraphQLFile(fullPath)) {
       try {
-        const fileExport = await import(fullPath);
+        const fileExport = await eval(`require('${fullPath}')`);
 
         return { ok: true, export: fileExport };
       } catch (e) {
@@ -73,7 +73,7 @@ export class SchemaFromExport implements SchemaLoader {
 
         if (existsSync(fullPath)) {
           try {
-            const exports = await import(fullPath);
+            const exports = await eval(`require('${fullPath}')`);
 
             if (exports) {
               let rawExport = exports.default || exports.schema || exports;
@@ -151,7 +151,7 @@ export class SchemaFromExport implements SchemaLoader {
     } else if (this.isSchemaJson(schema)) {
       return buildClientSchema(schema);
     } else if (this.isSchemaAst(schema)) {
-      return buildASTSchema(schema);
+      return schema;
     } else {
       throw new Error('Unexpected schema type provided!');
     }
