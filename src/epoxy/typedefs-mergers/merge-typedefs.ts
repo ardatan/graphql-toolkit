@@ -202,7 +202,7 @@ export function mergeGraphQLTypes(types: Array<string | Source | DocumentNode | 
       return type;
     })
     .map(ast => ast.definitions)
-    .reduce((defs, newDef) => [...defs, ...newDef], []);
+    .reduce((defs, newDef = []) => [...defs, ...newDef], []);
 
   // XXX: right now we don't handle multiple schema definitions
   let schemaDef: {
