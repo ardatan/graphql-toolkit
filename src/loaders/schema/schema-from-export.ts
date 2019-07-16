@@ -8,6 +8,9 @@ import { isGraphQLFile } from './schema-from-typedefs';
 import * as isGlob from 'is-glob';
 import { sync as globSync } from 'glob';
 import { mergeTypeDefs } from '../../epoxy';
+import { fixWindowsPath } from '../../utils/fix-windows-path';
+
+export const getFullPath = (file: string) => fixWindowsPath(isAbsolute(file) ? file : resolvePath(process.cwd(), file));
 
 export class SchemaFromExport implements SchemaLoader {
   static getFiles(globOrValidPath: string): string[] {
@@ -21,7 +24,7 @@ export class SchemaFromExport implements SchemaLoader {
   }
 
   async resolveExports(file: string): Promise<{ ok: boolean; export?: any }> {
-    const fullPath = isAbsolute(file) ? file : resolvePath(process.cwd(), file);
+    const fullPath = getFullPath(file);
 
     if (isValidPath(file) && existsSync(fullPath) && extname(file) !== '.json' && !isGraphQLFile(fullPath)) {
       try {
@@ -40,7 +43,7 @@ export class SchemaFromExport implements SchemaLoader {
     const files = SchemaFromExport.getFiles(globOrValidPath);
 
     for (let file of files) {
-      const fullPath = isAbsolute(file) ? file : resolvePath(process.cwd(), file);
+      const fullPath = getFullPath(file);
 
       if (isValidPath(file) && existsSync(fullPath) && extname(file) !== '.json' && !isGraphQLFile(fullPath)) {
         const validRequire = await this.resolveExports(file);
@@ -69,7 +72,7 @@ export class SchemaFromExport implements SchemaLoader {
 
     const schemas: Array<GraphQLSchema | DocumentNode> = await Promise.all(
       filtered.map<Promise<GraphQLSchema | DocumentNode>>(async (file: string) => {
-        const fullPath = isAbsolute(file) ? file : resolvePath(process.cwd(), file);
+        const fullPath = getFullPath(file);
 
         if (existsSync(fullPath)) {
           try {

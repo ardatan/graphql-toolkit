@@ -6,6 +6,7 @@ import { existsSync, readFileSync } from 'fs';
 import { extname } from 'path';
 import * as isValidPath from 'is-valid-path';
 import { extractDocumentStringFromCodeFile, ExtractOptions } from '../../utils/extract-document-string-from-code-file';
+import { fixWindowsPath } from '../../utils/fix-windows-path';
 
 const VALID_DOCUMENT_KINDS: string[] = [Kind.OPERATION_DEFINITION, Kind.FRAGMENT_DEFINITION];
 const GQL_EXTENSIONS: string[] = ['.graphql', '.graphqls', '.gql'];
@@ -16,7 +17,8 @@ export interface DocumentsFromGlobOptions extends ExtractOptions {
 
 export class DocumentsFromGlob implements DocumentLoader {
   canHandle(doc: string): Promise<boolean> | boolean {
-    return isGlob(doc) || isValidPath(doc);
+    const fixedPath = fixWindowsPath(doc);
+    return isGlob(fixedPath) || isValidPath(fixedPath);
   }
 
   documentsFromGlobs(documentGlob: string, options?: DocumentsFromGlobOptions): Promise<string[]> {
