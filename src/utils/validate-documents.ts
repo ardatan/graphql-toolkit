@@ -1,6 +1,6 @@
 import * as AggregateError from 'aggregate-error';
 import { validate, GraphQLSchema, GraphQLError, specifiedRules } from 'graphql';
-import { DocumentFile } from '../loaders/documents';
+import { DocumentFile } from '../loaders/load-typedefs';
 
 const rulesToIgnore = ['KnownFragmentNames', 'NoUnusedFragments', 'NoUnusedVariables', 'KnownDirectives'];
 const effectiveRules = specifiedRules.filter((f: Function) => !rulesToIgnore.includes(f.name));

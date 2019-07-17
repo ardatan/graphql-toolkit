@@ -1,4 +1,3 @@
-import { buildASTSchema, isSchema, GraphQLSchema } from 'graphql';
 import { loadSchema } from '../../../src';
 
 describe('loadSchema', () => {
@@ -7,33 +6,22 @@ describe('loadSchema', () => {
     try {
       await loadSchema(schemaPath);
       expect(true).toBeFalsy(); // should throw
-    } catch(e) {
-      expect(e.toString()).toContain(`SyntaxError: Unterminated template (12:1)`);
+    } catch (e) {
+      expect(e.toString()).toContain(`Unexpected end of input`);
     }
   });
-  
+
   it('should work with ts files and without globs correctly', async () => {
     const schemaPath = './tests/loaders/schema/test-files/schema-dir/type-defs/graphql-tag.ts';
-    const built = await loadSchema(schemaPath);
-    let schema: GraphQLSchema;
-  
-    if (!isSchema(built)) {
-      schema = buildASTSchema(built);
-    }
-  
+    const schema = await loadSchema(schemaPath);
     expect(schema.getTypeMap()['User']).toBeDefined();
     expect(schema.getTypeMap()['Query']).toBeDefined();
   });
-  
-  it('should work with graphql files and without globs correctly', async () => {
+
+  it('should work with graphql single file', async () => {
     const schemaPath = './tests/loaders/schema/test-files/schema-dir/user.graphql';
-    const built = await loadSchema(schemaPath);
-    let schema: GraphQLSchema;
-  
-    if (!isSchema(built)) {
-      schema = buildASTSchema(built);
-    }
-  
+    const schema = await loadSchema(schemaPath);
+
     expect(schema.getTypeMap()['User']).toBeDefined();
   });
 });

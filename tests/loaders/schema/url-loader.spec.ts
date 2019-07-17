@@ -1,7 +1,7 @@
 jest.mock('cross-fetch');
-import { IntrospectionFromUrlLoader } from '../../../src/loaders/schema/introspection-from-url';
 import { makeExecutableSchema } from '@kamilkisiela/graphql-tools';
 import { introspectionFromSchema, GraphQLSchema } from 'graphql';
+import { loadSchema } from '../../../src';
 
 const SHOULD_NOT_GET_HERE_ERROR = 'SHOULD_NOT_GET_HERE';
 
@@ -15,21 +15,6 @@ describe('Schema URL Loader', () => {
   });
 
   const VALID_INTROSPECTION = introspectionFromSchema(makeExecutableSchema({ typeDefs: 'type Query { a: String }' }));
-  const loader = new IntrospectionFromUrlLoader();
-
-  describe('canHandle', () => {
-    it('Should return true for handling a valid url', async () => {
-      expect(loader.canHandle('http://localhost:3000/graphql')).toBeTruthy();
-    });
-
-    it('Should return false for handling a non-valid string', async () => {
-      expect(loader.canHandle('file.graphql')).toBeFalsy();
-    });
-
-    it('Should return false for handling a non-valid string glob', async () => {
-      expect(loader.canHandle('**/*.graphql')).toBeFalsy();
-    });
-  });
 
   describe('handle', () => {
     it('Should throw an error when introspection is not valid', async () => {
@@ -37,7 +22,7 @@ describe('Schema URL Loader', () => {
       mockRequest(testUrl, {});
 
       try {
-        await loader.handle(testUrl, {});
+        await loadSchema(testUrl, {});
         throw new Error(SHOULD_NOT_GET_HERE_ERROR);
       } catch (e) {
         expect(e.message).not.toBe(SHOULD_NOT_GET_HERE_ERROR);
@@ -52,7 +37,7 @@ describe('Schema URL Loader', () => {
       const testUrl = 'http://localhost:3000/graphql';
       mockRequest(testUrl, VALID_INTROSPECTION);
 
-      const schema = await loader.handle(testUrl, {});
+      const schema = await loadSchema(testUrl, {});
       expect(schema).toBeDefined();
       expect(schema instanceof GraphQLSchema).toBeTruthy();
 
@@ -63,7 +48,7 @@ describe('Schema URL Loader', () => {
     it('Should pass default headers', async () => {
       const testUrl = 'http://localhost:3000/graphql';
       mockRequest(testUrl, VALID_INTROSPECTION);
-      const schema = await loader.handle(testUrl, {});
+      const schema = await loadSchema(testUrl, {});
       expect(schema).toBeDefined();
       expect(schema instanceof GraphQLSchema).toBeTruthy();
       const calls = getMockedCalls(testUrl);
@@ -77,7 +62,7 @@ describe('Schema URL Loader', () => {
     it('Should pass extra headers when they are specified as object', async () => {
       const testUrl = 'http://localhost:3000/graphql';
       mockRequest(testUrl, VALID_INTROSPECTION);
-      const schema = await loader.handle(testUrl, { headers: { Auth: '1' } });
+      const schema = await loadSchema(testUrl, { headers: { Auth: '1' } });
       expect(schema).toBeDefined();
       expect(schema instanceof GraphQLSchema).toBeTruthy();
       const calls = getMockedCalls(testUrl);
@@ -92,7 +77,7 @@ describe('Schema URL Loader', () => {
     it('Should pass extra headers when they are specified as array', async () => {
       const testUrl = 'http://localhost:3000/graphql';
       mockRequest(testUrl, VALID_INTROSPECTION);
-      const schema = await loader.handle(testUrl, { headers: [{ A: '1' }, { B: '2', C: '3' }] });
+      const schema = await loadSchema(testUrl, { headers: [{ A: '1' }, { B: '2', C: '3' }] });
       expect(schema).toBeDefined();
       expect(schema instanceof GraphQLSchema).toBeTruthy();
       const calls = getMockedCalls(testUrl);

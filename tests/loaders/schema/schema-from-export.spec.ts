@@ -1,34 +1,30 @@
 import { GraphQLSchema } from 'graphql';
-import { SchemaFromExport } from '../../../src/loaders/schema/schema-from-export';
+import { loadSchema } from '../../../src';
 
 describe('Schema From Export', () => {
-  const instance = new SchemaFromExport();
-
   it('should load the schema correctly from module.exports', async () => {
-    const result: any = await instance.handle('./tests/loaders/schema/test-files/loaders/module-exports.js');
+    const result: any = await loadSchema('./tests/loaders/schema/test-files/loaders/module-exports.js');
     expect(result instanceof GraphQLSchema).toBeTruthy();
   });
 
+  it('should load the schema (with extend) correctly from module.exports', async () => {
+    const result: GraphQLSchema = await loadSchema('./tests/loaders/schema/test-files/schema-dir/with-extend.js');
+    expect(result instanceof GraphQLSchema).toBeTruthy();
+    expect(result.getQueryType().getFields()['hello']).toBeDefined();
+  });
+
   it('should load the schema correctly from variable export', async () => {
-    const result: any = await instance.handle('./tests/loaders/schema/test-files/loaders/schema-export.js');
+    const result: any = await loadSchema('./tests/loaders/schema/test-files/loaders/schema-export.js');
     expect(result instanceof GraphQLSchema).toBeTruthy();
   });
 
   it('should load the schema correctly from default export', async () => {
-    const result: any = await instance.handle('./tests/loaders/schema/test-files/loaders/default-export.js');
+    const result: any = await loadSchema('./tests/loaders/schema/test-files/loaders/default-export.js');
     expect(result instanceof GraphQLSchema).toBeTruthy();
   });
 
   it('should load the schema correctly from promise export', async () => {
-    const result: any = await instance.handle('./tests/loaders/schema/test-files/loaders/promise-export.js');
+    const result: any = await loadSchema('./tests/loaders/schema/test-files/loaders/promise-export.js');
     expect(result instanceof GraphQLSchema).toBeTruthy();
-  });
-
-  it('should work with glob patterns', async () => {
-    const schemaPath = './tests/loaders/schema/test-files/loaders/*.js';
-    const canHandle = await instance.canHandle(schemaPath);
-    expect(canHandle).toBeTruthy();
-    const schema = await instance.handle(schemaPath);
-    expect(schema instanceof GraphQLSchema).toBeTruthy();
   });
 });
