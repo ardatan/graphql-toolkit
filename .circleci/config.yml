@@ -8,8 +8,16 @@ jobs:
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
-          name: Install Dependencies & Build
+          name: Install Dependencies
           command: yarn
+      - run:
+          name: Build
+          command: yarn build
+      - run:
+          name: Test 
+          command: yarn test
+      - store_test_results:
+          path: ./junit.xml
       - run:
           name: Publish Canary
           command: |

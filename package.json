@@ -27,6 +27,7 @@
     "graphql-tag-pluck": "^0.8.3"
   },
   "devDependencies": {
+    "jest-junit": "6.4.0",
     "@types/deepmerge": "2.2.0",
     "@types/graphql": "14.2.2",
     "@types/is-glob": "4.0.1",

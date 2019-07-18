@@ -65,3 +65,6 @@ dist
 build
 temp
 .idea
+
+test-results/
+junit.xml
