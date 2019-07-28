@@ -27,6 +27,7 @@ export interface DocumentFile {
 export interface LoadTypedefsOptions {
   ignore?: string | string[];
   tagPluck?: ExtractOptions['tagPluck'];
+  noRequire?: boolean;
   [key: string]: any;
 }
 
@@ -54,7 +55,7 @@ export async function loadTypedefs<AdditionalConfig = any>(pointToSchema: string
               })
         );
 
-        found.push(...(await Promise.all(relevantFiles.map(async p => ({ filePath: p, content: await loadSingleFile(p, { tagPluck: options.tagPluck || {} }, cwd) })))));
+        found.push(...(await Promise.all(relevantFiles.map(async p => ({ filePath: p, content: await loadSingleFile(p, { noRequire: options.noRequire, tagPluck: options.tagPluck || {} }, cwd) })))));
       }
     } else if (isUri(schemaPath)) {
       found.push({
@@ -93,16 +94,22 @@ export async function loadTypedefs<AdditionalConfig = any>(pointToSchema: string
   return nonEmpty;
 }
 
-export async function loadSingleFile(filePath: string, pluckOptions: ExtractOptions = {}, cwd = process.cwd()): Promise<DocumentNode> {
+export async function loadSingleFile(filePath: string, options: ExtractOptions & { noRequire?: boolean } = {}, cwd = process.cwd()): Promise<DocumentNode> {
   const extension = extname(filePath).toLowerCase();
   const fullPath = fixWindowsPath(isAbsolute(filePath) ? filePath : resolvePath(cwd, filePath));
 
-  if (extension === '.json') {
-    return loadFromJsonFile(fullPath);
-  } else if (GQL_EXTENSIONS.includes(extension)) {
-    return loadFromGqlFile(fullPath);
-  } else if (CODE_FILE_EXTENSIONS.includes(extension)) {
-    return loadFromCodeFile(fullPath, pluckOptions);
+  try {
+    if (extension === '.json') {
+      return await loadFromJsonFile(fullPath);
+    } else if (GQL_EXTENSIONS.includes(extension)) {
+      return await loadFromGqlFile(fullPath);
+    } else if (CODE_FILE_EXTENSIONS.includes(extension)) {
+      return await loadFromCodeFile(fullPath, options);
+    }
+  } catch (e) {
+    debugLog(`Failed to find any GraphQL type definitions in: ${filePath} - ${e.message}`);
+
+    return null;
   }
 
   return null;

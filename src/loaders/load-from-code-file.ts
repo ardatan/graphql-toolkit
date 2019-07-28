@@ -27,7 +27,7 @@ function isSchemaAst(obj: any): obj is DocumentNode {
   return (obj as DocumentNode).kind !== undefined;
 }
 
-function resolveExport(fileExport: GraphQLSchema | DocumentNode | string | { data: IntrospectionQuery } | IntrospectionQuery): DocumentNode {
+function resolveExport(fileExport: GraphQLSchema | DocumentNode | string | { data: IntrospectionQuery } | IntrospectionQuery): DocumentNode | null {
   if (isSchemaObject(fileExport)) {
     return parse(printSchemaWithDirectives(fileExport));
   } else if (isSchemaText(fileExport)) {
@@ -44,9 +44,9 @@ function resolveExport(fileExport: GraphQLSchema | DocumentNode | string | { dat
     return parse(printed);
   } else if (isSchemaAst(fileExport)) {
     return fileExport;
-  } else {
-    throw new Error('Unexpected export value provided!');
   }
+
+  return null;
 }
 async function tryToLoadFromExport(filePath: string): Promise<DocumentNode> {
   try {
@@ -86,18 +86,18 @@ async function tryToLoadFromCodeAst(filePath: string, options?: ExtractOptions):
   }
 }
 
-export async function loadFromCodeFile(filePath: string, extractOptions?: ExtractOptions): Promise<DocumentNode> {
+export async function loadFromCodeFile(filePath: string, options: ExtractOptions & { noRequire?: boolean }): Promise<DocumentNode> {
   let loaded: DocumentNode | null = null;
 
   try {
-    const result = await tryToLoadFromCodeAst(filePath, extractOptions);
+    const result = await tryToLoadFromCodeAst(filePath, options);
 
     if (result) {
       loaded = result;
     }
   } catch (e) {}
 
-  if (!loaded) {
+  if (!loaded && !options.noRequire) {
     loaded = await tryToLoadFromExport(filePath);
   }
 

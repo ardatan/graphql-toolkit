@@ -1,13 +1,13 @@
 import { loadSchema } from '../../../src';
 
 describe('loadSchema', () => {
-  it('should throw a valid exception when using ts file for schema and it has a syntax error', async () => {
+  it('should throw when all files are invalid and unable to load it', async () => {
     const schemaPath = './tests/loaders/schema/test-files/error.ts';
     try {
       await loadSchema(schemaPath);
       expect(true).toBeFalsy(); // should throw
     } catch (e) {
-      expect(e.toString()).toBeTruthy();
+      expect(e.toString()).toContain(`Unable to find any GraphQL type defintions for the following pointers`);
     }
   });
 

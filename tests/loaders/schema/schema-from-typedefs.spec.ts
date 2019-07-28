@@ -20,6 +20,17 @@ describe('schema from typedefs', () => {
     }
   });
 
+  it('should point to a broken file with parsing error message', async () => {
+    const glob = './tests/loaders/schema/test-files/schema-dir/*.broken.graphql';
+
+    try {
+      await loadSchema(glob);
+      expect(true).toBeFalsy();
+    } catch(e) {
+      expect(e.message).toMatch('Unable to find any GraphQL type defintions for the following pointers');
+    }
+  });
+
   it('should ignore graphql documents when loading a scehma', async () => {
     const glob = './tests/loaders/schema/test-files/schema-dir/*.non-schema.graphql';
 
