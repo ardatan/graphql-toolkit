@@ -68,3 +68,5 @@ temp
 
 test-results/
 junit.xml
+
+*.tgz
