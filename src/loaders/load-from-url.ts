@@ -1,19 +1,30 @@
-import { introspectionQuery, buildClientSchema, DocumentNode, parse, IntrospectionQuery } from 'graphql';
+import { introspectionQuery, buildClientSchema, DocumentNode, parse, IntrospectionQuery, ExecutionResult } from 'graphql';
 import { printSchemaWithDirectives } from '../utils/print-schema-with-directives';
-import { fetch } from 'cross-fetch';
+
+export type FetchFn = WindowOrWorkerGlobalScope['fetch'];
+
+type Headers = Record<string, string> | Array<Record<string, string>>;
 
 export interface LoadFromUrlOptions {
-  headers?: { [key: string]: string }[] | { [key: string]: string };
+  headers?: Headers;
+  fetch?: FetchFn;
 }
 
 export async function loadFromUrl(url: string, options?: LoadFromUrlOptions): Promise<DocumentNode> {
   let headers = {};
+  let fetch: FetchFn;
 
   if (options) {
     if (Array.isArray(options.headers)) {
       headers = options.headers.reduce((prev: object, v: object) => ({ ...prev, ...v }), {});
     } else if (typeof options.headers === 'object') {
       headers = options.headers;
+    }
+
+    if (options.fetch) {
+      fetch = options.fetch;
+    } else {
+      fetch = (await import('cross-fetch')).fetch;
     }
   }
 
@@ -31,7 +42,7 @@ export async function loadFromUrl(url: string, options?: LoadFromUrlOptions): Pr
     headers: extraHeaders,
   });
 
-  const body = await response.json();
+  const body: ExecutionResult = await response.json();
 
   let errorMessage;
 
