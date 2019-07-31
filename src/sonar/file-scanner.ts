@@ -77,7 +77,7 @@ export function loadSchemaFiles(path: string, options: LoadSchemaFilesOptions = 
 
   return relevantPaths.map(path => {
     
-    if (path.includes('/index.') && options.ignoreIndex) {
+    if (isIndex(path, execOptions.extensions) && options.ignoreIndex) {
       return false;
     }
 
@@ -124,7 +124,7 @@ export function loadResolversFiles<Resolvers extends IResolvers = IResolvers>(pa
 
   return relevantPaths.map(path => {
     
-    if (path.includes('/index.') && options.ignoreIndex) {
+    if (isIndex(path, execOptions.extensions) && options.ignoreIndex) {
       return false;
     }
 
@@ -155,7 +155,7 @@ export async function loadSchemaFilesAsync(path: string, options: LoadSchemaFile
 
   return Promise.all(relevantPaths.map(async path => {
     
-    if (path.includes('/index.') && options.ignoreIndex) {
+    if (isIndex(path, execOptions.extensions) && options.ignoreIndex) {
       return false;
     }
 
@@ -191,7 +191,7 @@ export async function loadResolversFilesAsync<Resolvers extends IResolvers = IRe
 
   return Promise.all(relevantPaths.map(async path => {
     
-    if (path.includes('/index.') && options.ignoreIndex) {
+    if (isIndex(path, execOptions.extensions) && options.ignoreIndex) {
       return false;
     }
 
@@ -203,4 +203,9 @@ export async function loadResolversFilesAsync<Resolvers extends IResolvers = IRe
       throw new Error(`Unable to load resolver file: ${path}, error: ${e}`);
     }
   }));
+}
+
+function isIndex(path: string, extensions: string[] = []): boolean {
+  const IS_INDEX = /(\/|\\)index\.[^\/\\]+$/i; // (/ or \) AND `index.` AND (everything except \ and /)(end of line)
+  return IS_INDEX.test(path) && extensions.some(ext => path.endsWith('.' + ext));
 }
