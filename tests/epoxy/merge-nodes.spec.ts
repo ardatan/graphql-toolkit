@@ -1,5 +1,5 @@
 import { mergeGraphQLNodes } from '../../src/epoxy/typedefs-mergers/merge-nodes';
-import { parse } from 'graphql';
+import { parse, InputObjectTypeDefinitionNode } from 'graphql';
 
 describe('Merge Nodes', () => {
   describe('type', () => {
@@ -213,6 +213,17 @@ describe('Merge Nodes', () => {
       expect(result.fields.length).toBe(2);
       expect(result.fields[0].name.value).toBe('f1');
       expect(result.fields[1].name.value).toBe('f2');
+    });
+
+    it('should merge input and prefer NonNullable over Nullable', () => {
+      const type1 = parse(`input A { f1: String }`);
+      const type2 = parse(`input A { f1: String! }`);
+      const merged = mergeGraphQLNodes([...type1.definitions, ...type2.definitions]);
+      const result: InputObjectTypeDefinitionNode = merged['A'] as any;
+
+      expect(result.fields.length).toBe(1);
+      expect(result.fields[0].name.value).toBe('f1');
+      expect(result.fields[0].type.kind).toBe('NonNullType');
     });
   });
 

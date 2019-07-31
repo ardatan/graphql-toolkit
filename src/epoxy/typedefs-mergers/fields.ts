@@ -3,6 +3,7 @@ import { FieldDefinitionNode, InputValueDefinitionNode, TypeNode, NameNode } fro
 import { extractType, isWrappingTypeNode, isListTypeNode, isNonNullTypeNode, printTypeNode } from './utils';
 import { mergeDirectives } from './directives';
 import { isNotEqual } from '../../utils/helpers';
+import { mergeArguments } from './arguments';
 
 function fieldAlreadyExists(fieldsArr: ReadonlyArray<any>, otherField: any): boolean {
   const result: FieldDefinitionNode | null = fieldsArr.find(field => field.name.value === otherField.name.value);
@@ -27,9 +28,16 @@ export function mergeFields<T extends FieldDefinitionNode | InputValueDefinition
       const existing: any = result.find((f: any) => f.name.value === (field as any).name.value);
 
       if (config && config.throwOnConflict) {
-        preventConflicts(type, existing, field);
+        preventConflicts(type, existing, field, false);
+      } else {
+        preventConflicts(type, existing, field, true);
       }
 
+      if (isNonNullTypeNode(field.type) && !isNonNullTypeNode(existing.type)) {
+        existing.type = field.type;
+      }
+
+      existing['arguments'] = mergeArguments(field['arguments'], existing['arguments']);
       existing['directives'] = mergeDirectives(field['directives'], existing['directives'], config);
     } else {
       result.push(field);
@@ -42,18 +50,18 @@ export function mergeFields<T extends FieldDefinitionNode | InputValueDefinition
   return result;
 }
 
-function preventConflicts(type: { name: NameNode }, a: FieldDefinitionNode | InputValueDefinitionNode, b: FieldDefinitionNode | InputValueDefinitionNode) {
+function preventConflicts(type: { name: NameNode }, a: FieldDefinitionNode | InputValueDefinitionNode, b: FieldDefinitionNode | InputValueDefinitionNode, ignoreNullability: boolean = false) {
   const aType = printTypeNode(a.type);
   const bType = printTypeNode(b.type);
 
   if (isNotEqual(aType, bType)) {
-    if (safeChangeForFieldType(a.type, b.type) === false) {
+    if (safeChangeForFieldType(a.type, b.type, ignoreNullability) === false) {
       throw new Error(`Field '${type.name.value}.${a.name.value}' changed type from '${aType}' to '${bType}'`);
     }
   }
 }
 
-function safeChangeForFieldType(oldType: TypeNode, newType: TypeNode): boolean {
+function safeChangeForFieldType(oldType: TypeNode, newType: TypeNode, ignoreNullability: boolean = false): boolean {
   // both are named
   if (!isWrappingTypeNode(oldType) && !isWrappingTypeNode(newType)) {
     return oldType.toString() === newType.toString();
@@ -62,13 +70,18 @@ function safeChangeForFieldType(oldType: TypeNode, newType: TypeNode): boolean {
   // new is non-null
   if (isNonNullTypeNode(newType)) {
     // I don't think it's a breaking change but `merge-graphql-schemas` needs it...
-    if (!isNonNullTypeNode(oldType)) {
+    if (!isNonNullTypeNode(oldType) && !ignoreNullability) {
       return false;
     }
 
     const ofType = isNonNullTypeNode(oldType) ? oldType.type : oldType;
 
     return safeChangeForFieldType(ofType, newType.type);
+  }
+
+  // old is non-null
+  if (isNonNullTypeNode(oldType)) {
+    return safeChangeForFieldType(newType, oldType, ignoreNullability);
   }
 
   // old is list
