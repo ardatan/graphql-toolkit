@@ -19,10 +19,12 @@ describe('printSchemaWithDirectives', () => {
     `);
 
     const printedSchemaByGraphQL = printSchema(schemaWithDirectives);
+    expect(printedSchemaByGraphQL).toContain('directive @entity on OBJECT');
     expect(printedSchemaByGraphQL).not.toContain(`id: ID! @id`);
     expect(printedSchemaByGraphQL).not.toContain(`friends: [User!]! @link`);
     expect(printedSchemaByGraphQL).not.toContain(`type User @entity`);
     const printedSchemaAlternative = printSchemaWithDirectives(schemaWithDirectives);
+    expect(printedSchemaAlternative).toContain('directive @entity on OBJECT');
     expect(printedSchemaAlternative).toContain(`id: ID! @id`);
     expect(printedSchemaAlternative).toContain(`friends: [User!]! @link`);
     expect(printedSchemaAlternative).toContain(`type User @entity`);
