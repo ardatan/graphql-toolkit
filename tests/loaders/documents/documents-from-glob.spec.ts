@@ -59,16 +59,20 @@ describe('documentsFromGlob', () => {
   it('Should ignore schema definitions', async () => {
     const glob = join(__dirname, './test-files/', '*.graphql');
     const result = await loadDocuments(glob);
-    console.log(result.map(a => a.content.definitions));
     expect(result.length).toBe(2);
   });
 
-  it('Should ignore files that is added to ignore glob', async () => {
+  it('Should ignore files that is added to ignore glob (using options.ignore)', async () => {
     const glob = join(__dirname, './test-files/', '*.graphql');
     const ignoreGlob = join(__dirname, './test-files/', '*.query.graphql');
-    const result = await loadDocuments(glob, {
-      ignore: ignoreGlob,
-    });
+    const result = await loadDocuments([glob], { ignore: ignoreGlob });
+    expect(result.length).toBe(1);
+  });
+
+  it('Should ignore files that is added to ignore glob (using negative glob)', async () => {
+    const glob = join(__dirname, './test-files/', '*.graphql');
+    const ignoreGlob = `!(${join(__dirname, './test-files/', '*.query.graphql')})`;
+    const result = await loadDocuments([glob, ignoreGlob]);
     expect(result.length).toBe(1);
   });
 });

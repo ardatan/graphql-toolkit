@@ -2,7 +2,6 @@ import { ExtractOptions } from './../utils/extract-document-string-from-code-fil
 import { DocumentNode, parse, concatAST, Kind } from 'graphql';
 import * as isValidPath from 'is-valid-path';
 import * as isGlob from 'is-glob';
-import { sync as globSync } from 'glob';
 import { isUri } from 'valid-url';
 import { loadFromUrl } from './load-from-url';
 import { extname, isAbsolute, resolve as resolvePath } from 'path';
@@ -11,6 +10,7 @@ import { loadFromGqlFile } from './load-from-gql-file';
 import { loadFromCodeFile } from './load-from-code-file';
 import { debugLog } from '../utils/debugLog';
 import { fixWindowsPath } from '../utils/fix-windows-path';
+import * as globby from 'globby';
 
 const GQL_EXTENSIONS = ['.gql', '.graphql', '.graphqls'];
 const CODE_FILE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'];
@@ -32,36 +32,47 @@ export interface LoadTypedefsOptions {
 }
 
 export async function loadTypedefs<AdditionalConfig = any>(pointToSchema: string | string[], options: LoadTypedefsOptions & Partial<AdditionalConfig> = {}, filterKinds: null | string[] = [], cwd = process.cwd()): Promise<DocumentFile[]> {
-  const schemasPaths: string[] = normalizeSchemaString(pointToSchema);
+  const typesPaths: string[] = normalizeSchemaString(pointToSchema);
   let found: DocumentFile[] = [];
+  let foundGlobs: string[] = [];
 
-  for (const schemaPath of schemasPaths) {
-    if (isSchemaString(schemaPath)) {
+  for (const typesPath of typesPaths) {
+    if (isSchemaString(typesPath)) {
       found.push({
-        filePath: schemaPath,
-        content: parse(schemaPath),
+        filePath: typesPath,
+        content: parse(typesPath),
       });
-    } else if (!isUri(schemaPath)) {
-      const fixedPath = fixWindowsPath(schemaPath);
+    } else if (!isUri(typesPath)) {
+      const fixedPath = fixWindowsPath(typesPath);
 
-      if (isValidPath(fixedPath) || isGlob(fixedPath)) {
-        const relevantFiles = filterFiles(
-          !isGlob(fixedPath)
-            ? [fixedPath]
-            : globSync(fixedPath, {
-                cwd,
-                ignore: options.ignore || [],
-                absolute: true,
-              })
-        );
+      if (isValidPath(fixedPath)) {
+        const relevantFiles = filterFiles([fixedPath]);
 
         found.push(...(await Promise.all(relevantFiles.map(async p => ({ filePath: p, content: await loadSingleFile(p, { noRequire: options.noRequire, tagPluck: options.tagPluck || {} }, cwd) })))));
+      } else if (isGlob(fixedPath)) {
+        foundGlobs.push(fixedPath);
       }
-    } else if (isUri(schemaPath)) {
+    } else if (isUri(typesPath)) {
       found.push({
-        filePath: schemaPath,
-        content: await loadFromUrl(schemaPath, options as AdditionalConfig),
+        filePath: typesPath,
+        content: await loadFromUrl(typesPath, options as AdditionalConfig),
       });
+    }
+  }
+
+  if (foundGlobs.length > 0) {
+    if (options.ignore) {
+      const ignoreList = (Array.isArray(options.ignore) ? options.ignore : [options.ignore]).map(g => `!(${g})`);
+
+      if (ignoreList.length > 0) {
+        foundGlobs.push(...ignoreList);
+      }
+    }
+
+    const relevantFiles = await globby(foundGlobs, { cwd, absolute: true });
+
+    if (relevantFiles.length > 0) {
+      found.push(...(await Promise.all(relevantFiles.map(async p => ({ filePath: p, content: await loadSingleFile(p, { noRequire: options.noRequire, tagPluck: options.tagPluck || {} }, cwd) })))));
     }
   }
 
@@ -88,7 +99,7 @@ export async function loadTypedefs<AdditionalConfig = any>(pointToSchema: string
   const nonEmpty = found.filter(f => f.content && f.content.definitions && f.content.definitions.length > 0);
 
   if (nonEmpty.length === 0) {
-    throw new Error(`Unable to find any GraphQL type defintions for the following pointers: ${schemasPaths.join(', ')}`);
+    throw new Error(`Unable to find any GraphQL type defintions for the following pointers: ${typesPaths.join(', ')}`);
   }
 
   return nonEmpty;
