@@ -73,7 +73,7 @@ export async function loadTypedefs<AdditionalConfig = any>(pointToSchema: string
     const relevantFiles = await globby(foundGlobs, { cwd, absolute: true });
 
     if (relevantFiles.length > 0) {
-      found.push(...(await Promise.all(relevantFiles.map(async p => ({ filePath: p, content: await loadSingleFile(p, { noRequire: options.noRequire, tagPluck: options.tagPluck || {} }, cwd) })))));
+      found.push(...(await Promise.all(relevantFiles.map(async p => ({ filePath: p, content: await loadSingleFile(p, { skipGraphQLImport: options.skipGraphQLImport, noRequire: options.noRequire, tagPluck: options.tagPluck || {} }, cwd) })))));
     }
   }
 
@@ -106,7 +106,7 @@ export async function loadTypedefs<AdditionalConfig = any>(pointToSchema: string
   return nonEmpty;
 }
 
-export async function loadSingleFile(filePath: string, options: ExtractOptions & { noRequire?: boolean, skipGraphQLImport?: boolean } = {}, cwd = process.cwd()): Promise<DocumentNode> {
+export async function loadSingleFile(filePath: string, options: ExtractOptions & { noRequire?: boolean; skipGraphQLImport?: boolean } = {}, cwd = process.cwd()): Promise<DocumentNode> {
   const extension = extname(filePath).toLowerCase();
   const fullPath = fixWindowsPath(isAbsolute(filePath) ? filePath : resolvePath(cwd, filePath));
 
