@@ -28,6 +28,7 @@ export interface LoadTypedefsOptions {
   ignore?: string | string[];
   tagPluck?: ExtractOptions['tagPluck'];
   noRequire?: boolean;
+  skipGraphQLImport?: boolean;
   [key: string]: any;
 }
 
@@ -48,7 +49,7 @@ export async function loadTypedefs<AdditionalConfig = any>(pointToSchema: string
       if (isValidPath(fixedPath)) {
         const relevantFiles = filterFiles([fixedPath]);
 
-        found.push(...(await Promise.all(relevantFiles.map(async p => ({ filePath: p, content: await loadSingleFile(p, { noRequire: options.noRequire, tagPluck: options.tagPluck || {} }, cwd) })))));
+        found.push(...(await Promise.all(relevantFiles.map(async p => ({ filePath: p, content: await loadSingleFile(p, { skipGraphQLImport: options.skipGraphQLImport, noRequire: options.noRequire, tagPluck: options.tagPluck || {} }, cwd) })))));
       } else if (isGlob(fixedPath)) {
         foundGlobs.push(fixedPath);
       }
@@ -105,7 +106,7 @@ export async function loadTypedefs<AdditionalConfig = any>(pointToSchema: string
   return nonEmpty;
 }
 
-export async function loadSingleFile(filePath: string, options: ExtractOptions & { noRequire?: boolean } = {}, cwd = process.cwd()): Promise<DocumentNode> {
+export async function loadSingleFile(filePath: string, options: ExtractOptions & { noRequire?: boolean, skipGraphQLImport?: boolean } = {}, cwd = process.cwd()): Promise<DocumentNode> {
   const extension = extname(filePath).toLowerCase();
   const fullPath = fixWindowsPath(isAbsolute(filePath) ? filePath : resolvePath(cwd, filePath));
 
@@ -113,7 +114,7 @@ export async function loadSingleFile(filePath: string, options: ExtractOptions &
     if (extension === '.json') {
       return await loadFromJsonFile(fullPath);
     } else if (GQL_EXTENSIONS.includes(extension)) {
-      return await loadFromGqlFile(fullPath);
+      return await loadFromGqlFile(fullPath, options.skipGraphQLImport);
     } else if (CODE_FILE_EXTENSIONS.includes(extension)) {
       return await loadFromCodeFile(fullPath, options);
     }
