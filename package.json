@@ -37,7 +37,7 @@
     "@types/valid-url": "1.0.2",
     "graphql": "14.4.2",
     "graphql-tag": "2.10.1",
-    "graphql-tag-pluck": "0.8.3",
+    "graphql-tag-pluck": "0.8.4",
     "jest": "24.8.0",
     "jest-junit": "7.0.0",
     "rimraf": "2.6.3",
