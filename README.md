@@ -32,7 +32,7 @@ const schema5 = loadSchema('./src/**/*.graphql'); // load from multiple files us
 
 ### Documents Loading
 
-Similar to documents loading - but meant to use for GraphQL documents (query/mutation/subscription/fragment).
+Similar to schema loading - but meant to use for GraphQL documents (query/mutation/subscription/fragment).
 
 You an specify any input as source, and this utils will detect it automatically. 
 
@@ -41,7 +41,7 @@ It also extracts usages of `gql` from code files using [`graphql-tag-pluck`](htt
 Usage:
 
 ```ts
-import { loadSchema } from 'graphql-toolkit';
+import { loadDocuments } from 'graphql-toolkit';
 
 const document1 = loadDocuments('query { f }'); // load from string
 const document2 = loadDocuments('./users.query.graphql'); // load from a single file 
