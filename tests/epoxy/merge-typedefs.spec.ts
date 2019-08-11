@@ -801,6 +801,35 @@ describe('Merge TypeDefs', () => {
       );
     });
 
+    it('should handle extend input typee', () => {
+      const schema = makeExecutableSchema({
+        typeDefs: [
+          `
+          type Query {
+            foo(i: TestInput): String
+          }
+
+          input TestInput {
+            t: String!
+          }
+        `,
+          `
+          extend input TestInput {
+            t2: String!
+          }
+        `,
+        ],
+      });
+      const merged = mergeTypeDefs([schema]);
+      const printed = stripWhitespaces(print(merged));
+
+      expect(printed).toContain(
+        stripWhitespaces(`
+        input TestInput { t: String! t2: String! }
+      `)
+      );
+    });
+
     it('should fail when a field is already defined and has a different type', () => {
       expect(() => {
         mergeTypeDefs([

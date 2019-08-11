@@ -53,23 +53,23 @@ export interface Config {
   commentDescriptions?: boolean;
   /**
    * Puts the next directive first.
-   * 
+   *
    * Default: false
-   * 
-   * @example: 
+   *
+   * @example:
    * Given:
    * ```graphql
    *  type User { a: String @foo }
    *  type User { a: String @bar }
    * ```
-   * 
+   *
    * Results:
    * ```
    *  type User { a: @bar @foo }
    * ```
    */
   reverseDirectives?: boolean;
-  exclusions ?: string[];
+  exclusions?: string[];
 }
 
 export function mergeGraphQLSchemas(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Omit<Partial<Config>, 'commentDescriptions'>) {
@@ -87,7 +87,7 @@ export function mergeTypeDefs(types: Array<string | Source | DocumentNode | Grap
 export function mergeTypeDefs(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Omit<Partial<Config>, 'commentDescriptions'>): DocumentNode;
 export function mergeTypeDefs(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Partial<Config>): DocumentNode | string {
   resetComments();
-  
+
   const doc = {
     kind: Kind.DOCUMENT,
     definitions: mergeGraphQLTypes(types, {
@@ -252,10 +252,14 @@ export function mergeGraphQLTypes(types: Array<string | Source | DocumentNode | 
 
 function extendDefinition(type: GraphQLNamedType): GraphQLNamedType['astNode'] {
   switch (type.astNode.kind) {
-    case 'ObjectTypeDefinition':
+    case Kind.OBJECT_TYPE_DEFINITION:
       return {
         ...type.astNode,
-        // add fields from object extension (`extend type Query { newField: String }`)
+        fields: type.astNode.fields.concat((type.extensionASTNodes as ReadonlyArray<ObjectTypeExtensionNode>).reduce((fields, node) => fields.concat(node.fields), [])),
+      };
+    case Kind.INPUT_OBJECT_TYPE_DEFINITION:
+      return {
+        ...type.astNode,
         fields: type.astNode.fields.concat((type.extensionASTNodes as ReadonlyArray<ObjectTypeExtensionNode>).reduce((fields, node) => fields.concat(node.fields), [])),
       };
     default:
