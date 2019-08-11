@@ -2,6 +2,7 @@ import { DocumentNode, GraphQLSchema, Source, parse, IntrospectionQuery, buildCl
 import { readFileSync } from 'fs';
 import { extractDocumentStringFromCodeFile, ExtractOptions } from '../utils/extract-document-string-from-code-file';
 import { printSchemaWithDirectives } from '../utils';
+import { debugLog } from '../utils/debugLog';
 
 function isSchemaText(obj: any): obj is string {
   return typeof obj === 'string';
@@ -61,7 +62,6 @@ async function tryToLoadFromExport(filePath: string): Promise<DocumentNode> {
         try {
           return resolveExport(exportValue);
         } catch (e) {
-          console.log(e);
           throw new Error('Exported schema must be of type GraphQLSchema, text, AST, or introspection JSON.');
         }
       } else {
@@ -95,7 +95,9 @@ export async function loadFromCodeFile(filePath: string, options: ExtractOptions
     if (result) {
       loaded = result;
     }
-  } catch (e) {}
+  } catch (e) {
+    debugLog(`Failed to load schema from code file "${filePath}" using AST: ${e.message}`);
+  }
 
   if (!loaded && !options.noRequire) {
     loaded = await tryToLoadFromExport(filePath);

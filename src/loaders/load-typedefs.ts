@@ -121,7 +121,7 @@ export async function loadSingleFile(filePath: string, options: ExtractOptions &
   } catch (e) {
     debugLog(`Failed to find any GraphQL type definitions in: ${filePath} - ${e.message}`);
 
-    return null;
+    throw e;
   }
 
   return null;

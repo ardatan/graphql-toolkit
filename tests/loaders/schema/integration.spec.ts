@@ -7,7 +7,7 @@ describe('loadSchema', () => {
       await loadSchema(schemaPath);
       expect(true).toBeFalsy(); // should throw
     } catch (e) {
-      expect(e.toString()).toContain(`Unable to find any GraphQL type defintions for the following pointers`);
+      expect(e.toString()).toContain(`due to import error: Unexpected end of input`);
     }
   });
 
