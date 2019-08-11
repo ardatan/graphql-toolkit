@@ -16,7 +16,7 @@ const GQL_EXTENSIONS = ['.gql', '.graphql', '.graphqls'];
 const CODE_FILE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'];
 
 function filterFiles(files: string[]): string[] {
-  return files.filter(file => !file.includes('node_modules') && !file.endsWith('.d.ts') && !file.endsWith('.spec.ts') && !file.endsWith('.spec.js') && !file.endsWith('.test.ts') && !file.endsWith('.test.js'));
+  return files.filter(file => !file.endsWith('.d.ts') && !file.endsWith('.spec.ts') && !file.endsWith('.spec.js') && !file.endsWith('.test.ts') && !file.endsWith('.test.js'));
 }
 
 export interface DocumentFile {
