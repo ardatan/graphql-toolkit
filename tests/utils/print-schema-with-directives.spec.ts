@@ -1,5 +1,7 @@
+import { makeExecutableSchema } from '@kamilkisiela/graphql-tools';
 import { buildSchema, printSchema } from 'graphql';
 import { printSchemaWithDirectives } from '../../src/utils/print-schema-with-directives';
+import GraphQLJSON from 'graphql-type-json';
 
 describe('printSchemaWithDirectives', () => {
   it('Should print with directives, while printSchema doesnt', () => {
@@ -28,5 +30,39 @@ describe('printSchemaWithDirectives', () => {
     expect(printedSchemaAlternative).toContain(`id: ID! @id`);
     expect(printedSchemaAlternative).toContain(`friends: [User!]! @link`);
     expect(printedSchemaAlternative).toContain(`type User @entity`);
+  });
+
+  it('Should print types correctly if they dont have astNode', () => {
+    const schema = makeExecutableSchema({
+      typeDefs: `
+      scalar JSON
+    
+      type TestType {
+        testField: JSON!
+      }
+
+      type Other {
+        something: String
+      }
+    
+      type Query {
+        test: TestType
+        other: Other!
+      }
+      `,
+      resolvers: {
+        Other: {
+          something: () => 'a',
+        },
+        JSON: GraphQLJSON
+      }
+    });
+
+    const output = printSchemaWithDirectives(schema);
+    
+    expect(output).toContain('scalar JSON');
+    expect(output).toContain('type Other');
+    expect(output).toContain('type TestType');
+    expect(output).toContain('type Query');
   });
 });
