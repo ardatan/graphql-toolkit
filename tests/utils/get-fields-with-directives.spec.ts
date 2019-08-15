@@ -13,6 +13,17 @@ describe('getFieldsWithDirectives', () => {
     expect(result['A.f1']).toEqual([{ name: 'a', args: {} }]);
   });
 
+  it('Should detect single basic directive in a type extension', () => {
+    const node = parse(`
+        extend type A {
+          f1: String @a
+        }
+    `);
+
+    const result = getFieldsWithDirectives(node);
+    expect(result['A.f1']).toEqual([{ name: 'a', args: {} }]);
+  });
+
   it('Should parse string argument correctly', () => {
     const node = parse(`
         type A {

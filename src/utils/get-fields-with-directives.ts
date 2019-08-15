@@ -1,4 +1,4 @@
-import { DocumentNode, ObjectTypeDefinitionNode, ValueNode, Kind } from 'graphql';
+import { DocumentNode, ObjectTypeDefinitionNode, ObjectTypeExtensionNode, ValueNode, Kind } from 'graphql';
 
 export type DirectiveArgs = { [name: string]: any };
 export type DirectiveUsage = { name: string; args: DirectiveArgs };
@@ -6,8 +6,8 @@ export type TypeAndFieldToDirectives = {
   [typeAndField: string]: DirectiveUsage[];
 };
 
-function isObjectTypeDefinition(obj: any): obj is ObjectTypeDefinitionNode {
-  return obj && obj.kind === 'ObjectTypeDefinition';
+function isObjectTypeDefinitionOrExtension(obj: any): obj is ObjectTypeDefinitionNode | ObjectTypeDefinitionNode {
+  return obj && (obj.kind === 'ObjectTypeDefinition' || obj.kind === 'ObjectTypeExtension');
 }
 
 function parseDirectiveValue(value: ValueNode): any {
@@ -34,7 +34,7 @@ function parseDirectiveValue(value: ValueNode): any {
 
 export function getFieldsWithDirectives(documentNode: DocumentNode): TypeAndFieldToDirectives {
   const result: TypeAndFieldToDirectives = {};
-  const allTypes: ObjectTypeDefinitionNode[] = documentNode.definitions.filter<ObjectTypeDefinitionNode>(isObjectTypeDefinition);
+  const allTypes = documentNode.definitions.filter<ObjectTypeDefinitionNode | ObjectTypeExtensionNode>(isObjectTypeDefinitionOrExtension);
 
   for (const type of allTypes) {
     const typeName = type.name.value;
