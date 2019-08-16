@@ -7,7 +7,7 @@ describe('loadSchema', () => {
       await loadSchema(schemaPath);
       expect(true).toBeFalsy(); // should throw
     } catch (e) {
-      expect(e.toString()).toContain(`due to import error: Unexpected end of input`);
+      expect(e.toString()).toContain(`SyntaxError: Unterminated template (12:1)`);
     }
   });
 

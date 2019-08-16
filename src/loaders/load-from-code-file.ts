@@ -97,6 +97,8 @@ export async function loadFromCodeFile(filePath: string, options: ExtractOptions
     }
   } catch (e) {
     debugLog(`Failed to load schema from code file "${filePath}" using AST: ${e.message}`);
+
+    throw e;
   }
 
   if (!loaded && !options.noRequire) {
