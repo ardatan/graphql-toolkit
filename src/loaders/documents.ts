@@ -7,5 +7,5 @@ export const NON_OPERATION_KINDS = Object.keys(Kind)
   .filter(v => !OPERATION_KINDS.includes(v));
 
 export async function loadDocuments(documentDef: string | string[], options: LoadTypedefsOptions = {}, cwd = process.cwd()): Promise<DocumentFile[]> {
-  return await loadTypedefs(documentDef, { ...options, skipGraphQLImport: true }, NON_OPERATION_KINDS, cwd);
+  return await loadTypedefs(documentDef, { ...options, skipGraphQLImport: true, noRequire: true }, NON_OPERATION_KINDS, cwd);
 }

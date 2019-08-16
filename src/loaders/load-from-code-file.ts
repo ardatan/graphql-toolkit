@@ -49,6 +49,7 @@ function resolveExport(fileExport: GraphQLSchema | DocumentNode | string | { dat
 
   return null;
 }
+
 async function tryToLoadFromExport(filePath: string): Promise<DocumentNode> {
   try {
     const rawExports = await eval(`require('${filePath}');`);
@@ -71,7 +72,7 @@ async function tryToLoadFromExport(filePath: string): Promise<DocumentNode> {
       throw new Error(`Invalid export from export file ${filePath}: empty export!`);
     }
   } catch (e) {
-    throw new Error(`Unable to load schema from file "${filePath}" due to import error: ${e.message}`);
+    throw new Error(`Unable to load from file "${filePath}": ${e.message}`);
   }
 }
 
