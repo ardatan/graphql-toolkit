@@ -32,7 +32,7 @@
     "@types/graphql": "14.2.3",
     "@types/is-glob": "4.0.1",
     "@types/jest": "24.0.18",
-    "@types/lodash": "4.14.137",
+    "@types/lodash": "4.14.138",
     "@types/node": "10.14.16",
     "@types/request": "2.48.2",
     "@types/valid-url": "1.0.2",
