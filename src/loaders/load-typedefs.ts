@@ -100,7 +100,7 @@ export async function loadTypedefs<AdditionalConfig = any>(pointToSchema: string
   const nonEmpty = found.filter(f => f.content && f.content.definitions && f.content.definitions.length > 0);
 
   if (nonEmpty.length === 0) {
-    throw new Error(`Unable to find any GraphQL type defintions for the following pointers: ${typesPaths.join(', ')}`);
+    throw new Error(`Unable to find any GraphQL type definitions for the following pointers: ${typesPaths.join(', ')}`);
   }
 
   return nonEmpty;
