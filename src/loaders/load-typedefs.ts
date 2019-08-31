@@ -63,7 +63,7 @@ export async function loadTypedefs<AdditionalConfig = any>(pointToSchema: string
 
   if (foundGlobs.length > 0) {
     if (options.ignore) {
-      const ignoreList = (Array.isArray(options.ignore) ? options.ignore : [options.ignore]).map(g => `!(${g})`);
+      const ignoreList = (Array.isArray(options.ignore) ? options.ignore : [options.ignore]).map(g => `!(${g})`).map(p => fixWindowsPath(p));
 
       if (ignoreList.length > 0) {
         foundGlobs.push(...ignoreList);
