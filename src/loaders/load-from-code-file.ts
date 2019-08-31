@@ -50,8 +50,18 @@ function resolveExport(fileExport: GraphQLSchema | DocumentNode | string | { dat
   return null;
 }
 
-async function tryToLoadFromExport(filePath: string): Promise<DocumentNode> {
+async function tryToLoadFromExport(rawFilePath: string): Promise<DocumentNode> {
+  let filePath = rawFilePath;
+
   try {
+    if (require && require.cache) {
+      filePath = require.resolve(filePath);
+
+      if (require.cache[filePath]) {
+        delete require.cache[filePath];
+      }
+    }
+
     const rawExports = await eval(`require('${filePath}');`);
 
     if (rawExports) {
