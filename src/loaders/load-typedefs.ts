@@ -10,7 +10,6 @@ import { loadFromGqlFile } from './load-from-gql-file';
 import { loadFromCodeFile } from './load-from-code-file';
 import { debugLog } from '../utils/debugLog';
 import { fixWindowsPath } from '../utils/fix-windows-path';
-import * as globby from 'globby';
 
 const GQL_EXTENSIONS = ['.gql', '.graphql', '.graphqls'];
 const CODE_FILE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'];
@@ -33,6 +32,7 @@ export interface LoadTypedefsOptions {
 }
 
 export async function loadTypedefs<AdditionalConfig = any>(pointToSchema: string | string[], options: LoadTypedefsOptions & Partial<AdditionalConfig> = {}, filterKinds: null | string[] = [], cwd = process.cwd()): Promise<DocumentFile[]> {
+  const globby = (await import('globby')) as any as typeof import('globby');
   const typesPaths: string[] = normalizeSchemaString(pointToSchema);
   let found: DocumentFile[] = [];
   let foundGlobs: string[] = [];
