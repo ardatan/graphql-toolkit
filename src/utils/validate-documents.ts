@@ -1,7 +1,8 @@
 import * as AggregateError from 'aggregate-error';
-import { Kind, concatAST, validate, GraphQLSchema, GraphQLError, specifiedRules, FragmentDefinitionNode } from 'graphql';
+import { Kind, concatAST, validate, GraphQLSchema, GraphQLError, specifiedRules, FragmentDefinitionNode, ValidationContext, ASTVisitor } from 'graphql';
 import { DocumentFile } from '../loaders/load-typedefs';
 
+export type ValidationRule = (context: ValidationContext) => ASTVisitor;
 const DEFAULT_IGNORED_RULES = ['NoUnusedFragments', 'NoUnusedVariables', 'KnownDirectives'];
 const DEFAULT_EFFECTIVE_RULES = specifiedRules.filter((f: Function) => !DEFAULT_IGNORED_RULES.includes(f.name));
 
@@ -10,7 +11,7 @@ export interface LoadDocumentError {
   readonly errors: ReadonlyArray<GraphQLError>;
 }
 
-export const validateGraphQlDocuments = (schema: GraphQLSchema, documentFiles: DocumentFile[], effectiveRules: typeof specifiedRules = DEFAULT_EFFECTIVE_RULES): ReadonlyArray<LoadDocumentError> => {
+export const validateGraphQlDocuments = (schema: GraphQLSchema, documentFiles: DocumentFile[], effectiveRules: ValidationRule[] = DEFAULT_EFFECTIVE_RULES): ReadonlyArray<LoadDocumentError> => {
   const allAst = concatAST(documentFiles.map(m => m.content));
   const allFragments = allAst.definitions.filter(d => d.kind === Kind.FRAGMENT_DEFINITION) as FragmentDefinitionNode[];
 
