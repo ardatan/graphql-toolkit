@@ -18,7 +18,7 @@ export function printSchemaWithDirectives(schema: GraphQLSchema): string {
     .filter(a => a);
   const directivesAst = schema.getDirectives().map(def => def.astNode).filter(a => a);
 
-  if (allTypesAst.length === 0 || directivesAst.length === 0) {
+  if (allTypesAst.length === 0 && directivesAst.length === 0) {
     return printSchema(schema);
   } else {
     const astTypesPrinted = [...allTypesAst, ...directivesAst].map(ast => print(ast));
