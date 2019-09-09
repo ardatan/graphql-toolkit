@@ -1,3 +1,1 @@
-import { sep } from 'path';
-
-export const fixWindowsPath = (path: string) => path.split('\\').join(sep);
+export const fixWindowsPath = (path: string) => path.split('\\').join('/');
