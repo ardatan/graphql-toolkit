@@ -25,7 +25,7 @@ describe('validateGraphQlDocuments', () => {
     }
   `;
 
-    const result = validateGraphQlDocuments(schema, [
+    const result = await validateGraphQlDocuments(schema, [
       {
         filePath: 'fragment.graphql',
         content: parse(fragment),

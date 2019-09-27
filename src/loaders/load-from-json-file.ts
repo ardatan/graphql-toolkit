@@ -1,5 +1,4 @@
 import { DocumentNode, IntrospectionQuery, buildClientSchema, parse } from 'graphql';
-import { existsSync, readFileSync } from 'fs';
 import { printSchemaWithDirectives } from '../utils/print-schema-with-directives';
 
 function stripBOM(content: string): string {
@@ -20,6 +19,7 @@ function parseBOM(content: string): IntrospectionQuery {
 
 export async function loadFromJsonFile(filePath: string): Promise<DocumentNode> {
   return new Promise<DocumentNode>((resolve, reject) => {
+    const { existsSync, readFileSync } = eval(`require('fs')`);
     if (existsSync(filePath)) {
       try {
         const fileContent = readFileSync(filePath, 'utf8');

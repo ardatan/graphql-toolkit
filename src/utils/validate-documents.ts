@@ -1,5 +1,5 @@
 import * as AggregateError from 'aggregate-error';
-import { Kind, concatAST, validate, GraphQLSchema, GraphQLError, specifiedRules, FragmentDefinitionNode, ValidationContext, ASTVisitor } from 'graphql';
+import { Kind, validate, GraphQLSchema, GraphQLError, specifiedRules, FragmentDefinitionNode, ValidationContext, ASTVisitor } from 'graphql';
 import { DocumentFile } from '../loaders/load-typedefs';
 
 export type ValidationRule = (context: ValidationContext) => ASTVisitor;
@@ -11,33 +11,53 @@ export interface LoadDocumentError {
   readonly errors: ReadonlyArray<GraphQLError>;
 }
 
-export const validateGraphQlDocuments = (schema: GraphQLSchema, documentFiles: DocumentFile[], effectiveRules: ValidationRule[] = DEFAULT_EFFECTIVE_RULES): ReadonlyArray<LoadDocumentError> => {
-  const allAst = concatAST(documentFiles.map(m => m.content));
-  const allFragments = allAst.definitions.filter(d => d.kind === Kind.FRAGMENT_DEFINITION) as FragmentDefinitionNode[];
+export const validateGraphQlDocuments = async (schema: GraphQLSchema, documentFiles: DocumentFile[], effectiveRules: ValidationRule[] = DEFAULT_EFFECTIVE_RULES): Promise<ReadonlyArray<LoadDocumentError>> => {
 
-  return documentFiles
-    .map(file => {
-      const documentToValidate = {
-        kind: Kind.DOCUMENT,
-        definitions: [...allFragments, ...file.content.definitions].filter((d, index, arr) => {
-          if (d.kind === Kind.FRAGMENT_DEFINITION) {
-            const foundIndex = arr.findIndex(i => i.kind === Kind.FRAGMENT_DEFINITION && i.name.value === d.name.value);
+  const allFragments: FragmentDefinitionNode[] = [];
 
-            if (foundIndex !== index) {
-              return false;
-            }
+  const allFragments$ = Promise.all(documentFiles.map(async documentFile => {
+    if (documentFile.content) {
+      for (const definitionNode of documentFile.content.definitions) {
+        if (definitionNode.kind === Kind.FRAGMENT_DEFINITION) {
+          allFragments.push(definitionNode);
+        }
+      }
+    }
+  }));
+
+  await allFragments$;
+
+  const allErrors: LoadDocumentError[] = [];
+  
+  const allErrors$ = Promise.all(documentFiles.map(async documentFile => {
+    const documentToValidate = {
+      kind: Kind.DOCUMENT,
+      definitions: [...allFragments, ...documentFile.content.definitions].filter((d, index, arr) => {
+        if (d.kind === Kind.FRAGMENT_DEFINITION) {
+          const foundIndex = arr.findIndex(i => i.kind === Kind.FRAGMENT_DEFINITION && i.name.value === d.name.value);
+
+          if (foundIndex !== index) {
+            return false;
           }
+        }
 
-          return true;
-        }),
-      };
+        return true;
+      }),
+    };
 
-      return {
-        filePath: file.filePath,
-        errors: validate(schema, documentToValidate, effectiveRules),
-      };
-    })
-    .filter(r => r.errors.length > 0);
+    const errors = validate(schema, documentToValidate, effectiveRules);
+
+    if(errors.length > 0) {
+      allErrors.push({
+        filePath: documentFile.filePath,
+        errors
+      })
+    }
+  }));
+
+  await allErrors$;
+
+  return allErrors;
 };
 
 export function checkValidationErrors(loadDocumentErrors: ReadonlyArray<LoadDocumentError>): void | never {

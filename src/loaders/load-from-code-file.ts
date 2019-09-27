@@ -1,5 +1,4 @@
 import { DocumentNode, GraphQLSchema, Source, parse, IntrospectionQuery, buildClientSchema } from 'graphql';
-import { readFileSync } from 'fs';
 import { extractDocumentStringFromCodeFile, ExtractOptions } from '../utils/extract-document-string-from-code-file';
 import { printSchemaWithDirectives } from '../utils';
 import { debugLog } from '../utils/debugLog';
@@ -55,7 +54,7 @@ async function tryToLoadFromExport(rawFilePath: string): Promise<DocumentNode> {
 
   try {
     if (require && require.cache) {
-      filePath = require.resolve(filePath);
+      filePath = eval(`require.resolve('${filePath}')`);
 
       if (require.cache[filePath]) {
         delete require.cache[filePath];
@@ -87,6 +86,7 @@ async function tryToLoadFromExport(rawFilePath: string): Promise<DocumentNode> {
 }
 
 async function tryToLoadFromCodeAst(filePath: string, options?: ExtractOptions): Promise<DocumentNode> {
+  const { readFileSync } = eval(`require('fs')`);
   const content = readFileSync(filePath, 'utf-8');
   const foundDoc = await extractDocumentStringFromCodeFile(new Source(content, filePath), options || {});
 

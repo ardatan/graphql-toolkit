@@ -10,8 +10,5 @@ module.exports = {
             'graphql-toolkit': path.join(__dirname, '../dist/esnext')
         },
         modules: ['node_modules', '../node_modules']
-    },
-    externals: {
-        fs: 'empty'
     }
 }

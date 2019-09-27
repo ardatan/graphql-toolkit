@@ -1,7 +1,3 @@
-import { IOptions, sync } from 'glob';
-import * as glob from 'glob';
-import { extname } from 'path';
-import { readFileSync, readFile } from 'fs';
 import { print } from 'graphql';
 import { IResolvers } from '@kamilkisiela/graphql-tools';
 
@@ -16,7 +12,8 @@ function isDirectory(path: string) {
   return fs.existsSync(path) && fs.statSync(path).isDirectory();
 }
 
-function scanForFiles(globStr: string, globOptions: IOptions = {}): string[] {
+function scanForFiles(globStr: string, globOptions: import('glob').IOptions = {}): string[] {
+  const { sync } = eval(`require('glob')`) as typeof import('glob');
   return sync(globStr, { absolute: true, ...globOptions });
 }
 
@@ -54,7 +51,7 @@ export interface LoadSchemaFilesOptions {
   extensions?: string[];
   useRequire?: boolean;
   requireMethod?: any;
-  globOptions?: IOptions;
+  globOptions?: import('glob').IOptions;
   exportNames?: string[];
   recursive?: boolean;
   ignoreIndex?: boolean;
@@ -81,6 +78,7 @@ export function loadSchemaFiles(path: string, options: LoadSchemaFilesOptions = 
       return false;
     }
 
+    const { extname } = eval(`require('path')`) as typeof import('path');
     const extension = extname(path);
 
     if (extension.endsWith('.js') || extension.endsWith('.ts') || execOptions.useRequire) {
@@ -93,6 +91,7 @@ export function loadSchemaFiles(path: string, options: LoadSchemaFilesOptions = 
 
       return extractedExport;
     } else {
+      const { readFileSync } = eval(`require('fs')`);
       return readFileSync(path, { encoding: 'utf-8' });
     }
   }).filter(v => v);
@@ -102,7 +101,7 @@ export interface LoadResolversFilesOptions {
   ignoredExtensions?: string[];
   extensions?: string[];
   requireMethod?: any;
-  globOptions?: IOptions;
+  globOptions?: import('glob').IOptions;
   exportNames?: string[];
   recursive?: boolean;
   ignoreIndex?: boolean;
@@ -138,7 +137,8 @@ export function loadResolversFiles<Resolvers extends IResolvers = IResolvers>(pa
   }).filter(t => t);
 }
 
-function scanForFilesAsync(globStr: string, globOptions: IOptions = {}): Promise<string[]> {
+function scanForFilesAsync(globStr: string, globOptions: import('glob').IOptions = {}): Promise<string[]> {
+  const glob = eval(`require('glob')`) as typeof import('glob');
   return new Promise((resolve, reject) => glob(globStr, { absolute: true, ...globOptions }, (err, matches) => {
     if (err) {
       reject(err);
@@ -158,7 +158,7 @@ export async function loadSchemaFilesAsync(path: string, options: LoadSchemaFile
     if (isIndex(path, execOptions.extensions) && options.ignoreIndex) {
       return false;
     }
-
+    const { extname } = eval(`require('path')`) as typeof import('path');
     const extension = extname(path);
 
     if (extension.endsWith('.js') || extension.endsWith('.ts') || execOptions.useRequire) {
@@ -172,6 +172,7 @@ export async function loadSchemaFilesAsync(path: string, options: LoadSchemaFile
       return extractedExport;
     } else {
       return new Promise((resolve, reject) => {
+        const { readFile } = eval(`require('fs')`) as typeof import('fs');
         readFile(path, { encoding: 'utf-8' }, (err, data) => {
           if (err) {
             reject(err);
