@@ -1,6 +1,6 @@
 {
   "name": "graphql-toolkit",
-  "version": "0.5.15",
+  "version": "0.5.16",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": "git@github.com:dotansimha/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
@@ -28,7 +28,6 @@
   "devDependencies": {
     "graphql-type-json": "0.3.0",
     "@types/deepmerge": "2.2.0",
-    "@types/graphql": "14.2.3",
     "@types/is-glob": "4.0.1",
     "@types/jest": "24.0.18",
     "@types/lodash": "4.14.141",
