@@ -47,7 +47,7 @@
   "dependencies": {
     "@kamilkisiela/graphql-tools": "4.0.6",
     "@types/glob": "7.1.1",
-    "aggregate-error": "3.0.0",
+    "aggregate-error": "3.0.1",
     "asyncro": "^3.0.0",
     "cross-fetch": "^3.0.4",
     "deepmerge": "4.0.0",
