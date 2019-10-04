@@ -136,7 +136,7 @@ export async function loadTypedefs<AdditionalConfig = any>(pointToSchema: string
 
     const globby = eval(`require('globby')`) as typeof import('globby');
     for await (let path of globby.stream(foundGlobs, { cwd, absolute: true })) {
-      const filePath = path.toString('utf8');
+      const filePath = fixWindowsPath(path.toString('utf8'));
       found$.push(
         Promise.resolve().then(async () => {
           let content = await loadSingleFile(
@@ -156,7 +156,7 @@ export async function loadTypedefs<AdditionalConfig = any>(pointToSchema: string
 
   await Promise.all(found$);
 
-  found = found.sort((left, right) => left.filePath.localeCompare(right.filePath))
+  found = found.sort((left, right) => left.filePath.localeCompare(right.filePath));
 
   if (found.length === 0) {
     throw new Error(`Unable to find any GraphQL type definitions for the following pointers: ${typesPaths.join(', ')}`);
