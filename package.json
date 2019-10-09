@@ -42,7 +42,7 @@
     "rimraf": "3.0.0",
     "semver": "6.3.0",
     "ts-jest": "24.1.0",
-    "typescript": "3.6.3"
+    "typescript": "3.6.4"
   },
   "dependencies": {
     "@kamilkisiela/graphql-tools": "4.0.6",
