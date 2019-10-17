@@ -23,9 +23,11 @@ export async function loadFromUrl(url: string, options?: LoadFromUrlOptions): Pr
 
     if (options.fetch) {
       fetch = options.fetch;
-    } else {
-      fetch = (await import('cross-fetch')).fetch;
     }
+  }
+
+  if (!fetch) {
+    fetch = (await import('cross-fetch')).fetch;
   }
 
   let extraHeaders = {
