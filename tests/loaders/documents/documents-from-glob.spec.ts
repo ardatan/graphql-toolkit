@@ -1,7 +1,6 @@
 import { loadDocuments } from './../../../src/loaders/documents';
 import { join } from 'path';
 import { separateOperations } from 'graphql';
-import { loadTypedefs } from '../../../src';
 
 describe('documentsFromGlob', () => {
   it('Should load one GraphQL document from glob expression', async () => {
@@ -55,6 +54,16 @@ describe('documentsFromGlob', () => {
       expect(e).toBeDefined();
     }
   });
+
+  it('Should throw on invalid files', async () => {
+    try {
+      const glob = join(__dirname, './test-files/', 'invalid*.*.graphql');
+      await loadDocuments(glob);
+      expect(true).toBeFalsy();
+    } catch (e) {
+      expect(e).toBeDefined();
+    }
+  })
 
   it('Should ignore schema definitions', async () => {
     const glob = join(__dirname, './test-files/', '*.graphql');
