@@ -61,7 +61,7 @@ export const filterKind = (content: DocumentNode, filterKinds: null | string[]) 
 
 export async function loadTypedefs<AdditionalConfig = any>(pointToSchema: string | string[], options: LoadTypedefsOptions & Partial<AdditionalConfig> = {}, filterKinds: null | string[] = [], cwd = process.cwd()): Promise<DocumentFile[]> {
   const typesPaths: string[] = asArray(pointToSchema);
-  const found$: Promise<void>[] = [];
+  const found$: Promise<any>[] = [];
   let found: DocumentFile[] = [];
   const foundGlobs: string[] = [];
 
@@ -135,23 +135,26 @@ export async function loadTypedefs<AdditionalConfig = any>(pointToSchema: string
     }
 
     const globby = eval(`require('globby')`) as typeof import('globby');
-    for await (let path of globby.stream(foundGlobs, { cwd, absolute: true })) {
-      const filePath = fixWindowsPath(path.toString('utf8'));
-      found$.push(
-        Promise.resolve().then(async () => {
-          let content = await loadSingleFile(
-            filePath,
-            { skipGraphQLImport: options.skipGraphQLImport, noRequire: options.noRequire, tagPluck: options.tagPluck || {} }, cwd);
-          content = filterKind(content, filterKinds);
-          if (content && content.definitions && content.definitions.length > 0) {
-            found.push({
+    found$.push(
+      Promise.resolve().then(async () =>{
+        const paths = await globby(foundGlobs, { cwd, absolute: true });
+        await Promise.all(
+          paths.map(async path => {
+            const filePath = fixWindowsPath(path);
+            let content = await loadSingleFile(
               filePath,
-              content,
-            });
-          }
-        })
-      );
-    }
+              { skipGraphQLImport: options.skipGraphQLImport, noRequire: options.noRequire, tagPluck: options.tagPluck || {} }, cwd);
+            content = filterKind(content, filterKinds);
+            if (content && content.definitions && content.definitions.length > 0) {
+              found.push({
+                filePath,
+                content,
+              });
+            }
+          })
+        )
+      })
+    );
   }
 
   await Promise.all(found$);
