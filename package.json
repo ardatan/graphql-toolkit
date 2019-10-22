@@ -50,7 +50,7 @@
     "aggregate-error": "3.0.1",
     "asyncro": "^3.0.0",
     "cross-fetch": "^3.0.4",
-    "deepmerge": "4.1.1",
+    "deepmerge": "4.2.0",
     "globby": "10.0.1",
     "graphql-import": "0.7.1",
     "is-glob": "4.0.1",
