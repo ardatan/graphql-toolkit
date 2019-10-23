@@ -1,0 +1,37 @@
+{
+  "name": "@graphql-toolkit/code-file-loader",
+  "version": "0.5.18",
+  "description": "A set of utils for faster development of GraphQL tools",
+  "repository": "git@github.com:dotansimha/graphql-toolkit.git",
+  "author": "Dotan Simha <dotansimha@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "tsc -m esnext --outDir dist/esnext && tsc -m commonjs --outDir dist/commonjs",
+    "test": "jest --config ../../../jest.config.js"
+  },
+  "sideEffects": false,
+  "main": "dist/commonjs/index.js",
+  "module": "dist/esnext/index.js",
+  "typings": "dist/esnext/index.d.ts",
+  "typescript": {
+    "definition": "dist/esnext/index.d.ts"
+  },
+  "peerDependencies": {
+    "graphql": "^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "24.0.19",
+    "graphql": "14.5.8",
+    "jest": "24.9.0",
+    "ts-jest": "24.1.0",
+    "typescript": "3.6.4"
+  },
+  "dependencies": {
+    "@graphql-toolkit/common": "0.5.18",
+    "graphql-tag-pluck": "0.8.6"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
