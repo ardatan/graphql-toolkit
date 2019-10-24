@@ -1,5 +1,5 @@
 {
-  "name": "@graphql-toolkit/git",
+  "name": "@graphql-toolkit/git-loader",
   "version": "0.5.18",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": "git@github.com:dotansimha/graphql-toolkit.git",
