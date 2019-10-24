@@ -13,10 +13,10 @@ jobs:
         uses: actions/setup-node@master
       - name: Install Dependencies using Yarn
         run: yarn install --ignore-engines
-      - name: Test
-        run: yarn test
       - name: Build
         run: yarn build
+      - name: Test
+        run: yarn test
       - name: Publish Canary
         env: # Or as an environment variable
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
