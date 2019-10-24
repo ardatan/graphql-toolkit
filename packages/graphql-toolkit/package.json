@@ -1,6 +1,6 @@
 {
   "name": "graphql-toolkit",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Common package containting utils and types for GraphQL Toolkit",
   "repository": "git@github.com:dotansimha/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
@@ -29,14 +29,14 @@
     "typescript": "3.6.4"
   },
   "dependencies": {
-    "@graphql-toolkit/code-file-loader": "0.6.1",
-    "@graphql-toolkit/common": "0.6.1",
-    "@graphql-toolkit/core": "0.6.1",
-    "@graphql-toolkit/file-loading": "0.6.1",
-    "@graphql-toolkit/graphql-file-loader": "0.6.1",
-    "@graphql-toolkit/json-file-loader": "0.6.1",
-    "@graphql-toolkit/schema-merging": "0.6.1",
-    "@graphql-toolkit/url-loader": "0.6.1"
+    "@graphql-toolkit/code-file-loader": "0.6.2",
+    "@graphql-toolkit/common": "0.6.2",
+    "@graphql-toolkit/core": "0.6.2",
+    "@graphql-toolkit/file-loading": "0.6.2",
+    "@graphql-toolkit/graphql-file-loader": "0.6.2",
+    "@graphql-toolkit/json-file-loader": "0.6.2",
+    "@graphql-toolkit/schema-merging": "0.6.2",
+    "@graphql-toolkit/url-loader": "0.6.2"
   },
   "publishConfig": {
     "access": "public"
