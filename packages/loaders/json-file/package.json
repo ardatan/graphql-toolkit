@@ -1,6 +1,6 @@
 {
   "name": "@graphql-toolkit/json-file-loader",
-  "version": "0.5.18",
+  "version": "0.6.2",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": "git@github.com:dotansimha/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
@@ -25,7 +25,7 @@
     "typescript": "3.6.4"
   },
   "dependencies": {
-    "@graphql-toolkit/common": "0.5.18"
+    "@graphql-toolkit/common": "0.6.2"
   },
   "publishConfig": {
     "access": "public"

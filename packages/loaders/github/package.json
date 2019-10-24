@@ -1,14 +1,14 @@
 {
-  "name": "graphql-toolkit",
+  "name": "@graphql-toolkit/github-loader",
   "version": "0.6.2",
-  "description": "Common package containting utils and types for GraphQL Toolkit",
+  "description": "A set of utils for faster development of GraphQL tools",
   "repository": "git@github.com:dotansimha/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
   "license": "MIT",
   "scripts": {
     "clean": "rimraf dist",
     "build": "tsc -m esnext --outDir dist/esnext && tsc -m commonjs --outDir dist/commonjs",
-    "test": "jest --config ../../jest.config.js"
+    "test": "jest --config ../../../jest.config.js"
   },
   "sideEffects": false,
   "main": "dist/commonjs/index.js",
@@ -18,25 +18,16 @@
     "definition": "dist/esnext/index.d.ts"
   },
   "peerDependencies": {
-    "graphql": "^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0",
-    "graphql-tag-pluck": "^0.8.3"
+    "graphql": "^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"
   },
   "devDependencies": {
-    "@types/jest": "24.0.19",
+    "@kamilkisiela/graphql-tools": "4.0.6",
     "graphql": "14.5.8",
-    "jest": "24.9.0",
-    "ts-jest": "24.1.0",
     "typescript": "3.6.4"
   },
   "dependencies": {
-    "@graphql-toolkit/code-file-loader": "0.6.2",
     "@graphql-toolkit/common": "0.6.2",
-    "@graphql-toolkit/core": "0.6.2",
-    "@graphql-toolkit/file-loading": "0.6.2",
-    "@graphql-toolkit/graphql-file-loader": "0.6.2",
-    "@graphql-toolkit/json-file-loader": "0.6.2",
-    "@graphql-toolkit/schema-merging": "0.6.2",
-    "@graphql-toolkit/url-loader": "0.6.2"
+    "cross-fetch": "3.0.4"
   },
   "publishConfig": {
     "access": "public"
