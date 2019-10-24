@@ -8,8 +8,8 @@
     "test-and-build": "yarn build && yarn test",
     "prerelease": "yarn test-and-build",
     "prerelease:canary": "yarn test-and-build",
-    "release": "lerna publish --no-git-tag-version --exact --force-publish=\"*\"",
-    "release:canary": "lerna publish --no-git-tag-version --force-publish=\"*\" --canary --exact ",
+    "release": "lerna publish --exact --force-publish=\"*\"",
+    "release:canary": "lerna publish --force-publish=\"*\" --canary --exact",
     "ci:release:canary": "lerna publish --force-publish=\"*\" --canary --exact --yes"
   },
   "husky": {
