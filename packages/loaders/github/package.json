@@ -1,6 +1,6 @@
 {
   "name": "@graphql-toolkit/github-loader",
-  "version": "0.5.18",
+  "version": "0.6.0",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": "git@github.com:dotansimha/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
@@ -26,8 +26,8 @@
     "typescript": "3.6.4"
   },
   "dependencies": {
-    "cross-fetch": "3.0.4",
-    "@graphql-toolkit/common": "0.5.18"
+    "@graphql-toolkit/common": "0.6.0",
+    "cross-fetch": "3.0.4"
   },
   "publishConfig": {
     "access": "public"
