@@ -97,7 +97,7 @@ async function tryToLoadFromCodeAst(filePath: string, options?: ExtractOptions):
   }
 }
 
-export type CodeFileLoaderOptions = ExtractOptions & { noRequire?: boolean };
+export type CodeFileLoaderOptions = ExtractOptions & { noRequire?: boolean; cwd?: string };
 
 const CODE_FILE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'];
 
@@ -114,7 +114,7 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
 
   async load(pointer: SchemaPointerSingle | DocumentPointerSingle, options: CodeFileLoaderOptions): Promise<Source> {
     let loaded: DocumentNode | null = null;
-    const normalizedFilePath = isAbsolute(pointer) ? pointer : resolve(process.cwd(), pointer);
+    const normalizedFilePath = isAbsolute(pointer) ? pointer : resolve(options.cwd || process.cwd(), pointer);
 
     try {
       const result = await tryToLoadFromCodeAst(normalizedFilePath, options);
@@ -123,7 +123,7 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
         loaded = result;
       }
     } catch (e) {
-      debugLog(`Failed to load schema from code file "${pointer}" using AST: ${e.message}`);
+      debugLog(`Failed to load schema from code file "${normalizedFilePath}" using AST: ${e.message}`);
 
       throw e;
     }

@@ -1,4 +1,4 @@
-import { extname } from 'path';
+import { extname, isAbsolute, resolve as resolvePath } from 'path';
 import { IntrospectionQuery, buildClientSchema, parse } from 'graphql';
 import { Source, printSchemaWithDirectives, SchemaPointerSingle, DocumentLoader } from '@graphql-toolkit/common';
 
@@ -18,27 +18,32 @@ function parseBOM(content: string): IntrospectionQuery {
   return JSON.parse(stripBOM(content));
 }
 
+export interface JsonFileLoaderOptions {
+  cwd?: string;
+}
+
 export class JsonFileLoader implements DocumentLoader {
   loaderId(): string {
     return 'json-file';
   }
 
-  async canLoad(pointer: SchemaPointerSingle, options: any): Promise<boolean> {
+  async canLoad(pointer: SchemaPointerSingle, options: JsonFileLoaderOptions): Promise<boolean> {
     const extension = extname(pointer).toLowerCase();
 
     return extension === '.json';
   }
 
-  async load(pointer: SchemaPointerSingle, options: any): Promise<Source> {
+  async load(pointer: SchemaPointerSingle, options: JsonFileLoaderOptions): Promise<Source> {
     return new Promise<Source>((resolve, reject) => {
       const { existsSync, readFileSync } = eval(`require('fs')`);
+      const normalizedFilepath = isAbsolute(pointer) ? pointer : resolvePath(options.cwd || process.cwd(), pointer);
 
-      if (existsSync(pointer)) {
+      if (existsSync(normalizedFilepath)) {
         try {
-          const fileContent = readFileSync(pointer, 'utf8');
+          const fileContent = readFileSync(normalizedFilepath, 'utf8');
 
           if (!fileContent) {
-            reject(`Unable to read local introspection file: ${pointer}`);
+            reject(`Unable to read local introspection file: ${normalizedFilepath}`);
           }
 
           let introspection = parseBOM(fileContent);
@@ -62,7 +67,7 @@ export class JsonFileLoader implements DocumentLoader {
           reject(e);
         }
       } else {
-        reject(`Unable to locate local introspection file: ${pointer}`);
+        reject(`Unable to locate local introspection file: ${normalizedFilepath}`);
       }
     });
   }
