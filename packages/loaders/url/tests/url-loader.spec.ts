@@ -8,7 +8,7 @@ const SHOULD_NOT_GET_HERE_ERROR = 'SHOULD_NOT_GET_HERE';
 describe('Schema URL Loader', () => {
   const loader = new UrlLoader();
   const resetMocks = () => require('cross-fetch').__resetMocks();
-  const mockRequest = (url: string, content: object) => require('cross-fetch').__registerUrlRequestMock(url, content);
+  const mockRequest = (url: string, content: string) => require('cross-fetch').__registerUrlRequestMock(url, content);
   const getMockedCalls = (url: string) => require('cross-fetch').__getCalls(url);
 
   beforeEach(() => {
@@ -20,7 +20,7 @@ describe('Schema URL Loader', () => {
   describe('handle', () => {
     it('Should throw an error when introspection is not valid', async () => {
       const testUrl = 'http://localhost:3000/graphql';
-      mockRequest(testUrl, {});
+      mockRequest(testUrl, JSON.stringify({ data: {} }));
 
       try {
         await loader.load(testUrl, {});
@@ -36,7 +36,7 @@ describe('Schema URL Loader', () => {
 
     it('Should return a valid schema when request is valid', async () => {
       const testUrl = 'http://localhost:3000/graphql';
-      mockRequest(testUrl, VALID_INTROSPECTION);
+      mockRequest(testUrl, JSON.stringify({ data: VALID_INTROSPECTION }));
 
       const schema = await loader.load(testUrl, {});
       expect(schema).toBeDefined();
@@ -47,7 +47,7 @@ describe('Schema URL Loader', () => {
 
     it('Should pass default headers', async () => {
       const testUrl = 'http://localhost:3000/graphql';
-      mockRequest(testUrl, VALID_INTROSPECTION);
+      mockRequest(testUrl, JSON.stringify({ data: VALID_INTROSPECTION }));
       const schema = await loader.load(testUrl, {});
       expect(schema).toBeDefined();
       const calls = getMockedCalls(testUrl);
@@ -60,7 +60,7 @@ describe('Schema URL Loader', () => {
 
     it('Should pass extra headers when they are specified as object', async () => {
       const testUrl = 'http://localhost:3000/graphql';
-      mockRequest(testUrl, VALID_INTROSPECTION);
+      mockRequest(testUrl, JSON.stringify({ data: VALID_INTROSPECTION }));
       const schema = await loader.load(testUrl, { headers: { Auth: '1' } });
       expect(schema).toBeDefined();
       const calls = getMockedCalls(testUrl);
@@ -74,7 +74,7 @@ describe('Schema URL Loader', () => {
 
     it('Should pass extra headers when they are specified as array', async () => {
       const testUrl = 'http://localhost:3000/graphql';
-      mockRequest(testUrl, VALID_INTROSPECTION);
+      mockRequest(testUrl, JSON.stringify({ data: VALID_INTROSPECTION }));
       const schema = await loader.load(testUrl, { headers: [{ A: '1' }, { B: '2', C: '3' }] });
       expect(schema).toBeDefined();
       const calls = getMockedCalls(testUrl);
