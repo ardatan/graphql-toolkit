@@ -19,12 +19,12 @@ jobs:
         run: yarn test
       - name: Publish Canary
         env: # Or as an environment variable
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
         run: |
             echo "Fork PR: ${{github.repository}}"
-            if [ "${{github.repository}}" == "ardatan/graphql-toolkit" ] && [ "${NPM_AUTH_TOKEN}" != "" ]
+            if [ "${{github.repository}}" == "ardatan/graphql-toolkit" ] && [ "${{ secrets.NODE_AUTH_TOKEN }}" != "" ]
             then
-                echo "//registry.npmjs.org/:_authToken=$NPM_AUTH_TOKEN" > .npmrc
+                echo "//registry.npmjs.org/:_authToken=${{ secrets.NODE_AUTH_TOKEN }}" > .npmrc
                 npm run ci:release:canary
             else    
                 echo "Skipping canary publish due to a fork/PR..."
