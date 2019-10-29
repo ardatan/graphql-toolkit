@@ -20,7 +20,7 @@ function extractData(
   };
 }
 
-export class GitHubLoader implements UniversalLoader {
+export class GitLoader implements UniversalLoader {
   loaderId() {
     return 'git-loader';
   }
