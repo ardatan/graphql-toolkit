@@ -1,7 +1,7 @@
 import { DocumentNode, GraphQLSchema, parse, IntrospectionQuery, buildClientSchema, Source as GraphQLSource } from 'graphql';
 import { resolve, isAbsolute, extname } from 'path';
 import { extractDocumentStringFromCodeFile, ExtractOptions } from './extract-document-string-from-code-file';
-import { SchemaPointerSingle, DocumentPointerSingle, debugLog, printSchemaWithDirectives, Source, UniversalLoader } from '@graphql-toolkit/common';
+import { SchemaPointerSingle, DocumentPointerSingle, debugLog, printSchemaWithDirectives, Source, UniversalLoader, asArray } from '@graphql-toolkit/common';
 
 function isSchemaText(obj: any): obj is string {
   return typeof obj === 'string';
@@ -97,7 +97,7 @@ async function tryToLoadFromCodeAst(filePath: string, options?: ExtractOptions):
   }
 }
 
-export type CodeFileLoaderOptions = ExtractOptions & { noRequire?: boolean; cwd?: string };
+export type CodeFileLoaderOptions = ExtractOptions & { noRequire?: boolean; cwd?: string; require?: string | string[] };
 
 const CODE_FILE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'];
 
@@ -129,6 +129,9 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
     }
 
     if (!loaded && !options.noRequire) {
+      if (options && options.require) {
+        await Promise.all(asArray(options.require).map(m => import(m)));
+      }
       loaded = await tryToLoadFromExport(normalizedFilePath);
     }
 
