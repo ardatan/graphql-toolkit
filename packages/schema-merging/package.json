@@ -31,7 +31,7 @@
   "dependencies": {
     "@graphql-toolkit/common": "0.6.2",
     "@kamilkisiela/graphql-tools": "4.0.6",
-    "deepmerge": "4.2.0"
+    "deepmerge": "4.2.2"
   },
   "publishConfig": {
     "access": "public"
