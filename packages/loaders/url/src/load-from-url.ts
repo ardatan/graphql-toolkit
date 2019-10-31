@@ -2,7 +2,7 @@ import { introspectionQuery, buildClientSchema, parse, IntrospectionQuery, Execu
 import { SchemaPointerSingle, Source, printSchemaWithDirectives, DocumentLoader } from '@graphql-toolkit/common';
 import { isUri } from 'valid-url';
 
-export type FetchFn = WindowOrWorkerGlobalScope['fetch'];
+export type FetchFn = typeof import('cross-fetch').fetch;
 
 type Headers = Record<string, string> | Array<Record<string, string>>;
 
