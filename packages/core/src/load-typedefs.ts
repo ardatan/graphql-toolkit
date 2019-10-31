@@ -46,7 +46,8 @@ export async function loadTypedefsUsingLoaders<AdditionalConfig = {}>(
     } else if (isUrl(pointer)) {
       loadPromises$.push(
         Promise.resolve().then(async () => {
-          let content = await loadSingleFile(loaders, pointer, options, cwd);
+          const fullPath = fixWindowsPath(isAbsolute(pointer) ? pointer : resolvePath(cwd, pointer));
+          let content = await loadSingleFile(loaders, fullPath, options);
           content = filterKind(content, filterKinds);
 
           if (content && content.definitions && content.definitions.length > 0) {
@@ -64,7 +65,7 @@ export async function loadTypedefsUsingLoaders<AdditionalConfig = {}>(
       for (const filePath of relevantFiles) {
         loadPromises$.push(
           Promise.resolve().then(async () => {
-            let content = await loadSingleFile(loaders, filePath, options, cwd);
+            let content = await loadSingleFile(loaders, filePath, options);
             content = filterKind(content, filterKinds);
 
             if (content && content.definitions && content.definitions.length > 0) {
@@ -100,7 +101,7 @@ export async function loadTypedefsUsingLoaders<AdditionalConfig = {}>(
         await Promise.all(
           paths.map(async path => {
             const filePath = fixWindowsPath(path);
-            let content = await loadSingleFile(loaders, filePath, options, cwd);
+            let content = await loadSingleFile(loaders, filePath, options);
             content = filterKind(content, filterKinds);
 
             if (content && content.definitions && content.definitions.length > 0) {
@@ -124,15 +125,13 @@ export async function loadTypedefsUsingLoaders<AdditionalConfig = {}>(
   return found.sort((left, right) => left.location.localeCompare(right.location));
 }
 
-export async function loadSingleFile(loaders: Loader[], pointer: string, options: SingleFileOptions = {}, cwd = process.cwd()): Promise<DocumentNode> {
-  const fullPath = isUrl(pointer) ? pointer : fixWindowsPath(isAbsolute(pointer) ? pointer : resolvePath(cwd, pointer));
-
+export async function loadSingleFile(loaders: Loader[], pointer: string, options: SingleFileOptions = {}): Promise<DocumentNode> {
   try {
     for (const loader of loaders) {
-      const canLoad = await loader.canLoad(fullPath, options);
+      const canLoad = await loader.canLoad(pointer, options);
 
       if (canLoad) {
-        const found = await loader.load(fullPath, options);
+        const found = await loader.load(pointer, options);
 
         if (found) {
           return found.document;
