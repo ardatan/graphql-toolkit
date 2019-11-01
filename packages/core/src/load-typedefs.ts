@@ -46,8 +46,7 @@ export async function loadTypedefsUsingLoaders<AdditionalConfig = {}>(
     } else if (isUrl(pointer)) {
       loadPromises$.push(
         Promise.resolve().then(async () => {
-          const fullPath = fixWindowsPath(isAbsolute(pointer) ? pointer : resolvePath(cwd, pointer));
-          let content = await loadSingleFile(loaders, fullPath, options);
+          let content = await loadSingleFile(loaders, pointer, options);
           content = filterKind(content, filterKinds);
 
           if (content && content.definitions && content.definitions.length > 0) {
