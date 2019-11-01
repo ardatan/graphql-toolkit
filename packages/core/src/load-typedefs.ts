@@ -1,7 +1,6 @@
 import { DocumentNode } from 'graphql';
 import * as isValidPath from 'is-valid-path';
 import * as isGlob from 'is-glob';
-import { isAbsolute, resolve as resolvePath } from 'path';
 import { Source, asArray, isDocumentString, debugLog, fixWindowsPath, Loader } from '@graphql-toolkit/common';
 import { filterKind } from './filter-document-kind';
 import { documentFromString } from './document-from-string';
