@@ -1,8 +1,9 @@
 import { print } from 'graphql';
 import { IResolvers } from '@kamilkisiela/graphql-tools';
 
+const DEFAULT_IGNORED_SCHEMA_EXTENSIONS = ['spec', 'test', 'd', 'map'];
 const DEFAULT_SCHEMA_EXTENSIONS = ['gql', 'graphql', 'graphqls', 'ts', 'js'];
-const DEFAULT_IGNORED_RESOLVERS_EXTENSIONS = ['spec', 'test', 'd', 'gql', 'graphql', 'graphqls'];
+const DEFAULT_IGNORED_RESOLVERS_EXTENSIONS = ['spec', 'test', 'd', 'gql', 'graphql', 'graphqls', 'map'];
 const DEFAULT_RESOLVERS_EXTENSIONS = ['ts', 'js'];
 const DEFAULT_SCHEMA_EXPORT_NAMES = ['typeDefs', 'schema'];
 const DEFAULT_RESOLVERS_EXPORT_NAMES = ['resolvers', 'resolver'];
@@ -57,7 +58,7 @@ export interface LoadSchemaFilesOptions {
 }
 
 const LoadSchemaFilesDefaultOptions: LoadSchemaFilesOptions = {
-  ignoredExtensions: [],
+  ignoredExtensions: DEFAULT_IGNORED_SCHEMA_EXTENSIONS,
   extensions: DEFAULT_SCHEMA_EXTENSIONS,
   useRequire: false,
   requireMethod: null,
