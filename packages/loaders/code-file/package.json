@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@graphql-toolkit/common": "0.6.6",
-    "graphql-tag-pluck": "0.8.6"
+    "graphql-tag-pluck": "0.8.7"
   },
   "publishConfig": {
     "access": "public"
