@@ -74,6 +74,10 @@ export function loadSchemaFiles(path: string, options: LoadSchemaFilesOptions = 
 
   return relevantPaths
     .map(path => {
+      if (!checkExtension(path, options)) {
+        return;
+      }
+
       if (isIndex(path, execOptions.extensions) && options.ignoreIndex) {
         return false;
       }
@@ -124,6 +128,10 @@ export function loadResolversFiles<Resolvers extends IResolvers = IResolvers>(pa
 
   return relevantPaths
     .map(path => {
+      if (!checkExtension(path, options)) {
+        return;
+      }
+
       if (isIndex(path, execOptions.extensions) && options.ignoreIndex) {
         return false;
       }
@@ -151,6 +159,28 @@ function scanForFilesAsync(globStr: string, globOptions: import('glob').IOptions
   );
 }
 
+const checkExtension = (path: string, { extensions, ignoredExtensions }: { extensions?: string[]; ignoredExtensions?: string[] }) => {
+  if (ignoredExtensions) {
+    for (const ignoredExtension of ignoredExtensions) {
+      if (path.endsWith(ignoredExtension)) {
+        return false;
+      }
+    }
+  }
+
+  if (extensions) {
+    for (const extension of extensions) {
+      if (path.endsWith(extension)) {
+        return true;
+      }
+    }
+  } else {
+    return true;
+  }
+
+  return false;
+};
+
 export async function loadSchemaFilesAsync(path: string, options: LoadSchemaFilesOptions = LoadSchemaFilesDefaultOptions): Promise<string[]> {
   const execOptions = { ...LoadSchemaFilesDefaultOptions, ...options };
   const relevantPaths = await scanForFilesAsync(isDirectory(path) ? buildGlob(path, execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive) : path, options.globOptions);
@@ -160,6 +190,10 @@ export async function loadSchemaFilesAsync(path: string, options: LoadSchemaFile
   return Promise.all(
     relevantPaths
       .map(async path => {
+        if (!checkExtension(path, options)) {
+          return;
+        }
+
         if (isIndex(path, execOptions.extensions) && options.ignoreIndex) {
           return false;
         }
@@ -199,6 +233,10 @@ export async function loadResolversFilesAsync<Resolvers extends IResolvers = IRe
 
   return Promise.all(
     relevantPaths.map(async path => {
+      if (!checkExtension(path, options)) {
+        return;
+      }
+
       if (isIndex(path, execOptions.extensions) && options.ignoreIndex) {
         return false;
       }
