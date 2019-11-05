@@ -1,6 +1,6 @@
 {
   "name": "@graphql-toolkit/common",
-  "version": "0.6.6",
+  "version": "0.6.7",
   "description": "Common package containting utils and types for GraphQL Toolkit",
   "repository": "git@github.com:dotansimha/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
