@@ -1,7 +1,7 @@
 import { DocumentNode, GraphQLSchema, parse, IntrospectionQuery, buildClientSchema, Source as GraphQLSource } from 'graphql';
 import { resolve, isAbsolute, extname } from 'path';
 import { extractDocumentStringFromCodeFile, ExtractOptions } from './extract-document-string-from-code-file';
-import { SchemaPointerSingle, DocumentPointerSingle, debugLog, printSchemaWithDirectives, Source, UniversalLoader, asArray } from '@graphql-toolkit/common';
+import { SchemaPointerSingle, DocumentPointerSingle, debugLog, printSchemaWithDirectives, Source, UniversalLoader, asArray, fixWindowsPath } from '@graphql-toolkit/common';
 
 function isSchemaText(obj: any): obj is string {
   return typeof obj === 'string';
@@ -53,6 +53,7 @@ async function tryToLoadFromExport(rawFilePath: string): Promise<DocumentNode> {
   let filePath = rawFilePath;
 
   try {
+    filePath = fixWindowsPath(filePath);
     if (require && require.cache) {
       filePath = eval(`require.resolve('${filePath}')`);
 
