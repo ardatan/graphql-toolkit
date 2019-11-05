@@ -28,6 +28,6 @@ export async function loadDocuments(pointerOrPointers: string | string[], option
   return loadDocumentsUsingLoaders(loaders, pointerOrPointers, options, cwd);
 }
 
-export async function loadSchema(pointerOrPointers: string | string[], options: LoadTypedefsOptions<CodeFileLoaderOptions | GraphQLFileLoaderOptions> = {}, cwd = process.cwd(), loaders: Loader[] = DEFAULT_DOCUMENTS_LOADERS): Promise<GraphQLSchema> {
+export async function loadSchema(pointerOrPointers: string | string[], options: LoadTypedefsOptions<CodeFileLoaderOptions | GraphQLFileLoaderOptions> = {}, cwd = process.cwd(), loaders: Loader[] = DEFAULT_SCHEMA_LOADERS): Promise<GraphQLSchema> {
   return loadSchemaUsingLoaders(loaders, pointerOrPointers, options, cwd);
 }
