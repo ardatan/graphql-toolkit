@@ -33,7 +33,7 @@
     "jest-junit": "8.0.0",
     "rimraf": "3.0.0",
     "ts-jest": "24.1.0",
-    "typescript": "3.6.3"
+    "typescript": "3.7.2"
   },
   "dependencies": {
     "@graphql-toolkit/common": "0.6.7",
