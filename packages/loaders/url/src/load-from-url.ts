@@ -10,6 +10,7 @@ type Headers = Record<string, string> | Array<Record<string, string>>;
 export interface LoadFromUrlOptions {
   headers?: Headers;
   fetch?: FetchFn;
+  method?: 'GET' | 'POST';
 }
 
 export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
@@ -44,10 +45,14 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
     };
 
     const response = await fetch(pointer, {
-      method: 'POST',
-      body: JSON.stringify({
-        query: introspectionQuery,
-      }),
+      method: options.method ? options.method : 'POST',
+      ...(options.method === 'POST'
+        ? {
+            body: JSON.stringify({
+              query: introspectionQuery,
+            }),
+          }
+        : {}),
       headers: extraHeaders,
     });
 
@@ -62,7 +67,7 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
     }
 
     if (errorMessage) {
-      throw 'Unable to download schema from remote: ' + errorMessage;
+      throw new Error('Unable to download schema from remote: ' + errorMessage);
     }
 
     if (!body.data.__schema) {
