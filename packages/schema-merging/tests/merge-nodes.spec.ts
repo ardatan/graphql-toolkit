@@ -143,8 +143,8 @@ describe('Merge Nodes', () => {
       const result: any = merged['A'];
 
       expect(result.values.length).toBe(2);
-      expect(result.values[0].name.value).toBe('T');
-      expect(result.values[1].name.value).toBe('S');
+      expect(result.values.findIndex(v => v.name.value === 'T')).not.toBe(-1);
+      expect(result.values.findIndex(v => v.name.value === 'S')).not.toBe(-1);
     });
 
     it('should merge different same values', () => {

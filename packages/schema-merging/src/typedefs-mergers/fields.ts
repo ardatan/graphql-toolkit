@@ -39,6 +39,7 @@ export function mergeFields<T extends FieldDefinitionNode | InputValueDefinition
 
       existing['arguments'] = mergeArguments(field['arguments'], existing['arguments']);
       existing['directives'] = mergeDirectives(field['directives'], existing['directives'], config);
+      existing['description'] = field['description'] || existing['description'];
     } else {
       result.push(field);
     }

@@ -1041,6 +1041,57 @@ describe('Merge TypeDefs', () => {
       expect(separateTypes).toContain(expectedEnumType);
     });
 
+    it('merges enum comments correctly', () => {
+      const types = [
+        stripWhitespaces(/* GraphQL */ `
+          """
+            Enum without comments
+          """
+          enum TestEnum {
+            Value1
+            Value2
+          }
+        `),
+        stripWhitespaces(/* GraphQL */ `
+          """
+            Extended Enum with comments and new Value
+          """
+          enum TestEnum {
+            """Value1"""
+            Value1
+
+            """Value2"""
+            Value2
+
+            """Value3"""
+            Value3
+          }
+        `)
+      ];
+      
+      const mergedTypes = mergeTypeDefs(types);
+
+      const expectedEnumType = stripWhitespaces(`
+        """
+          Extended Enum with comments and new Value
+        """
+        enum TestEnum {
+          """Value1"""
+          Value1
+
+          """Value2"""
+          Value2
+
+          """Value3"""
+          Value3
+        }
+      `);
+      const separateTypes = stripWhitespaces(print(mergedTypes));
+
+      expect(separateTypes).toContain(expectedEnumType);
+      
+    })
+
     it('preserves the field comments', () => {
       const types = [clientType, productType];
       const mergedTypes = mergeTypeDefs(types, { commentDescriptions: true });
