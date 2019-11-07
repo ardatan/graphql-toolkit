@@ -1,5 +1,6 @@
 import { buildClientSchema, printSchema, parse, DocumentNode } from 'graphql';
 import { UniversalLoader } from '@graphql-toolkit/common';
+import { fetch } from 'cross-fetch';
 
 // github:owner/name#ref:path/to/file
 function extractData(
@@ -35,7 +36,6 @@ export class GithubLoader implements UniversalLoader<GithubLoaderOptions> {
   }
   async load(pointer: string, options: GithubLoaderOptions) {
     const { owner, name, ref, path } = extractData(pointer);
-    const { fetch } = await import('cross-fetch');
     const request = await fetch('https://api.github.com/graphql', {
       method: 'POST',
       headers: {

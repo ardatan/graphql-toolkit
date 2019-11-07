@@ -1,6 +1,8 @@
 import { extname, isAbsolute, resolve as resolvePath } from 'path';
 import { IntrospectionQuery, buildClientSchema, parse } from 'graphql';
 import { Source, printSchemaWithDirectives, SchemaPointerSingle, DocumentLoader } from '@graphql-toolkit/common';
+import { existsSync, readFileSync } from 'fs';
+import * as isValidPath from 'is-valid-path';
 
 function stripBOM(content: string): string {
   content = content.toString();
@@ -28,14 +30,21 @@ export class JsonFileLoader implements DocumentLoader {
   }
 
   async canLoad(pointer: SchemaPointerSingle, options: JsonFileLoaderOptions): Promise<boolean> {
-    const extension = extname(pointer).toLowerCase();
+    if (isValidPath(pointer)) {
+      const extension = extname(pointer).toLowerCase();
+      if (extension === '.json') {
+        const normalizedFilePath = isAbsolute(pointer) ? pointer : resolvePath(options.cwd || process.cwd(), pointer);
+        if (existsSync(normalizedFilePath)) {
+          return true;
+        }
+      }
+    }
 
-    return extension === '.json';
+    return false;
   }
 
   async load(pointer: SchemaPointerSingle, options: JsonFileLoaderOptions): Promise<Source> {
     return new Promise<Source>((resolve, reject) => {
-      const { existsSync, readFileSync } = eval(`require('fs')`);
       const normalizedFilepath = isAbsolute(pointer) ? pointer : resolvePath(options.cwd || process.cwd(), pointer);
 
       if (existsSync(normalizedFilepath)) {

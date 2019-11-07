@@ -1,5 +1,8 @@
 import { print } from 'graphql';
 import { IResolvers } from '@kamilkisiela/graphql-tools';
+import { existsSync, statSync, readFileSync, readFile } from 'fs';
+import * as glob from 'glob';
+import { extname } from 'path';
 
 const DEFAULT_IGNORED_SCHEMA_EXTENSIONS = ['spec', 'test', 'd', 'map'];
 const DEFAULT_SCHEMA_EXTENSIONS = ['gql', 'graphql', 'graphqls', 'ts', 'js'];
@@ -9,13 +12,11 @@ const DEFAULT_SCHEMA_EXPORT_NAMES = ['typeDefs', 'schema'];
 const DEFAULT_RESOLVERS_EXPORT_NAMES = ['resolvers', 'resolver'];
 
 function isDirectory(path: string) {
-  const fs = eval(`require('fs')`);
-  return fs.existsSync(path) && fs.statSync(path).isDirectory();
+  return existsSync(path) && statSync(path).isDirectory();
 }
 
 function scanForFiles(globStr: string, globOptions: import('glob').IOptions = {}): string[] {
-  const { sync } = eval(`require('glob')`) as typeof import('glob');
-  return sync(globStr, { absolute: true, ...globOptions });
+  return glob.sync(globStr, { absolute: true, ...globOptions });
 }
 
 function buildGlob(basePath: string, extensions: string[], ignoredExtensions: string[] = [], recursive: boolean): string {
@@ -82,11 +83,10 @@ export function loadSchemaFiles(path: string, options: LoadSchemaFilesOptions = 
         return false;
       }
 
-      const { extname } = eval(`require('path')`) as typeof import('path');
       const extension = extname(path);
 
       if (extension.endsWith('.js') || extension.endsWith('.ts') || execOptions.useRequire) {
-        const fileExports = (execOptions.requireMethod ? execOptions.requireMethod : eval('require'))(path);
+        const fileExports = (execOptions.requireMethod ? execOptions.requireMethod : require)(path);
         const extractedExport = extractExports(fileExports, execOptions.exportNames);
 
         if (extractedExport && extractedExport.kind === 'Document') {
@@ -95,7 +95,6 @@ export function loadSchemaFiles(path: string, options: LoadSchemaFilesOptions = 
 
         return extractedExport;
       } else {
-        const { readFileSync } = eval(`require('fs')`);
         return readFileSync(path, { encoding: 'utf-8' });
       }
     })
@@ -137,7 +136,7 @@ export function loadResolversFiles<Resolvers extends IResolvers = IResolvers>(pa
       }
 
       try {
-        const fileExports = (execOptions.requireMethod ? execOptions.requireMethod : eval('require'))(path);
+        const fileExports = (execOptions.requireMethod ? execOptions.requireMethod : require)(path);
 
         return extractExports(fileExports, execOptions.exportNames);
       } catch (e) {
@@ -148,7 +147,6 @@ export function loadResolversFiles<Resolvers extends IResolvers = IResolvers>(pa
 }
 
 function scanForFilesAsync(globStr: string, globOptions: import('glob').IOptions = {}): Promise<string[]> {
-  const glob = eval(`require('glob')`) as typeof import('glob');
   return new Promise((resolve, reject) =>
     glob(globStr, { absolute: true, ...globOptions }, (err, matches) => {
       if (err) {
@@ -185,7 +183,7 @@ export async function loadSchemaFilesAsync(path: string, options: LoadSchemaFile
   const execOptions = { ...LoadSchemaFilesDefaultOptions, ...options };
   const relevantPaths = await scanForFilesAsync(isDirectory(path) ? buildGlob(path, execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive) : path, options.globOptions);
 
-  const require$ = (path: string) => Promise.resolve().then(() => eval(`require('${path}')`));
+  const require$ = (path: string) => import(path);
 
   return Promise.all(
     relevantPaths
@@ -197,7 +195,6 @@ export async function loadSchemaFilesAsync(path: string, options: LoadSchemaFile
         if (isIndex(path, execOptions.extensions) && options.ignoreIndex) {
           return false;
         }
-        const { extname } = eval(`require('path')`) as typeof import('path');
         const extension = extname(path);
 
         if (extension.endsWith('.js') || extension.endsWith('.ts') || execOptions.useRequire) {
@@ -211,7 +208,6 @@ export async function loadSchemaFilesAsync(path: string, options: LoadSchemaFile
           return extractedExport;
         } else {
           return new Promise((resolve, reject) => {
-            const { readFile } = eval(`require('fs')`) as typeof import('fs');
             readFile(path, { encoding: 'utf-8' }, (err, data) => {
               if (err) {
                 reject(err);
@@ -229,7 +225,7 @@ export async function loadResolversFilesAsync<Resolvers extends IResolvers = IRe
   const execOptions = { ...LoadResolversFilesDefaultOptions, ...options };
   const relevantPaths = await scanForFilesAsync(isDirectory(path) ? buildGlob(path, execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive) : path, options.globOptions);
 
-  const require$ = (path: string) => Promise.resolve().then(() => eval(`require('${path}')`));
+  const require$ = (path: string) => import(path);
 
   return Promise.all(
     relevantPaths.map(async path => {

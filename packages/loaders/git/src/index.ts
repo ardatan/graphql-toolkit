@@ -1,5 +1,6 @@
 import { buildClientSchema, printSchema, parse, DocumentNode } from 'graphql';
 import { UniversalLoader } from '@graphql-toolkit/common';
+import * as simplegit from 'simple-git/promise';
 
 // git:branch:path/to/file
 function extractData(
@@ -29,7 +30,6 @@ export class GitLoader implements UniversalLoader {
   }
   async load(pointer: string) {
     const { ref, path } = extractData(pointer);
-    const simplegit = await import('simple-git/promise');
     const git = simplegit();
 
     let schemaString: string;

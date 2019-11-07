@@ -1,13 +1,9 @@
 import { DocumentNode } from 'graphql';
-import * as isValidPath from 'is-valid-path';
 import * as isGlob from 'is-glob';
 import { Source, asArray, isDocumentString, debugLog, fixWindowsPath, Loader } from '@graphql-toolkit/common';
 import { filterKind } from './filter-document-kind';
 import { documentFromString } from './document-from-string';
-
-function filterFiles(files: string[]): string[] {
-  return files.filter(file => !file.endsWith('.d.ts') && !file.endsWith('.spec.ts') && !file.endsWith('.spec.js') && !file.endsWith('.test.ts') && !file.endsWith('.test.js'));
-}
+import * as globby from 'globby';
 
 export type SingleFileOptions<ExtraConfig = { [key: string]: any }> = ExtraConfig & {
   noRequire?: boolean;
@@ -17,10 +13,6 @@ export type SingleFileOptions<ExtraConfig = { [key: string]: any }> = ExtraConfi
 export type LoadTypedefsOptions<ExtraConfig = { [key: string]: any }> = SingleFileOptions<ExtraConfig> & {
   ignore?: string | string[];
 };
-
-function isUrl(pointer: string) {
-  return typeof pointer === 'string' && /^https?\:\/\//i.test(pointer);
-}
 
 export async function loadTypedefsUsingLoaders<AdditionalConfig = {}>(
   loaders: Loader[],
@@ -42,7 +34,9 @@ export async function loadTypedefsUsingLoaders<AdditionalConfig = {}>(
           found.push(...docs);
         })
       );
-    } else if (isUrl(pointer)) {
+    } else if (isGlob(pointer)) {
+      foundGlobs.push(pointer);
+    } else {
       loadPromises$.push(
         Promise.resolve().then(async () => {
           let content = await loadSingleFile(loaders, pointer, options);
@@ -56,27 +50,6 @@ export async function loadTypedefsUsingLoaders<AdditionalConfig = {}>(
           }
         })
       );
-    } else if (isValidPath(pointer)) {
-      const fixedPath = fixWindowsPath(pointer);
-
-      const relevantFiles = filterFiles(asArray(fixedPath));
-      for (const filePath of relevantFiles) {
-        loadPromises$.push(
-          Promise.resolve().then(async () => {
-            let content = await loadSingleFile(loaders, filePath, options);
-            content = filterKind(content, filterKinds);
-
-            if (content && content.definitions && content.definitions.length > 0) {
-              found.push({
-                location: filePath,
-                document: content,
-              });
-            }
-          })
-        );
-      }
-    } else if (isGlob(pointer)) {
-      foundGlobs.push(pointer);
     }
   }
 
@@ -91,22 +64,21 @@ export async function loadTypedefsUsingLoaders<AdditionalConfig = {}>(
       }
     }
 
-    const globby = eval(`require('globby')`) as typeof import('globby');
-
     loadPromises$.push(
       Promise.resolve().then(async () => {
         const paths = await globby(foundGlobs, { cwd, absolute: true });
         await Promise.all(
           paths.map(async path => {
-            const filePath = fixWindowsPath(path);
-            let content = await loadSingleFile(loaders, filePath, options);
-            content = filterKind(content, filterKinds);
+            if (!path.endsWith('.d.ts') && !path.endsWith('.spec.ts') && !path.endsWith('.spec.js') && !path.endsWith('.test.ts') && !path.endsWith('.test.js')) {
+              let content = await loadSingleFile(loaders, path, options);
+              content = filterKind(content, filterKinds);
 
-            if (content && content.definitions && content.definitions.length > 0) {
-              found.push({
-                location: filePath,
-                document: content,
-              });
+              if (content && content.definitions && content.definitions.length > 0) {
+                found.push({
+                  location: path,
+                  document: content,
+                });
+              }
             }
           })
         );

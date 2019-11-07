@@ -1,6 +1,7 @@
 import { introspectionQuery, buildClientSchema, parse, IntrospectionQuery, ExecutionResult } from 'graphql';
 import { SchemaPointerSingle, Source, printSchemaWithDirectives, DocumentLoader } from '@graphql-toolkit/common';
 import { isUri } from 'valid-url';
+import { fetch as crossFetch } from 'cross-fetch';
 
 export type FetchFn = typeof import('cross-fetch').fetch;
 
@@ -22,7 +23,7 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
 
   async load(pointer: SchemaPointerSingle, options: LoadFromUrlOptions): Promise<Source> {
     let headers = {};
-    let fetch: FetchFn;
+    let fetch = crossFetch;
 
     if (options) {
       if (Array.isArray(options.headers)) {
@@ -34,10 +35,6 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
       if (options.fetch) {
         fetch = options.fetch;
       }
-    }
-
-    if (!fetch) {
-      fetch = (await import('cross-fetch')).fetch;
     }
 
     let extraHeaders = {

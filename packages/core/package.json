@@ -42,7 +42,6 @@
     "globby": "10.0.1",
     "graphql-import": "0.7.1",
     "is-glob": "4.0.1",
-    "is-valid-path": "0.1.1",
     "tslib": "^1.9.3",
     "valid-url": "1.0.9"
   },

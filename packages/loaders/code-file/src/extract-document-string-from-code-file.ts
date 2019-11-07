@@ -1,4 +1,5 @@
 import { Source, parse } from 'graphql';
+import { gqlPluckFromFile } from 'graphql-tag-pluck';
 
 export interface ExtractOptions {
   tagPluck?: {
@@ -49,7 +50,6 @@ export async function extractDocumentStringFromCodeFile(source: Source, options?
     }
   } catch (e) {
     try {
-      const { gqlPluckFromFile } = eval(`require('graphql-tag-pluck')`);
       return (await gqlPluckFromFile(source.name, calculateOptions(options))) || null;
     } catch (e) {
       throw new e.constructor(`${e.message} at ${source.name}`);

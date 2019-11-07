@@ -2,6 +2,8 @@ import { DocumentNode, GraphQLSchema, parse, IntrospectionQuery, buildClientSche
 import { resolve, isAbsolute, extname } from 'path';
 import { extractDocumentStringFromCodeFile, ExtractOptions } from './extract-document-string-from-code-file';
 import { SchemaPointerSingle, DocumentPointerSingle, debugLog, printSchemaWithDirectives, Source, UniversalLoader, asArray, fixWindowsPath } from '@graphql-toolkit/common';
+import { readFileSync, existsSync } from 'fs';
+import * as isValidPath from 'is-valid-path';
 
 function isSchemaText(obj: any): obj is string {
   return typeof obj === 'string';
@@ -55,14 +57,14 @@ async function tryToLoadFromExport(rawFilePath: string): Promise<DocumentNode> {
   try {
     filePath = fixWindowsPath(filePath);
     if (require && require.cache) {
-      filePath = eval(`require.resolve('${filePath}')`);
+      filePath = require.resolve(filePath);
 
       if (require.cache[filePath]) {
         delete require.cache[filePath];
       }
     }
 
-    const rawExports = await eval(`require('${filePath}');`);
+    const rawExports = await import(filePath);
 
     if (rawExports) {
       let rawExport = rawExports.default || rawExports.schema || rawExports;
@@ -87,7 +89,6 @@ async function tryToLoadFromExport(rawFilePath: string): Promise<DocumentNode> {
 }
 
 async function tryToLoadFromCodeAst(filePath: string, options?: ExtractOptions): Promise<DocumentNode> {
-  const { readFileSync } = eval(`require('fs')`);
   const content = readFileSync(filePath, 'utf-8');
   const foundDoc = await extractDocumentStringFromCodeFile(new GraphQLSource(content, filePath), options || {});
 
@@ -108,9 +109,17 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
   }
 
   async canLoad(pointer: SchemaPointerSingle | DocumentPointerSingle, options: CodeFileLoaderOptions): Promise<boolean> {
-    const extension = extname(pointer).toLowerCase();
+    if (isValidPath(pointer)) {
+      const extension = extname(pointer).toLowerCase();
+      if (CODE_FILE_EXTENSIONS.includes(extension)) {
+        const normalizedFilePath = isAbsolute(pointer) ? pointer : resolve(options.cwd || process.cwd(), pointer);
+        if (existsSync(normalizedFilePath)) {
+          return true;
+        }
+      }
+    }
 
-    return CODE_FILE_EXTENSIONS.includes(extension);
+    return false;
   }
 
   async load(pointer: SchemaPointerSingle | DocumentPointerSingle, options: CodeFileLoaderOptions): Promise<Source> {
