@@ -25,6 +25,7 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
   async load(pointer: SchemaPointerSingle, options: LoadFromUrlOptions): Promise<Source> {
     let headers = {};
     let fetch = crossFetch;
+    let method: 'GET' | 'POST' = 'POST';
 
     if (options) {
       if (Array.isArray(options.headers)) {
@@ -36,6 +37,10 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
       if (options.fetch) {
         fetch = options.fetch;
       }
+
+      if (options.method) {
+        method = options.method;
+      }
     }
 
     let extraHeaders = {
@@ -45,8 +50,8 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
     };
 
     const response = await fetch(pointer, {
-      method: options.method ? options.method : 'POST',
-      ...(options.method === 'POST'
+      method,
+      ...(method === 'POST'
         ? {
             body: JSON.stringify({
               query: introspectionQuery,
