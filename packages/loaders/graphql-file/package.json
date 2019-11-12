@@ -27,6 +27,7 @@
   "dependencies": {
     "@graphql-toolkit/common": "0.7.0",
     "graphql-import": "0.7.1",
+    "is-valid-path": "0.1.1",
     "tslib": "1.10.0"
   },
   "publishConfig": {
