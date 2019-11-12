@@ -1,6 +1,6 @@
 {
   "name": "@graphql-toolkit/url-loader",
-  "version": "0.6.8",
+  "version": "0.7.0",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": "git@github.com:dotansimha/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
@@ -29,7 +29,7 @@
     "typescript": "3.7.2"
   },
   "dependencies": {
-    "@graphql-toolkit/common": "0.6.8",
+    "@graphql-toolkit/common": "0.7.0",
     "cross-fetch": "3.0.4",
     "tslib": "1.10.0",
     "valid-url": "1.0.9"
