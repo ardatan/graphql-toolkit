@@ -12,11 +12,7 @@ export function mergeUnion(first: UnionTypeDefinitionNode | UnionTypeExtensionNo
       kind: first.kind === 'UnionTypeDefinition' || second.kind === 'UnionTypeDefinition' ? 'UnionTypeDefinition' : 'UnionTypeExtension',
       loc: first.loc,
       types: mergeNamedTypeArray(first.types, second.types),
-    } as any;
-  }
-
-  if (first.kind === 'UnionTypeExtension') {
-    throw new Error(`Unable to extend undefined GraphQL union: ${first.name}`);
+    };
   }
 
   return first;
