@@ -1,6 +1,6 @@
 {
   "name": "@graphql-toolkit/json-file-loader",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": "git@github.com:dotansimha/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
@@ -25,7 +25,7 @@
     "typescript": "3.7.2"
   },
   "dependencies": {
-    "@graphql-toolkit/common": "0.7.0",
+    "@graphql-toolkit/common": "0.7.1",
     "is-valid-path": "0.1.1",
     "tslib": "1.10.0"
   },
