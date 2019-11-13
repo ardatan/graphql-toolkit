@@ -30,7 +30,7 @@ describe('documentsFromGlob', () => {
     const glob = join(__dirname, './test-files/', 'tags.js');
 
     const result = await loadDocuments(glob, {
-      tagPluck: {
+      pluckConfig: {
         modules: [
           {
             name: 'parse-graphql',

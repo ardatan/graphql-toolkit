@@ -2,11 +2,7 @@ import { Source, parse } from 'graphql';
 import { gqlPluckFromFile } from 'graphql-tag-pluck';
 
 export interface ExtractOptions {
-  tagPluck?: {
-    modules?: Array<{ name: string; identifier?: string }>;
-    magicComment?: string;
-    globalIdentifier?: string;
-  };
+  pluckConfig?: GraphQLTagPluckOptions;
 }
 
 interface GraphQLTagPluckOptions {
@@ -16,7 +12,7 @@ interface GraphQLTagPluckOptions {
 }
 
 function calculateOptions(options?: ExtractOptions) {
-  if (!options || !options.tagPluck) {
+  if (!options || !options.pluckConfig) {
     return {};
   }
 
@@ -28,7 +24,7 @@ function calculateOptions(options?: ExtractOptions) {
   };
 
   return Object.keys(keyMap).reduce<GraphQLTagPluckOptions>((prev, curr) => {
-    const value = options.tagPluck[curr];
+    const value = options.pluckConfig[curr];
 
     if (value) {
       return {

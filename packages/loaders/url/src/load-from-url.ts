@@ -9,7 +9,7 @@ type Headers = Record<string, string> | Array<Record<string, string>>;
 
 export interface LoadFromUrlOptions {
   headers?: Headers;
-  fetch?: FetchFn;
+  customFetch?: FetchFn | string;
   method?: 'GET' | 'POST';
 }
 
@@ -34,8 +34,11 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
         headers = options.headers;
       }
 
-      if (options.fetch) {
-        fetch = options.fetch;
+      if (options.customFetch) {
+        if (typeof options.customFetch === 'string') {
+          const [moduleName, fetchFnName] = options.customFetch.split('#');
+          fetch = await import(moduleName).then(module => (fetchFnName ? module[fetchFnName] : module));
+        }
       }
 
       if (options.method) {
