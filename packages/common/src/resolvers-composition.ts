@@ -3,7 +3,7 @@ import { chainFunctions, asArray } from './helpers';
 import { flattenArray } from './flatten-array';
 
 const get = require('lodash/get');
-const set = require('lodash/get');
+const set = require('lodash/set');
 
 export type ResolversComposition<Resolver extends IFieldResolver<any, any> = IFieldResolver<any, any>> = (next: Resolver) => Resolver;
 
