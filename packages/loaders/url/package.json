@@ -8,6 +8,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "bob",
+    "prepack": "bob-update-version",
     "test": "jest --no-watchman --config ../../../jest.config.js"
   },
   "sideEffects": false,
