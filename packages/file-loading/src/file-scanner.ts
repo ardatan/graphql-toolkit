@@ -1,8 +1,9 @@
 import { print } from 'graphql';
 import { IResolvers } from '@kamilkisiela/graphql-tools';
 import { existsSync, statSync, readFileSync, readFile } from 'fs';
-import * as glob from 'glob';
 import { extname } from 'path';
+
+const globby: typeof import('globby') = require('globby');
 
 const DEFAULT_IGNORED_SCHEMA_EXTENSIONS = ['spec', 'test', 'd', 'map'];
 const DEFAULT_SCHEMA_EXTENSIONS = ['gql', 'graphql', 'graphqls', 'ts', 'js'];
@@ -15,8 +16,8 @@ function isDirectory(path: string) {
   return existsSync(path) && statSync(path).isDirectory();
 }
 
-function scanForFiles(globStr: string, globOptions: import('glob').IOptions = {}): string[] {
-  return glob.sync(globStr, { absolute: true, ...globOptions });
+function scanForFiles(globStr: string, globOptions: import('globby').GlobbyOptions = {}): string[] {
+  return globby.sync(globStr, { absolute: true, ...globOptions });
 }
 
 function buildGlob(basePath: string, extensions: string[], ignoredExtensions: string[] = [], recursive: boolean): string {
@@ -52,7 +53,7 @@ export interface LoadSchemaFilesOptions {
   extensions?: string[];
   useRequire?: boolean;
   requireMethod?: any;
-  globOptions?: import('glob').IOptions;
+  globOptions?: import('globby').GlobbyOptions;
   exportNames?: string[];
   recursive?: boolean;
   ignoreIndex?: boolean;
@@ -105,7 +106,7 @@ export interface LoadResolversFilesOptions {
   ignoredExtensions?: string[];
   extensions?: string[];
   requireMethod?: any;
-  globOptions?: import('glob').IOptions;
+  globOptions?: import('globby').GlobbyOptions;
   exportNames?: string[];
   recursive?: boolean;
   ignoreIndex?: boolean;
@@ -146,15 +147,8 @@ export function loadResolversFiles<Resolvers extends IResolvers = IResolvers>(pa
     .filter(t => t);
 }
 
-function scanForFilesAsync(globStr: string, globOptions: import('glob').IOptions = {}): Promise<string[]> {
-  return new Promise((resolve, reject) =>
-    glob(globStr, { absolute: true, ...globOptions }, (err, matches) => {
-      if (err) {
-        reject(err);
-      }
-      resolve(matches);
-    })
-  );
+function scanForFilesAsync(globStr: string, globOptions: import('globby').GlobbyOptions = {}): Promise<string[]> {
+  return globby(globStr, { absolute: true, ...globOptions });
 }
 
 const checkExtension = (path: string, { extensions, ignoredExtensions }: { extensions?: string[]; ignoredExtensions?: string[] }) => {
@@ -181,7 +175,7 @@ const checkExtension = (path: string, { extensions, ignoredExtensions }: { exten
 
 export async function loadSchemaFilesAsync(path: string, options: LoadSchemaFilesOptions = LoadSchemaFilesDefaultOptions): Promise<string[]> {
   const execOptions = { ...LoadSchemaFilesDefaultOptions, ...options };
-  const relevantPaths = await scanForFilesAsync(isDirectory(path) ? buildGlob(path, execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive) : path, options.globOptions);
+  const relevantPaths = scanForFiles(isDirectory(path) ? buildGlob(path, execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive) : path, options.globOptions);
 
   const require$ = (path: string) => import(path);
 
@@ -223,7 +217,7 @@ export async function loadSchemaFilesAsync(path: string, options: LoadSchemaFile
 
 export async function loadResolversFilesAsync<Resolvers extends IResolvers = IResolvers>(path: string, options: LoadResolversFilesOptions = LoadResolversFilesDefaultOptions): Promise<Resolvers[]> {
   const execOptions = { ...LoadResolversFilesDefaultOptions, ...options };
-  const relevantPaths = await scanForFilesAsync(isDirectory(path) ? buildGlob(path, execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive) : path, options.globOptions);
+  const relevantPaths = scanForFiles(isDirectory(path) ? buildGlob(path, execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive) : path, options.globOptions);
 
   const require$ = (path: string) => import(path);
 

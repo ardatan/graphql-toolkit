@@ -1,10 +1,11 @@
 import { DocumentNode, GraphQLSchema, parse } from 'graphql';
-import * as isGlob from 'is-glob';
 import { Source, asArray, isDocumentString, debugLog, fixWindowsPath, Loader, printSchemaWithDirectives } from '@graphql-toolkit/common';
 import { filterKind } from './filter-document-kind';
 import { documentFromString } from './document-from-string';
-import * as globby from 'globby';
 import { join } from 'path';
+
+const isGlob = require('is-glob');
+const globby: typeof import('globby') = require('globby');
 
 export type SingleFileOptions<ExtraConfig = { [key: string]: any }> = ExtraConfig & {
   noRequire?: boolean;

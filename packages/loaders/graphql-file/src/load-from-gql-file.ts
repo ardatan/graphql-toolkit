@@ -2,8 +2,9 @@ import { Source, UniversalLoader, DocumentPointerSingle, SchemaPointerSingle } f
 import { parse, Source as GraphQLSource } from 'graphql';
 import { extname, isAbsolute, resolve } from 'path';
 import { readFileSync, existsSync } from 'fs';
-import * as isValidPath from 'is-valid-path';
 import { importSchema } from 'graphql-import';
+
+const isValidPath = require('is-valid-path');
 
 export type GraphQLFileLoaderOptions = { skipGraphQLImport: boolean; cwd?: string };
 

@@ -7,20 +7,24 @@
   "license": "MIT",
   "scripts": {
     "clean": "rimraf dist",
-    "build": "tsc -m esnext --outDir dist/esnext && tsc -m commonjs --outDir dist/commonjs",
+    "build": "bob",
     "test": "jest --config ../../../jest.config.js"
   },
   "sideEffects": false,
-  "main": "dist/commonjs/index.js",
-  "module": "dist/esnext/index.js",
-  "typings": "dist/esnext/index.d.ts",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "typings": "dist/index.d.ts",
   "typescript": {
-    "definition": "dist/esnext/index.d.ts"
+    "definition": "dist/index.d.ts"
   },
   "peerDependencies": {
     "graphql": "^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"
   },
+  "buildOptions": {
+    "input": "./src/index.ts"
+  },
   "devDependencies": {
+    "@ardatan/bob": "0.1.4",
     "@kamilkisiela/graphql-tools": "4.0.6",
     "@types/jest": "24.0.23",
     "graphql": "14.5.8",

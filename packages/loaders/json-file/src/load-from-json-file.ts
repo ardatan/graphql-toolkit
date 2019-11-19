@@ -2,7 +2,8 @@ import { extname, isAbsolute, resolve as resolvePath } from 'path';
 import { IntrospectionQuery, buildClientSchema, parse } from 'graphql';
 import { Source, printSchemaWithDirectives, SchemaPointerSingle, DocumentLoader } from '@graphql-toolkit/common';
 import { existsSync, readFileSync } from 'fs';
-import * as isValidPath from 'is-valid-path';
+
+const isValidPath = require('is-valid-path');
 
 function stripBOM(content: string): string {
   content = content.toString();

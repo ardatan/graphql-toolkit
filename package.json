@@ -37,6 +37,6 @@
   },
   "workspaces": [
     "packages/*",
-    "packages/loaders/**/*"
+    "packages/loaders/*"
   ]
 }

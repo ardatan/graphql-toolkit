@@ -3,7 +3,8 @@ import { resolve, isAbsolute, extname } from 'path';
 import { extractDocumentStringFromCodeFile, ExtractOptions } from './extract-document-string-from-code-file';
 import { SchemaPointerSingle, DocumentPointerSingle, debugLog, printSchemaWithDirectives, Source, UniversalLoader, asArray, fixWindowsPath } from '@graphql-toolkit/common';
 import { readFileSync, existsSync } from 'fs';
-import * as isValidPath from 'is-valid-path';
+
+const isValidPath = require('is-valid-path');
 
 function isSchemaText(obj: any): obj is string {
   return typeof obj === 'string';
