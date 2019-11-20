@@ -1,8 +1,8 @@
 import { DocumentNode, GraphQLSchema, parse, IntrospectionQuery, buildClientSchema, Source as GraphQLSource } from 'graphql';
 import { resolve, isAbsolute, extname } from 'path';
-import { extractDocumentStringFromCodeFile, ExtractOptions } from './extract-document-string-from-code-file';
 import { SchemaPointerSingle, DocumentPointerSingle, debugLog, printSchemaWithDirectives, Source, UniversalLoader, asArray, fixWindowsPath } from '@graphql-toolkit/common';
-import { readFileSync, existsSync } from 'fs';
+import { existsSync } from 'fs';
+import { gqlPluckFromFile, GraphQLTagPluckOptions } from '@graphql-toolkit/graphql-tag-pluck';
 
 const isValidPath = require('is-valid-path');
 
@@ -89,10 +89,8 @@ async function tryToLoadFromExport(rawFilePath: string): Promise<DocumentNode> {
   }
 }
 
-async function tryToLoadFromCodeAst(filePath: string, options?: ExtractOptions): Promise<DocumentNode> {
-  const content = readFileSync(filePath, 'utf-8');
-  const foundDoc = await extractDocumentStringFromCodeFile(new GraphQLSource(content, filePath), options || {});
-
+function tryToLoadFromCodeAst(filePath: string, options?: CodeFileLoaderOptions): DocumentNode {
+  const foundDoc = gqlPluckFromFile(filePath, options && options.pluckConfig);
   if (foundDoc) {
     return parse(foundDoc);
   } else {
@@ -100,7 +98,7 @@ async function tryToLoadFromCodeAst(filePath: string, options?: ExtractOptions):
   }
 }
 
-export type CodeFileLoaderOptions = ExtractOptions & { noRequire?: boolean; cwd?: string; require?: string | string[] };
+export type CodeFileLoaderOptions = { noRequire?: boolean; cwd?: string; require?: string | string[]; pluckConfig?: GraphQLTagPluckOptions };
 
 const CODE_FILE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'];
 
@@ -128,7 +126,7 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
     const normalizedFilePath = isAbsolute(pointer) ? pointer : resolve(options.cwd || process.cwd(), pointer);
 
     try {
-      const result = await tryToLoadFromCodeAst(normalizedFilePath, options);
+      const result = tryToLoadFromCodeAst(normalizedFilePath, options);
 
       if (result) {
         loaded = result;

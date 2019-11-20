@@ -1,15 +1,14 @@
 {
-  "name": "@graphql-toolkit/graphql-file-loader",
+  "name": "@graphql-toolkit/graphql-tag-pluck",
   "version": "0.7.2",
-  "description": "A set of utils for faster development of GraphQL tools",
-  "repository": "git@github.com:dotansimha/graphql-toolkit.git",
-  "author": "Dotan Simha <dotansimha@gmail.com>",
+  "description": "Pluck graphql-tag template literals",
   "license": "MIT",
+  "repository": "git@github.com:ardatan/graphql-toolkit.git",
   "scripts": {
     "clean": "rimraf dist",
     "build": "bob",
     "prepack": "bob-update-version",
-    "test": "jest --passWithNoTests --passWithNoTests --no-watchman --config ../../../jest.config.js"
+    "test": "jest --passWithNoTests --no-watchman --config ../../jest.config.js"
   },
   "sideEffects": false,
   "main": "dist/index.cjs.js",
@@ -24,17 +23,21 @@
   "buildOptions": {
     "input": "./src/index.ts"
   },
+  "dependencies": {
+    "@babel/parser": "7.7.3",
+    "@babel/traverse": "7.7.2",
+    "@babel/types": "7.7.2"
+  },
   "devDependencies": {
     "@ardatan/bob": "0.1.4",
-    "@kamilkisiela/graphql-tools": "4.0.6",
+    "@types/jest": "24.0.23",
+    "@types/node": "12.12.11",
+    "@types/tmp": "0.1.0",
     "graphql": "14.5.8",
+    "jest": "24.9.0",
+    "tmp": "0.1.0",
+    "ts-jest": "24.1.0",
     "typescript": "3.7.2"
-  },
-  "dependencies": {
-    "@graphql-toolkit/common": "0.7.2",
-    "graphql-import": "0.7.1",
-    "is-valid-path": "0.1.1",
-    "tslib": "1.10.0"
   },
   "publishConfig": {
     "access": "public"
