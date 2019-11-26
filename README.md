@@ -10,15 +10,15 @@ Included tools:
 
 These utils are useful for scanning, loading and building a GraphQL schema from any input.
 
-You can either specify a GraphQL endpoint, local introspection JSON file, code file that `export`s a GraphQLSchema, AST string and `.graphql` files (with support for `glob` expression).
+You can specify a GraphQL endpoint, local introspection JSON file, code file that `export`s a GraphQLSchema, AST string and `.graphql` files (with support for `glob` expression).
 
-It also merges all found schema files into a complete schema, and has support for `#import` syntax (using [`graphql-import`](https://github.com/prisma/graphql-import)).
+All found schema files can be merged into a complete schema. There is support for `#import` syntax (using [`graphql-import`](https://github.com/prisma/graphql-import)).
 
-You can also extend the loads by implementing you own loader (implement the interface `SchemaLoader`).
+The user is given the option of implementing their own loader (implement the interface `SchemaLoader`).
 
 The schema loading util is using loaders, and implemented using [chain-of-responsibility pattern](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern). 
 
-You don't have to specify which loader to use - just provide your input and this utils will detect it automatically.
+Specifiying the loader is not necessary. The user need only provide the inputs. The utils will detect it automatically.
 
 Usage:
 
@@ -36,7 +36,7 @@ const schema5 = loadSchema('./src/**/*.graphql'); // load from multiple files us
 
 Similar to schema loading - but meant to use for GraphQL documents (query/mutation/subscription/fragment).
 
-You an specify any input as source, and this utils will detect it automatically. 
+Any input provided as a source will be recognized by utils automatically.
 
 It also extracts usages of `gql` from code files using [`graphql-tag-pluck`](https://github.com/DAB0mB/graphql-tag-pluck).
 
@@ -55,7 +55,7 @@ const document4 = loadDocuments('./src/my-component.ts'); // load from code file
 
 Originally implemented in [graphql-modules](https://github.com/Urigo/graphql-modules). This tools merged GraphQL type definitions and schema. It aims to merge all possible types, interfaces, enums and unions, without conflicts.
 
-It also merged resolvers by using deep-merge, so you can separate your resolvers implementating across multiple objects and the merge it into a single `resolvers` object.
+Resolvers are merged using deep-merge. Resolver implementations can be separated across multiple objects and then merged into a single `resolvers` object.
 
 ```graphql
 # a1.graphql
