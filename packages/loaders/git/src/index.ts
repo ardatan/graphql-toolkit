@@ -1,7 +1,6 @@
 import { buildClientSchema, printSchema, parse, DocumentNode } from 'graphql';
 import { UniversalLoader } from '@graphql-toolkit/common';
-
-const simplegit = require('simple-git/promise');
+import simplegit from 'simple-git/promise';
 
 // git:branch:path/to/file
 function extractData(

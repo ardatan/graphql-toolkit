@@ -30,7 +30,7 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
@@ -78,7 +78,7 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
@@ -131,7 +131,7 @@ describe('graphql-tag-pluck', () => {
       }
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
@@ -183,7 +183,7 @@ describe('graphql-tag-pluck', () => {
       // \`;
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       query IndexQuery {
@@ -230,7 +230,7 @@ describe('graphql-tag-pluck', () => {
       \`;
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       query IndexQuery {
@@ -282,7 +282,7 @@ describe('graphql-tag-pluck', () => {
       \`;
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       query myQueryInNamespace {
@@ -322,7 +322,7 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
@@ -366,7 +366,7 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
@@ -411,7 +411,7 @@ describe('graphql-tag-pluck', () => {
     const fail = Error('Function did not throw')
 
     try {
-      gqlPluck.fromFile(file.name)
+      await gqlPluck.fromFile(file.name)
 
       throw fail
     }
@@ -447,7 +447,7 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
@@ -488,7 +488,7 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
@@ -518,7 +518,7 @@ describe('graphql-tag-pluck', () => {
         }\`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       enum MessageTypes {
@@ -544,7 +544,7 @@ describe('graphql-tag-pluck', () => {
         }\`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       enum MessageTypes {
@@ -576,7 +576,7 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual('')
   })
@@ -607,7 +607,7 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
@@ -629,7 +629,7 @@ describe('graphql-tag-pluck', () => {
     })
 
     writeFileSync(file.name, freeText(`
-      import gql from 'graphql-tag'
+    import gql from 'graphql-tag'
 
       const fragment = gql(\`
         fragment Foo on FooType {
@@ -648,7 +648,7 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
@@ -681,7 +681,7 @@ describe('graphql-tag-pluck', () => {
       }
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
@@ -697,7 +697,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck graphql-tag template literals from code string', async () => {
-    const gqlString = gqlPluck.fromCodeString(freeText(`
+    const gqlString = await gqlPluck.fromCodeString(freeText(`
       import gql from 'graphql-tag'
 
       const fragment = gql(\`
@@ -756,7 +756,7 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
@@ -795,7 +795,7 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name, {
+    const gqlString = await gqlPluck.fromFile(file.name, {
       globalGqlIdentifierName: 'graphql'
     })
 
@@ -827,7 +827,7 @@ describe('graphql-tag-pluck', () => {
         }\`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name, {
+    const gqlString = await gqlPluck.fromFile(file.name, {
       gqlMagicComment: 'GQL'
     })
 
@@ -866,7 +866,7 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name, {
+    const gqlString = await gqlPluck.fromFile(file.name, {
       modules: [
         { name: 'my-graphql-tag' }
       ]
@@ -911,7 +911,7 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
@@ -952,7 +952,7 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
@@ -993,7 +993,7 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
@@ -1009,7 +1009,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck magic comment template literals with a trailing semicolon', async () => {
-    const gqlString = gqlPluck.fromCodeString("/* GraphQL */ `{}`;")
+    const gqlString = await gqlPluck.fromCodeString("/* GraphQL */ `{}`;")
     expect(gqlString).toEqual("{}")
   })
 
@@ -1032,7 +1032,7 @@ describe('graphql-tag-pluck', () => {
     \`
     `))
 
-    const gqlString = gqlPluck.fromFile(file.name)
+    const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
         type User { 

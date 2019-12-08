@@ -2,8 +2,7 @@ import { print } from 'graphql';
 import { IResolvers } from '@kamilkisiela/graphql-tools';
 import { existsSync, statSync, readFileSync, readFile } from 'fs';
 import { extname } from 'path';
-
-const globby: typeof import('globby') = require('globby');
+import globby from 'globby';
 
 const DEFAULT_IGNORED_SCHEMA_EXTENSIONS = ['spec', 'test', 'd', 'map'];
 const DEFAULT_SCHEMA_EXTENSIONS = ['gql', 'graphql', 'graphqls', 'ts', 'js'];

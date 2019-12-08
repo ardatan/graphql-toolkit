@@ -1,4 +1,5 @@
 import { parse } from 'graphql';
+import isGlob from 'is-glob';
 export const asArray = <T>(fns: T | T[]) => (Array.isArray(fns) ? fns : [fns]);
 
 export function chainFunctions(funcs: any[]) {
@@ -46,4 +47,9 @@ export function isDocumentString(str: string): boolean {
   } catch (e) {
     return false;
   }
+}
+
+const invalidPathRegex = /[‘“!#$%&+^<=>`]/;
+export function isValidPath(str: string): boolean {
+  return typeof str === 'string' && !isGlob(str) && !invalidPathRegex.test(str);
 }

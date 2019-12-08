@@ -3,9 +3,8 @@ import { Source, asArray, isDocumentString, debugLog, fixWindowsPath, Loader, pr
 import { filterKind } from './filter-document-kind';
 import { documentFromString } from './document-from-string';
 import { join } from 'path';
-
-const isGlob = require('is-glob');
-const globby: typeof import('globby') = require('globby');
+import isGlob from 'is-glob';
+import globby from 'globby';
 
 export type SingleFileOptions<ExtraConfig = { [key: string]: any }> = ExtraConfig & {
   noRequire?: boolean;
@@ -35,12 +34,12 @@ async function getCustomLoaderByPath(path: string, cwd: string): Promise<any> {
   try {
     const requiredModule = await import(join(cwd, path));
 
-    if (requiredModule && requiredModule.default && typeof requiredModule.default === 'function') {
-      return requiredModule.default;
-    }
-
-    if (requiredModule && typeof requiredModule === 'function') {
-      return requiredModule;
+    if (requiredModule) {
+      if (requiredModule.default && typeof requiredModule.default === 'function') {
+        return requiredModule.default;
+      } else if (typeof requiredModule === 'function') {
+        return requiredModule;
+      }
     }
 
     return null;

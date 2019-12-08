@@ -1,13 +1,13 @@
 import { parse as babelParse, ParserOptions } from '@babel/parser';
 import { freeText } from '../utils';
 
-export const parseCode = (code: string, config: ParserOptions) => {
+export const parseCode = async (code: string, config: ParserOptions) => {
   // The 'typescript' plug-in has few bugs... It's just better to use the native one
   // even though it affects performance
   if (config.plugins.includes('typescript')) {
-    let ts;
+    let ts: typeof import('typescript');
     try {
-      ts = require('typescript');
+      ts = await import('typescript');
     } catch (e) {
       throw Error(
         freeText(`
@@ -30,7 +30,7 @@ export const parseCode = (code: string, config: ParserOptions) => {
         target: ts.ScriptTarget.ES2018,
         // "preserve" mode would be more correct, but it will keep not transpile generic
         // React.Components which are provided with null or undefined e.g. <Foo<undefined />>
-        jsx: config.plugins.includes('jsx') && 'react',
+        jsx: config.plugins.includes('jsx') && ts.JsxEmit.React,
       },
     }).outputText;
 

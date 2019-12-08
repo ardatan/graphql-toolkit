@@ -16,9 +16,7 @@
     "alwaysStrict": true,
     "noImplicitReturns": true,
     "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "noUnusedParameters": false
   },
   "exclude": ["node_modules", "tests", "dist"]
 }

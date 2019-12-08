@@ -1,4 +1,4 @@
-const AggregateError = require('aggregate-error');
+import AggregateError from 'aggregate-error';
 import { Kind, validate, GraphQLSchema, GraphQLError, specifiedRules, FragmentDefinitionNode, ValidationContext, ASTVisitor } from 'graphql';
 import { Source } from './loaders';
 

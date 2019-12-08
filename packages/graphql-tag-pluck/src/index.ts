@@ -23,7 +23,7 @@ supportedExtensions.toString = function toString() {
   return this.join(', ');
 };
 
-export const gqlPluckFromFile = (filePath: string, options: GraphQLTagPluckOptions = {}) => {
+export const gqlPluckFromFile = async (filePath: string, options: GraphQLTagPluckOptions = {}) => {
   if (typeof filePath != 'string') {
     throw TypeError('Provided file path must be a string');
   }
@@ -49,7 +49,7 @@ export const gqlPluckFromFile = (filePath: string, options: GraphQLTagPluckOptio
   return gqlPluckFromCodeString(code, options);
 };
 
-export const gqlPluckFromCodeString = (code: string, options: GraphQLTagPluckOptions = {}): string => {
+export const gqlPluckFromCodeString = async (code: string, options: GraphQLTagPluckOptions = {}): Promise<string> => {
   if (typeof code != 'string') {
     throw TypeError('Provided code must be a string');
   }
@@ -69,7 +69,7 @@ export const gqlPluckFromCodeString = (code: string, options: GraphQLTagPluckOpt
   }
 
   const out = { returnValue: null };
-  const ast = parseCode(code, generateConfig(code, options));
+  const ast = await parseCode(code, generateConfig(code, options));
   const visitor = createVisitor(ast['code'], out, options);
 
   traverse(ast, visitor);

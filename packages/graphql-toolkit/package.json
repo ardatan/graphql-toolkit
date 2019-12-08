@@ -2,11 +2,12 @@
   "name": "graphql-toolkit",
   "version": "0.7.4",
   "description": "Common package containting utils and types for GraphQL Toolkit",
-  "repository": "git@github.com:dotansimha/graphql-toolkit.git",
+  "repository": "git@github.com:ardatan/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
   "license": "MIT",
   "scripts": {
     "clean": "rimraf dist",
+    "prebuild": "yarn clean",
     "build": "bob",
     "prepack": "bob-update-version",
     "test": "jest --passWithNoTests --no-watchman --config ../../jest.config.js"
@@ -43,6 +44,7 @@
     "@graphql-toolkit/url-loader": "0.7.4"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "directory": "dist"
   }
 }

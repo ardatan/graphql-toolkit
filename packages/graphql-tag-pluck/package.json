@@ -6,6 +6,7 @@
   "repository": "git@github.com:ardatan/graphql-toolkit.git",
   "scripts": {
     "clean": "rimraf dist",
+    "prebuild": "yarn clean",
     "build": "bob",
     "prepack": "bob-update-version",
     "test": "jest --passWithNoTests --no-watchman --config ../../jest.config.js"
@@ -40,6 +41,7 @@
     "typescript": "3.7.2"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "directory": "dist"
   }
 }

@@ -2,11 +2,12 @@
   "name": "@graphql-toolkit/url-loader",
   "version": "0.7.4",
   "description": "A set of utils for faster development of GraphQL tools",
-  "repository": "git@github.com:dotansimha/graphql-toolkit.git",
+  "repository": "git@github.com:ardatan/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
   "license": "MIT",
   "scripts": {
     "clean": "rimraf dist",
+    "prebuild": "yarn clean",
     "build": "bob",
     "prepack": "bob-update-version",
     "test": "jest --passWithNoTests --passWithNoTests --no-watchman --config ../../../jest.config.js"
@@ -40,6 +41,7 @@
     "valid-url": "1.0.9"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "directory": "dist"
   }
 }

@@ -2,11 +2,12 @@
   "name": "@graphql-toolkit/file-loading",
   "version": "0.7.4",
   "description": "A set of utils for faster development of GraphQL tools",
-  "repository": "git@github.com:dotansimha/graphql-toolkit.git",
+  "repository": "git@github.com:ardatan/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
   "license": "MIT",
   "scripts": {
     "clean": "rimraf dist",
+    "prebuild": "yarn clean",
     "build": "bob",
     "prepack": "bob-update-version",
     "test": "jest --passWithNoTests --no-watchman --config ../../jest.config.js"
@@ -39,6 +40,7 @@
     "globby": "10.0.1"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "directory": "dist"
   }
 }

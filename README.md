@@ -38,7 +38,7 @@ Similar to schema loading - but meant to use for GraphQL documents (query/mutati
 
 Any input provided as a source will be recognized by utils automatically.
 
-It also extracts usages of `gql` from code files using [`graphql-tag-pluck`](https://github.com/DAB0mB/graphql-tag-pluck).
+It also extracts usages of `gql` from code files using [`graphql-tag-pluck`](https://github.com/ardatan/graphql-toolkit/tree/master/packages/graphql-tag-pluck).
 
 Usage:
 
