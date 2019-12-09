@@ -38,7 +38,7 @@
     "jest": "24.9.0",
     "tmp": "0.1.0",
     "ts-jest": "24.2.0",
-    "typescript": "3.7.2"
+    "typescript": "3.7.3"
   },
   "publishConfig": {
     "access": "public",
