@@ -25,7 +25,7 @@
     "input": "./src/index.ts"
   },
   "dependencies": {
-    "@babel/parser": "7.7.4",
+    "@babel/parser": "7.7.5",
     "@babel/traverse": "7.7.4",
     "@babel/types": "7.7.4"
   },
