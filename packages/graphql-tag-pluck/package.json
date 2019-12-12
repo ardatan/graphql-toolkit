@@ -43,5 +43,8 @@
   "publishConfig": {
     "access": "public",
     "directory": "dist"
+  },
+  "optionalDependencies": {
+    "vue-template-compiler": "^2.6.10"
   }
 }

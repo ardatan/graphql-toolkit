@@ -15,13 +15,21 @@ export interface GraphQLTagPluckOptions {
 
 const gqlExtensions = ['.graphqls', '.graphql', '.gqls', '.gql'];
 
-const jsExtensions = ['.js', '.jsx', '.ts', '.tsx', '.flow', '.flow.js', '.flow.jsx'];
+const jsExtensions = ['.js', '.jsx', '.ts', '.tsx', '.flow', '.flow.js', '.flow.jsx', '.vue'];
 
 const supportedExtensions = [...gqlExtensions, ...jsExtensions];
 
 supportedExtensions.toString = function toString() {
   return this.join(', ');
 };
+
+function pluckVueFileScript(fileData): string {
+  const compiler = require('vue-template-compiler');
+  const parsed = compiler.parseComponent(fileData);
+  const script: string = parsed.script ? parsed.script.content : '';
+
+  return script;
+}
 
 export const gqlPluckFromFile = async (filePath: string, options: GraphQLTagPluckOptions = {}) => {
   if (typeof filePath != 'string') {
@@ -45,7 +53,12 @@ export const gqlPluckFromFile = async (filePath: string, options: GraphQLTagPluc
   filePath = resolve(process.cwd(), filePath);
   options = { ...options, fileExt };
 
-  const code = readFileSync(filePath, { encoding: 'utf8' });
+  let code = readFileSync(filePath, { encoding: 'utf8' });
+
+  if (fileExt === '.vue') {
+    code = pluckVueFileScript(code);
+  }
+
   return gqlPluckFromCodeString(code, options);
 };
 

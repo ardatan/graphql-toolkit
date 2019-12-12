@@ -98,7 +98,7 @@ async function tryToLoadFromCodeAst(filePath: string, options?: CodeFileLoaderOp
 
 export type CodeFileLoaderOptions = { noRequire?: boolean; cwd?: string; require?: string | string[]; pluckConfig?: GraphQLTagPluckOptions };
 
-const CODE_FILE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'];
+const CODE_FILE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.vue'];
 
 export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
   loaderId(): string {

@@ -196,6 +196,122 @@ describe('graphql-tag-pluck', () => {
     `))
   })
 
+  it('should pluck graphql-tag template literals from .vue JavaScript file', async () => {
+    const file = await createTmpFile({
+      unsafeCleanup: true,
+      template: '/tmp/tmp-XXXXXX.vue',
+    })
+
+    writeFileSync(file.name, freeText(`
+      <template>
+        <div>test</div>
+      </template>
+
+      <script>
+      import Vue from 'vue'
+      import gql from 'graphql-tag';
+
+      export default Vue.extend({
+        name: 'TestComponent'
+      })
+
+      export const pageQuery = gql\`
+        query IndexQuery {
+          site {
+            siteMetadata {
+              title
+            }
+          }
+        }
+      \`;
+
+      // export const pageQuery = gql\`
+      //   query OtherQuery {
+      //     site {
+      //       siteMetadata {
+      //         title
+      //       }
+      //     }
+      //   }
+      // \`;
+      </script>
+
+      <style>
+      .test { color: red };
+      </style>
+    `))
+
+    const gqlString = await gqlPluck.fromFile(file.name)
+
+    expect(gqlString).toEqual(freeText(`
+      query IndexQuery {
+        site {
+          siteMetadata {
+            title
+          }
+        }
+      }
+    `))
+  })
+
+  it('should pluck graphql-tag template literals from .vue TS/Pug/SCSS file', async () => {
+    const file = await createTmpFile({
+      unsafeCleanup: true,
+      template: '/tmp/tmp-XXXXXX.vue',
+    })
+
+    writeFileSync(file.name, freeText(`
+      <template lang="pug">
+        <div>test</div>
+      </template>
+
+      <script lang="ts">
+      import Vue from 'vue'
+      import gql from 'graphql-tag';
+
+      export default Vue.extend({
+        name: 'TestComponent'
+      })
+
+      export const pageQuery = gql\`
+        query IndexQuery {
+          site {
+            siteMetadata {
+              title
+            }
+          }
+        }
+      \`;
+
+      // export const pageQuery = gql\`
+      //   query OtherQuery {
+      //     site {
+      //       siteMetadata {
+      //         title
+      //       }
+      //     }
+      //   }
+      // \`;
+      </script>
+
+      <style lang="scss">
+      .test { color: red };
+      </style>
+    `))
+
+    const gqlString = await gqlPluck.fromFile(file.name)
+
+    expect(gqlString).toEqual(freeText(`
+      query IndexQuery {
+        site {
+          siteMetadata {
+            title
+          }
+        }
+      }
+    `))
+  })
+
   it('should pluck graphql-tag template literals from .tsx file with generic jsx elements', async () => {
     const file = await createTmpFile({
       unsafeCleanup: true,
@@ -1023,23 +1139,23 @@ describe('graphql-tag-pluck', () => {
     import gql from 'graphql-tag';
 
     export default gql\`
-      type User { 
-        id: ID! 
+      type User {
+        id: ID!
         "Choose a nice username, so users can \\\`@mention\\\` you."
-        username: String! 
-        email: String! 
-      } 
+        username: String!
+        email: String!
+      }
     \`
     `))
 
     const gqlString = await gqlPluck.fromFile(file.name)
 
     expect(gqlString).toEqual(freeText(`
-        type User { 
-          id: ID! 
+        type User {
+          id: ID!
           "Choose a nice username, so users can \`@mention\` you."
-          username: String! 
-          email: String! 
+          username: String!
+          email: String!
         }
     `))
   })
