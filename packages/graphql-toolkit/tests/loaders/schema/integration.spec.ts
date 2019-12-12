@@ -7,7 +7,7 @@ describe('loadSchema', () => {
       await loadSchema(schemaPath);
       expect(true).toBeFalsy(); // should throw
     } catch (e) {
-      expect(e.toString()).toContain(`SyntaxError: Unterminated template (12:1)`);
+      expect(e.toString()).toContain(`SyntaxError`);
     }
   });
 
