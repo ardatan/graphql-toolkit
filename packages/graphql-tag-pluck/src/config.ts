@@ -58,6 +58,9 @@ export default function generateConfig(code: string, options: GraphQLTagPluckOpt
     case '.flow':
       plugins.push('jsx', ...flowPlugins);
       break;
+    case '.vue':
+      plugins.push('vue');
+      break;
     default:
       plugins.push('jsx', ...dynamicFlowPlugins);
       break;

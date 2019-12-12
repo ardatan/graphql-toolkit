@@ -1,10 +1,11 @@
 import generateConfig from './config';
-import { parseCode } from './libs/parse-code';
+import { parse } from '@babel/parser';
 import { getExtNameFromFilePath } from './libs/extname';
 import createVisitor from './visitor';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import traverse from '@babel/traverse';
+import { freeText } from './utils';
 
 export interface GraphQLTagPluckOptions {
   modules?: Array<{ name: string; identifier?: string }>;
@@ -23,12 +24,28 @@ supportedExtensions.toString = function toString() {
   return this.join(', ');
 };
 
-function pluckVueFileScript(fileData): string {
-  const compiler = require('vue-template-compiler');
-  const parsed = compiler.parseComponent(fileData);
-  const script: string = parsed.script ? parsed.script.content : '';
+async function pluckVueFileScript(fileData) {
+  let vueTemplateCompiler: typeof import('vue-template-compiler');
+  try {
+    vueTemplateCompiler = await import('vue-template-compiler');
+  } catch (e) {
+    throw Error(
+      freeText(`
+      GraphQL template literals cannot be plucked from a Vue template code without having the "vue-template-compiler" package installed.
+      Please install it and try again.
 
-  return script;
+      Via NPM:
+
+          $ npm install vue-template-compiler
+
+      Via Yarn:
+
+          $ yarn add vue-template-compiler
+    `)
+    );
+  }
+  const parsed = vueTemplateCompiler.parseComponent(fileData);
+  return parsed.script ? parsed.script.content : '';
 }
 
 export const gqlPluckFromFile = async (filePath: string, options: GraphQLTagPluckOptions = {}) => {
@@ -56,7 +73,7 @@ export const gqlPluckFromFile = async (filePath: string, options: GraphQLTagPluc
   let code = readFileSync(filePath, { encoding: 'utf8' });
 
   if (fileExt === '.vue') {
-    code = pluckVueFileScript(code);
+    code = await pluckVueFileScript(code);
   }
 
   return gqlPluckFromCodeString(code, options);
@@ -82,8 +99,8 @@ export const gqlPluckFromCodeString = async (code: string, options: GraphQLTagPl
   }
 
   const out = { returnValue: null };
-  const ast = await parseCode(code, generateConfig(code, options));
-  const visitor = createVisitor(ast['code'], out, options);
+  const ast = parse(code, generateConfig(code, options));
+  const visitor = createVisitor(code, out, options);
 
   traverse(ast, visitor);
 
