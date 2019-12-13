@@ -39,7 +39,7 @@
     "tmp": "0.1.0",
     "ts-jest": "24.2.0",
     "typescript": "3.7.3",
-    "vue-template-compiler": "2.6.10"
+    "vue-template-compiler": "2.6.11"
   },
   "publishConfig": {
     "access": "public",
