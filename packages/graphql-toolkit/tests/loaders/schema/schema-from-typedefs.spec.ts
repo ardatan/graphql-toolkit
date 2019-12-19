@@ -66,4 +66,32 @@ describe('schema from typedefs', () => {
     expect(schema.getTypeMap()['User']).toBeDefined();
     expect(schema.getTypeMap()['Query']).toBeDefined();
   });
+
+  it('should work with extensions (static graphql file)', async () => {
+    const schemaPath = './tests/loaders/schema/test-files/schema-dir/extensions/schema-with-extend.graphql';
+    const schema = await loadSchema(schemaPath);
+    const queryFields = Object.keys(schema.getQueryType().getFields());
+
+    expect(queryFields).toContain('foo');
+    expect(queryFields).toContain('bar');
+  });
+
+  it('should work with extensions (multiple graphql files)', async () => {
+    const schemaPath = './tests/loaders/schema/test-files/schema-dir/extensions/*.graphql';
+    const schema = await loadSchema(schemaPath);
+    const queryFields = Object.keys(schema.getQueryType().getFields());
+
+    expect(queryFields).toContain('foo');
+    expect(queryFields).toContain('bar');
+    expect(queryFields).toContain('baz');
+  });
+
+  it('should work with extensions (static js file with typedefs)', async () => {
+    const schemaPath = './tests/loaders/schema/test-files/schema-dir/extensions/type-defs.js';
+    const schema = await loadSchema(schemaPath);
+    const queryFields = Object.keys(schema.getQueryType().getFields());
+
+    expect(queryFields).toContain('foo');
+    expect(queryFields).toContain('bar');
+  });
 });

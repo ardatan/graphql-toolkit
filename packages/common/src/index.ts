@@ -10,5 +10,6 @@ export * from './get-fields-with-directives';
 export * from './get-implementing-types';
 export * from './get-schema-directive-from-directive-resolver';
 export * from './print-schema-with-directives';
+export * from './get-fields-with-directives';
 export * from './validate-documents';
 export * from './resolvers-composition';
