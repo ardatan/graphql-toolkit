@@ -1,8 +1,9 @@
-import { introspectionQuery, buildClientSchema, parse, IntrospectionQuery, ExecutionResult, print } from 'graphql';
+import { buildClientSchema, parse, IntrospectionQuery, print, getIntrospectionQuery } from 'graphql';
 import { SchemaPointerSingle, Source, printSchemaWithDirectives, DocumentLoader, fixSchemaAst } from '@graphql-toolkit/common';
 import { isUri } from 'valid-url';
 import { fetch as crossFetch } from 'cross-fetch';
 import { makeRemoteExecutableSchema } from '@kamilkisiela/graphql-tools';
+import { Fetcher } from '@kamilkisiela/graphql-tools/dist/stitching/makeRemoteExecutableSchema';
 
 export type FetchFn = typeof import('cross-fetch').fetch;
 
@@ -53,13 +54,12 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
       ...headers,
     };
 
-    const fetcher = async ({ query: queryDocument, variables, operationName, context }) => {
-      const query = typeof queryDocument === 'string' ? queryDocument : print(queryDocument);
+    const fetcher: Fetcher = async ({ query: queryDocument, variables, operationName }) => {
       const fetchResult = await fetch(pointer, {
         method,
         ...(method === 'POST'
           ? {
-              body: JSON.stringify({ query, variables, operationName }),
+              body: JSON.stringify({ query: print(queryDocument), variables, operationName }),
             }
           : {}),
         headers: extraHeaders,
@@ -67,7 +67,12 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
       return fetchResult.json();
     };
 
-    const body: ExecutionResult = await fetcher({ query: introspectionQuery, variables: {}, operationName: 'introspection', context: {} });
+    const body = await fetcher({
+      query: parse(getIntrospectionQuery({ descriptions: true })),
+      variables: {},
+      operationName: 'IntrospectionQuery',
+      context: {},
+    });
 
     let errorMessage;
 

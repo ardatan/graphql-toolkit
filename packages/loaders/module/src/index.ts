@@ -1,5 +1,5 @@
-import { printSchema, parse, DocumentNode, isSchema } from 'graphql';
-import { UniversalLoader } from '@graphql-toolkit/common';
+import { parse, isSchema } from 'graphql';
+import { UniversalLoader, fixSchemaAst, printSchemaWithDirectives } from '@graphql-toolkit/common';
 
 // module:node/module#export
 function extractData(
@@ -27,7 +27,7 @@ export class ModuleLoader implements UniversalLoader {
   async canLoad(pointer: string) {
     return typeof pointer === 'string' && pointer.toLowerCase().startsWith('module:');
   }
-  async load(pointer: string) {
+  async load(pointer: string, options: any) {
     const { modulePath, exportName } = extractData(pointer);
 
     let thing: any;
@@ -37,26 +37,32 @@ export class ModuleLoader implements UniversalLoader {
 
       thing = imported[!exportName || exportName === 'default' ? 'default' : exportName];
 
-      let document: DocumentNode;
-
       if (!thing) {
         throw new Error('Unable to import an object from module: ' + modulePath);
       }
 
       if (isSchema(thing)) {
-        document = parse(printSchema(thing));
+        const schema = fixSchemaAst(thing, options as any);
+        return {
+          schema,
+          get document() {
+            return parse(printSchemaWithDirectives(schema));
+          },
+          location: pointer,
+        };
       } else if (typeof thing === 'string') {
-        document = parse(thing);
+        return {
+          location: pointer,
+          document: parse(thing),
+        };
       } else if (typeof thing === 'object' && thing.kind === 'Document') {
-        document = thing;
-      } else {
-        throw new Error(`Imported object was not a string, DocumentNode or GraphQLSchema`);
+        return {
+          location: pointer,
+          document: thing,
+        };
       }
 
-      return {
-        location: pointer,
-        document,
-      };
+      throw new Error(`Imported object was not a string, DocumentNode or GraphQLSchema`);
     } catch (error) {
       throw new Error('Unable to load schema from module: ' + `${error && error.message ? error.message : error}`);
     }

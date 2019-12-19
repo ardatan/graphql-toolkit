@@ -64,7 +64,7 @@ export class JsonFileLoader implements DocumentLoader {
             throw new Error('Invalid schema provided!');
           }
 
-          const schema = buildClientSchema(introspection);
+          const schema = buildClientSchema(introspection, options as any);
 
           resolve({
             location: pointer,
