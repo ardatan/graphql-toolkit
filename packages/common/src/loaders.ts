@@ -1,9 +1,10 @@
-import { DocumentNode } from 'graphql';
+import { DocumentNode, GraphQLSchema } from 'graphql';
 
 export declare class Source {
   document: DocumentNode;
+  schema?: GraphQLSchema;
   location?: string;
-  constructor({ document, location }: { document: DocumentNode; location?: string });
+  constructor({ document, location, schema }: { document: DocumentNode; location?: string; schema?: GraphQLSchema });
 }
 
 export type WithList<T> = T | T[];

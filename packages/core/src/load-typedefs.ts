@@ -1,5 +1,5 @@
-import { DocumentNode, GraphQLSchema, parse } from 'graphql';
-import { Source, asArray, isDocumentString, debugLog, fixWindowsPath, Loader, printSchemaWithDirectives } from '@graphql-toolkit/common';
+import { GraphQLSchema, parse } from 'graphql';
+import { Source, asArray, isDocumentString, debugLog, fixWindowsPath, Loader, printSchemaWithDirectives, fixSchemaAst } from '@graphql-toolkit/common';
 import { filterKind } from './filter-document-kind';
 import { documentFromString } from './document-from-string';
 import { join } from 'path';
@@ -85,8 +85,10 @@ export async function loadTypedefsUsingLoaders<AdditionalConfig = {}>(
           if (typeof loader !== 'function') {
             throw new Error(`Failed to load custom loader: ${pointerOptions.loader}`);
           }
+          let schema: GraphQLSchema;
           let content = await loader(pointer, { ...options, ...pointerOptions }, normalizedPointerOptionsMap);
           if (content && content instanceof GraphQLSchema) {
+            schema = fixSchemaAst(content, options as any);
             content = parse(printSchemaWithDirectives(content));
           }
           content = filterKind(content, filterKinds);
@@ -94,6 +96,7 @@ export async function loadTypedefsUsingLoaders<AdditionalConfig = {}>(
             found.push({
               location: pointer,
               document: content,
+              schema,
             });
           }
         })
@@ -101,17 +104,21 @@ export async function loadTypedefsUsingLoaders<AdditionalConfig = {}>(
     } else {
       loadPromises$.push(
         Promise.resolve().then(async () => {
-          let content = await loadSingleFile(loaders, pointer, {
+          const combinedOptions = {
             ...options,
             ...pointerOptions,
-          });
-          content = filterKind(content, filterKinds);
+          };
+          let loaded = await loadSingleFile(loaders, pointer, combinedOptions);
+          if (loaded) {
+            const filteredDocument = filterKind(loaded.document, filterKinds);
 
-          if (content && content.definitions && content.definitions.length > 0) {
-            found.push({
-              location: pointer,
-              document: content,
-            });
+            if (filteredDocument && filteredDocument.definitions && filteredDocument.definitions.length > 0) {
+              found.push({
+                location: pointer,
+                document: filteredDocument,
+                schema: loaded.schema && fixSchemaAst(loaded.schema, combinedOptions),
+              });
+            }
           }
         })
       );
@@ -135,7 +142,7 @@ export async function loadTypedefsUsingLoaders<AdditionalConfig = {}>(
         await Promise.all(
           paths.map(async path => {
             if (!path.endsWith('.d.ts') && !path.endsWith('.spec.ts') && !path.endsWith('.spec.js') && !path.endsWith('.test.ts') && !path.endsWith('.test.js')) {
-              let content;
+              let content, schema;
               if (globOptions.loader) {
                 let loader;
                 if (typeof globOptions.loader === 'string') {
@@ -148,10 +155,15 @@ export async function loadTypedefsUsingLoaders<AdditionalConfig = {}>(
                 }
                 content = await loader(path, { ...options, ...globOptions }, normalizedPointerOptionsMap);
                 if (content && content instanceof GraphQLSchema) {
+                  schema = content;
                   content = parse(printSchemaWithDirectives(content));
                 }
               } else {
-                content = await loadSingleFile(loaders, path, { ...options, ...globOptions });
+                const loaded = await loadSingleFile(loaders, path, { ...options, ...globOptions });
+                if (loaded) {
+                  content = loaded.document;
+                  schema = loaded.schema && fixSchemaAst(loaded.schema, options as any);
+                }
               }
               content = filterKind(content, filterKinds);
 
@@ -159,6 +171,7 @@ export async function loadTypedefsUsingLoaders<AdditionalConfig = {}>(
                 found.push({
                   location: path,
                   document: content,
+                  schema,
                 });
               }
             }
@@ -178,7 +191,7 @@ export async function loadTypedefsUsingLoaders<AdditionalConfig = {}>(
   return found.sort((left, right) => left.location.localeCompare(right.location));
 }
 
-export async function loadSingleFile(loaders: Loader[], pointer: string, options: SingleFileOptions = {}): Promise<DocumentNode> {
+export async function loadSingleFile(loaders: Loader[], pointer: string, options: SingleFileOptions = {}): Promise<Source> {
   try {
     for (const loader of loaders) {
       const canLoad = await loader.canLoad(pointer, options);
@@ -187,7 +200,7 @@ export async function loadSingleFile(loaders: Loader[], pointer: string, options
         const found = await loader.load(pointer, options);
 
         if (found) {
-          return found.document;
+          return found;
         }
       }
     }

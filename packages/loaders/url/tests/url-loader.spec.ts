@@ -1,7 +1,8 @@
 jest.mock('cross-fetch');
 import { makeExecutableSchema } from '@kamilkisiela/graphql-tools';
-import { introspectionFromSchema, GraphQLSchema } from 'graphql';
+import { introspectionFromSchema } from 'graphql';
 import { UrlLoader } from '../src';
+import { printSchemaWithDirectives } from '@graphql-toolkit/common';
 
 const SHOULD_NOT_GET_HERE_ERROR = 'SHOULD_NOT_GET_HERE';
 
@@ -15,7 +16,9 @@ describe('Schema URL Loader', () => {
     resetMocks();
   });
 
-  const VALID_INTROSPECTION = introspectionFromSchema(makeExecutableSchema({ typeDefs: 'type Query { a: String }' }));
+  const testSchema = makeExecutableSchema({ typeDefs: 'type Query { a: String }' });
+
+  const VALID_INTROSPECTION = introspectionFromSchema(testSchema);
 
   describe('handle', () => {
     it('Should throw an error when introspection is not valid', async () => {
@@ -39,7 +42,8 @@ describe('Schema URL Loader', () => {
       mockRequest(testUrl, JSON.stringify({ data: VALID_INTROSPECTION }));
 
       const schema = await loader.load(testUrl, {});
-      expect(schema).toBeDefined();
+      expect(schema.schema).toBeDefined();
+      expect(printSchemaWithDirectives(schema.schema)).toBe(printSchemaWithDirectives(testSchema));
 
       const calls = getMockedCalls(testUrl);
       expect(calls.length).toBe(1);
@@ -50,6 +54,8 @@ describe('Schema URL Loader', () => {
       mockRequest(testUrl, JSON.stringify({ data: VALID_INTROSPECTION }));
       const schema = await loader.load(testUrl, {});
       expect(schema).toBeDefined();
+      expect(schema.schema).toBeDefined();
+      expect(printSchemaWithDirectives(schema.schema)).toBe(printSchemaWithDirectives(testSchema));
       const calls = getMockedCalls(testUrl);
       expect(calls.length).toBe(1);
       expect(calls[0].headers).toEqual({
@@ -63,6 +69,8 @@ describe('Schema URL Loader', () => {
       mockRequest(testUrl, JSON.stringify({ data: VALID_INTROSPECTION }));
       const schema = await loader.load(testUrl, { headers: { Auth: '1' } });
       expect(schema).toBeDefined();
+      expect(schema.schema).toBeDefined();
+      expect(printSchemaWithDirectives(schema.schema)).toBe(printSchemaWithDirectives(testSchema));
       const calls = getMockedCalls(testUrl);
       expect(calls.length).toBe(1);
       expect(calls[0].headers).toEqual({
@@ -77,6 +85,8 @@ describe('Schema URL Loader', () => {
       mockRequest(testUrl, JSON.stringify({ data: VALID_INTROSPECTION }));
       const schema = await loader.load(testUrl, { headers: [{ A: '1' }, { B: '2', C: '3' }] });
       expect(schema).toBeDefined();
+      expect(schema.schema).toBeDefined();
+      expect(printSchemaWithDirectives(schema.schema)).toBe(printSchemaWithDirectives(testSchema));
       const calls = getMockedCalls(testUrl);
       expect(calls.length).toBe(1);
       expect(calls[0].headers).toEqual({

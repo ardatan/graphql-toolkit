@@ -64,12 +64,14 @@ export class JsonFileLoader implements DocumentLoader {
             throw new Error('Invalid schema provided!');
           }
 
-          const asSchema = buildClientSchema(introspection);
-          const printed = printSchemaWithDirectives(asSchema);
+          const schema = buildClientSchema(introspection);
 
           resolve({
             location: pointer,
-            document: parse(printed),
+            get document() {
+              return parse(printSchemaWithDirectives(schema));
+            },
+            schema,
           });
         } catch (e) {
           reject(e);

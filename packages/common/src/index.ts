@@ -13,3 +13,4 @@ export * from './print-schema-with-directives';
 export * from './get-fields-with-directives';
 export * from './validate-documents';
 export * from './resolvers-composition';
+export * from './fix-schema-ast';

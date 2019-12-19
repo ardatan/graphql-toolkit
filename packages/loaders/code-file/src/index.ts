@@ -1,6 +1,6 @@
 import { DocumentNode, GraphQLSchema, parse, IntrospectionQuery, buildClientSchema } from 'graphql';
 import { resolve, isAbsolute, extname } from 'path';
-import { SchemaPointerSingle, DocumentPointerSingle, debugLog, printSchemaWithDirectives, Source, UniversalLoader, asArray, fixWindowsPath, isValidPath } from '@graphql-toolkit/common';
+import { SchemaPointerSingle, DocumentPointerSingle, debugLog, printSchemaWithDirectives, Source, UniversalLoader, asArray, fixWindowsPath, isValidPath, fixSchemaAst } from '@graphql-toolkit/common';
 import { existsSync } from 'fs';
 import { gqlPluckFromFile, GraphQLTagPluckOptions } from '@graphql-toolkit/graphql-tag-pluck';
 
@@ -28,21 +28,15 @@ function isSchemaAst(obj: any): obj is DocumentNode {
   return (obj as DocumentNode).kind !== undefined;
 }
 
-function resolveExport(fileExport: GraphQLSchema | DocumentNode | string | { data: IntrospectionQuery } | IntrospectionQuery): DocumentNode | null {
+function resolveExport(fileExport: GraphQLSchema | DocumentNode | string | { data: IntrospectionQuery } | IntrospectionQuery): GraphQLSchema | DocumentNode | null {
   if (isSchemaObject(fileExport)) {
-    return parse(printSchemaWithDirectives(fileExport));
+    return fileExport;
   } else if (isSchemaText(fileExport)) {
     return parse(fileExport);
   } else if (isWrappedSchemaJson(fileExport)) {
-    const asSchema = buildClientSchema(fileExport.data);
-    const printed = printSchemaWithDirectives(asSchema);
-
-    return parse(printed);
+    return buildClientSchema(fileExport.data);
   } else if (isSchemaJson(fileExport)) {
-    const asSchema = buildClientSchema(fileExport);
-    const printed = printSchemaWithDirectives(asSchema);
-
-    return parse(printed);
+    return buildClientSchema(fileExport);
   } else if (isSchemaAst(fileExport)) {
     return fileExport;
   }
@@ -50,7 +44,7 @@ function resolveExport(fileExport: GraphQLSchema | DocumentNode | string | { dat
   return null;
 }
 
-async function tryToLoadFromExport(rawFilePath: string): Promise<DocumentNode> {
+async function tryToLoadFromExport(rawFilePath: string): Promise<GraphQLSchema | DocumentNode> {
   let filePath = rawFilePath;
 
   try {
@@ -120,14 +114,17 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
   }
 
   async load(pointer: SchemaPointerSingle | DocumentPointerSingle, options: CodeFileLoaderOptions): Promise<Source> {
-    let loaded: DocumentNode | null = null;
+    let loaded: GraphQLSchema | DocumentNode | null = null;
     const normalizedFilePath = isAbsolute(pointer) ? pointer : resolve(options.cwd || process.cwd(), pointer);
 
     try {
       const result = await tryToLoadFromCodeAst(normalizedFilePath, options);
 
       if (result) {
-        loaded = result;
+        return {
+          location: normalizedFilePath,
+          document: result,
+        };
       }
     } catch (e) {
       debugLog(`Failed to load schema from code file "${normalizedFilePath}" using AST: ${e.message}`);
@@ -139,11 +136,26 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
       if (options && options.require) {
         await Promise.all(asArray(options.require).map(m => import(m)));
       }
-      loaded = await tryToLoadFromExport(normalizedFilePath);
+      const schemaOrDocument = await tryToLoadFromExport(normalizedFilePath);
+      if (schemaOrDocument instanceof GraphQLSchema) {
+        const schema = fixSchemaAst(schemaOrDocument, options as any);
+        return {
+          get document() {
+            return parse(printSchemaWithDirectives(schema));
+          },
+          schema,
+          location: normalizedFilePath,
+        };
+      } else {
+        return {
+          document: schemaOrDocument,
+          location: normalizedFilePath,
+        };
+      }
     }
 
     return {
-      document: loaded,
+      document: null,
       location: normalizedFilePath,
     };
   }

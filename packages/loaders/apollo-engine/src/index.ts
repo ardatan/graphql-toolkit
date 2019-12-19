@@ -1,4 +1,4 @@
-import { SchemaLoader, printSchemaWithDirectives } from '@graphql-toolkit/common';
+import { SchemaLoader, printSchemaWithDirectives, fixSchemaAst } from '@graphql-toolkit/common';
 import { ClientConfig } from 'apollo-language-server';
 import { EngineSchemaProvider } from 'apollo-language-server/lib/providers/schema/engine';
 import { parse } from 'graphql';
@@ -12,12 +12,15 @@ export class ApolloEngineLoader implements SchemaLoader {
   }
   async load(_: 'apollo-engine', options: ClientConfig) {
     const engineSchemaProvider = new EngineSchemaProvider(options);
-    const asSchema = await engineSchemaProvider.resolveSchema({});
-    const printed = printSchemaWithDirectives(asSchema);
+    const resolvedSchema = await engineSchemaProvider.resolveSchema({});
+    const schema = fixSchemaAst(resolvedSchema, options as any);
 
     return {
       location: 'apollo-engine',
-      document: parse(printed),
+      get document() {
+        return parse(printSchemaWithDirectives(schema));
+      },
+      schema,
     };
   }
 }

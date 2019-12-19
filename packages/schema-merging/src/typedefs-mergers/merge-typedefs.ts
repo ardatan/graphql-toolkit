@@ -19,6 +19,7 @@ import {
 import { isGraphQLSchema, isSourceTypes, isStringTypes, isSchemaDefinition } from './utils';
 import { MergedResultMap, mergeGraphQLNodes } from './merge-nodes';
 import { resetComments, printWithComments } from './comments';
+import { fixSchemaAst } from '@graphql-toolkit/common';
 
 type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;
 
@@ -110,10 +111,6 @@ export function mergeTypeDefs(types: Array<string | Source | DocumentNode | Grap
   resetComments();
 
   return result;
-}
-
-function fixSchemaAst(schema: GraphQLSchema, config: Config): GraphQLSchema {
-  return buildASTSchema(parse(printSchema(schema, { commentDescriptions: config.commentDescriptions })));
 }
 
 function createSchemaDefinition(

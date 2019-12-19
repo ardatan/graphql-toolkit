@@ -1,7 +1,8 @@
-import { introspectionQuery, buildClientSchema, parse, IntrospectionQuery, ExecutionResult } from 'graphql';
-import { SchemaPointerSingle, Source, printSchemaWithDirectives, DocumentLoader } from '@graphql-toolkit/common';
+import { introspectionQuery, buildClientSchema, parse, IntrospectionQuery, ExecutionResult, print } from 'graphql';
+import { SchemaPointerSingle, Source, printSchemaWithDirectives, DocumentLoader, fixSchemaAst } from '@graphql-toolkit/common';
 import { isUri } from 'valid-url';
 import { fetch as crossFetch } from 'cross-fetch';
+import { makeRemoteExecutableSchema } from '@kamilkisiela/graphql-tools';
 
 export type FetchFn = typeof import('cross-fetch').fetch;
 
@@ -52,19 +53,21 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
       ...headers,
     };
 
-    const response = await fetch(pointer, {
-      method,
-      ...(method === 'POST'
-        ? {
-            body: JSON.stringify({
-              query: introspectionQuery,
-            }),
-          }
-        : {}),
-      headers: extraHeaders,
-    });
+    const fetcher = async ({ query: queryDocument, variables, operationName, context }) => {
+      const query = typeof queryDocument === 'string' ? queryDocument : print(queryDocument);
+      const fetchResult = await fetch(pointer, {
+        method,
+        ...(method === 'POST'
+          ? {
+              body: JSON.stringify({ query, variables, operationName }),
+            }
+          : {}),
+        headers: extraHeaders,
+      });
+      return fetchResult.json();
+    };
 
-    const body: ExecutionResult = await response.json();
+    const body: ExecutionResult = await fetcher({ query: introspectionQuery, variables: {}, operationName: 'introspection', context: {} });
 
     let errorMessage;
 
@@ -82,12 +85,19 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
       throw new Error('Invalid schema provided!');
     }
 
-    const asSchema = buildClientSchema(body.data as IntrospectionQuery);
-    const printed = printSchemaWithDirectives(asSchema);
+    const clientSchema = buildClientSchema(body.data as IntrospectionQuery, options as any);
+    const remoteExecutableSchema = makeRemoteExecutableSchema({
+      schema: clientSchema,
+      fetcher,
+    });
+    const schema = fixSchemaAst(remoteExecutableSchema, options as any);
 
     return {
       location: pointer,
-      document: parse(printed),
+      get document() {
+        return parse(printSchemaWithDirectives(schema));
+      },
+      schema,
     };
   }
 }
