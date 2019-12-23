@@ -11,7 +11,7 @@ export function mergeUnion(first: UnionTypeDefinitionNode | UnionTypeExtensionNo
       directives: mergeDirectives(first.directives, second.directives, config),
       kind: first.kind === 'UnionTypeDefinition' || second.kind === 'UnionTypeDefinition' ? 'UnionTypeDefinition' : 'UnionTypeExtension',
       loc: first.loc,
-      types: mergeNamedTypeArray(first.types, second.types),
+      types: mergeNamedTypeArray(first.types, second.types, config),
     };
   }
 

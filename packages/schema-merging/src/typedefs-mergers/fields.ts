@@ -20,7 +20,7 @@ function fieldAlreadyExists(fieldsArr: ReadonlyArray<any>, otherField: any): boo
   return !!result;
 }
 
-export function mergeFields<T extends FieldDefinitionNode | InputValueDefinitionNode>(type: { name: NameNode }, f1: ReadonlyArray<T>, f2: ReadonlyArray<T>, config?: Config): T[] {
+export function mergeFields<T extends FieldDefinitionNode | InputValueDefinitionNode>(type: { name: NameNode }, f1: ReadonlyArray<T>, f2: ReadonlyArray<T>, config: Config): T[] {
   const result: T[] = [...f2];
 
   for (const field of f1) {
@@ -37,14 +37,22 @@ export function mergeFields<T extends FieldDefinitionNode | InputValueDefinition
         existing.type = field.type;
       }
 
-      existing['arguments'] = mergeArguments(field['arguments'], existing['arguments']);
+      existing['arguments'] = mergeArguments(field['arguments'], existing['arguments'], config);
       existing['directives'] = mergeDirectives(field['directives'], existing['directives'], config);
       existing['description'] = field['description'] || existing['description'];
     } else {
       result.push(field);
     }
   }
-
+  if (config && config.sort) {
+    result.sort((a, b) => {
+      if (typeof config.sort === 'function') {
+        return config.sort(a.name.value, b.name.value);
+      } else {
+        return a.name.value.localeCompare(b.name.value);
+      }
+    });
+  }
   if (config && config.exclusions) {
     return result.filter(field => !config.exclusions.includes(`${type.name.value}.${field.name.value}`));
   }

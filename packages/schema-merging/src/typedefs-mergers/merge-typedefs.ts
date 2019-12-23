@@ -22,6 +22,7 @@ import { resetComments, printWithComments } from './comments';
 import { fixSchemaAst } from '@graphql-toolkit/common';
 
 type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;
+type CompareFn<T> = (a: T, b: T) => number;
 
 export interface Config {
   /**
@@ -71,6 +72,7 @@ export interface Config {
    */
   reverseDirectives?: boolean;
   exclusions?: string[];
+  sort?: boolean | CompareFn<string>;
 }
 
 export function mergeGraphQLSchemas(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Omit<Partial<Config>, 'commentDescriptions'>) {
@@ -224,6 +226,9 @@ export function mergeGraphQLTypes(types: Array<string | Source | DocumentNode | 
   );
   const mergedNodes: MergedResultMap = mergeGraphQLNodes(allNodes, config);
   const allTypes = Object.keys(mergedNodes);
+  if (config && config.sort) {
+    allTypes.sort(typeof config.sort === 'function' ? config.sort : undefined);
+  }
 
   if (config && config.useSchemaDefinition) {
     const queryType = schemaDef.query ? schemaDef.query : allTypes.find(t => t === 'Query');

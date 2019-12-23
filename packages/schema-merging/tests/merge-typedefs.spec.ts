@@ -1215,4 +1215,27 @@ describe('Merge TypeDefs', () => {
     });
     expect(stripWhitespaces(print(mergedTypes))).toBe(userType);
   });
+  it('should sort fields', () => {
+    const t1 = stripWhitespaces(`
+      type Query {
+        A: String!
+        C: String!
+      }
+    `);
+    const t2 = stripWhitespaces(`
+      extend type Query {
+        B: String!
+        D: String!
+      }
+    `);
+    const mergedTypes = mergeTypeDefs([t1, t2], { sort: true });
+    expect(stripWhitespaces(print(mergedTypes))).toContain(stripWhitespaces(`
+      type Query {
+        A: String!
+        B: String!
+        C: String!
+        D: String!
+      }
+    `));
+  });
 });

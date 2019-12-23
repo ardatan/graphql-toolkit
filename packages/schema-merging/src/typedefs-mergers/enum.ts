@@ -11,7 +11,7 @@ export function mergeEnum(e1: EnumTypeDefinitionNode | EnumTypeExtensionNode, e2
       kind: e1.kind === 'EnumTypeDefinition' || e2.kind === 'EnumTypeDefinition' ? 'EnumTypeDefinition' : 'EnumTypeExtension',
       loc: e1.loc,
       directives: mergeDirectives(e1.directives, e2.directives, config),
-      values: mergeEnumValues(e1.values, e2.values),
+      values: mergeEnumValues(e1.values, e2.values, config),
     } as any;
   }
 

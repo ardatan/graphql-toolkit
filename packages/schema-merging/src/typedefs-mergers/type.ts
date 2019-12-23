@@ -14,7 +14,7 @@ export function mergeType(node: ObjectTypeDefinitionNode | ObjectTypeExtensionNo
         loc: node.loc,
         fields: mergeFields(node, node.fields, existingNode.fields, config),
         directives: mergeDirectives(node.directives, existingNode.directives, config),
-        interfaces: mergeNamedTypeArray(node.interfaces, existingNode.interfaces),
+        interfaces: mergeNamedTypeArray(node.interfaces, existingNode.interfaces, config),
       } as any;
     } catch (e) {
       throw new Error(`Unable to merge GraphQL type "${node.name.value}": ${e.message}`);
