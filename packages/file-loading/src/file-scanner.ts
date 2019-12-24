@@ -4,12 +4,9 @@ import { existsSync, statSync, readFileSync, readFile } from 'fs';
 import { extname } from 'path';
 import globby from 'globby';
 
-const DEFAULT_IGNORED_SCHEMA_EXTENSIONS = ['spec', 'test', 'd', 'map'];
-const DEFAULT_SCHEMA_EXTENSIONS = ['gql', 'graphql', 'graphqls', 'ts', 'js'];
-const DEFAULT_IGNORED_RESOLVERS_EXTENSIONS = ['spec', 'test', 'd', 'gql', 'graphql', 'graphqls', 'map'];
-const DEFAULT_RESOLVERS_EXTENSIONS = ['ts', 'js'];
-const DEFAULT_SCHEMA_EXPORT_NAMES = ['typeDefs', 'schema'];
-const DEFAULT_RESOLVERS_EXPORT_NAMES = ['resolvers', 'resolver'];
+const DEFAULT_IGNORED_EXTENSIONS = ['spec', 'test', 'd', 'map'];
+const DEFAULT_EXTENSIONS = ['gql', 'graphql', 'graphqls', 'ts', 'js'];
+const DEFAULT_EXPORT_NAMES = ['typeDefs', 'schema'];
 
 function isDirectory(path: string) {
   return existsSync(path) && statSync(path).isDirectory();
@@ -47,7 +44,7 @@ function extractExports(fileExport: any, exportNames: string[]): any | null {
   return fileExport;
 }
 
-export interface LoadSchemaFilesOptions {
+export interface LoadFilesOptions {
   ignoredExtensions?: string[];
   extensions?: string[];
   useRequire?: boolean;
@@ -58,19 +55,19 @@ export interface LoadSchemaFilesOptions {
   ignoreIndex?: boolean;
 }
 
-const LoadSchemaFilesDefaultOptions: LoadSchemaFilesOptions = {
-  ignoredExtensions: DEFAULT_IGNORED_SCHEMA_EXTENSIONS,
-  extensions: DEFAULT_SCHEMA_EXTENSIONS,
+const LoadFilesDefaultOptions: LoadFilesOptions = {
+  ignoredExtensions: DEFAULT_IGNORED_EXTENSIONS,
+  extensions: DEFAULT_EXTENSIONS,
   useRequire: false,
   requireMethod: null,
   globOptions: {},
-  exportNames: DEFAULT_SCHEMA_EXPORT_NAMES,
+  exportNames: DEFAULT_EXPORT_NAMES,
   recursive: true,
   ignoreIndex: false,
 };
 
-export function loadSchemaFiles(path: string, options: LoadSchemaFilesOptions = LoadSchemaFilesDefaultOptions): string[] {
-  const execOptions = { ...LoadSchemaFilesDefaultOptions, ...options };
+export function loadFiles(path: string, options: LoadFilesOptions = LoadFilesDefaultOptions): any[] {
+  const execOptions = { ...LoadFilesDefaultOptions, ...options };
   const relevantPaths = scanForFiles(isDirectory(path) ? buildGlob(path, execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive) : path, options.globOptions);
 
   return relevantPaths
@@ -89,8 +86,12 @@ export function loadSchemaFiles(path: string, options: LoadSchemaFilesOptions = 
         const fileExports = (execOptions.requireMethod ? execOptions.requireMethod : require)(path);
         const extractedExport = extractExports(fileExports, execOptions.exportNames);
 
-        if (extractedExport && extractedExport.kind === 'Document') {
-          return print(extractedExport);
+        if (extractedExport.resolver) {
+          return extractedExport.resolver;
+        }
+
+        if (extractedExport.resolvers) {
+          return extractedExport.resolvers;
         }
 
         return extractedExport;
@@ -99,51 +100,6 @@ export function loadSchemaFiles(path: string, options: LoadSchemaFilesOptions = 
       }
     })
     .filter(v => v);
-}
-
-export interface LoadResolversFilesOptions {
-  ignoredExtensions?: string[];
-  extensions?: string[];
-  requireMethod?: any;
-  globOptions?: import('globby').GlobbyOptions;
-  exportNames?: string[];
-  recursive?: boolean;
-  ignoreIndex?: boolean;
-}
-
-const LoadResolversFilesDefaultOptions: LoadResolversFilesOptions = {
-  ignoredExtensions: DEFAULT_IGNORED_RESOLVERS_EXTENSIONS,
-  extensions: DEFAULT_RESOLVERS_EXTENSIONS,
-  requireMethod: null,
-  globOptions: {},
-  exportNames: DEFAULT_RESOLVERS_EXPORT_NAMES,
-  recursive: true,
-  ignoreIndex: false,
-};
-
-export function loadResolversFiles<Resolvers extends IResolvers = IResolvers>(path: string, options: LoadResolversFilesOptions = LoadResolversFilesDefaultOptions): Resolvers[] {
-  const execOptions = { ...LoadResolversFilesDefaultOptions, ...options };
-  const relevantPaths = scanForFiles(isDirectory(path) ? buildGlob(path, execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive) : path, options.globOptions);
-
-  return relevantPaths
-    .map(path => {
-      if (!checkExtension(path, options)) {
-        return;
-      }
-
-      if (isIndex(path, execOptions.extensions) && options.ignoreIndex) {
-        return false;
-      }
-
-      try {
-        const fileExports = (execOptions.requireMethod ? execOptions.requireMethod : require)(path);
-
-        return extractExports(fileExports, execOptions.exportNames);
-      } catch (e) {
-        throw new Error(`Unable to load resolver file: ${path}, error: ${e}`);
-      }
-    })
-    .filter(t => t);
 }
 
 function scanForFilesAsync(globStr: string, globOptions: import('globby').GlobbyOptions = {}): Promise<string[]> {
@@ -172,9 +128,9 @@ const checkExtension = (path: string, { extensions, ignoredExtensions }: { exten
   return false;
 };
 
-export async function loadSchemaFilesAsync(path: string, options: LoadSchemaFilesOptions = LoadSchemaFilesDefaultOptions): Promise<string[]> {
-  const execOptions = { ...LoadSchemaFilesDefaultOptions, ...options };
-  const relevantPaths = scanForFiles(isDirectory(path) ? buildGlob(path, execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive) : path, options.globOptions);
+export async function loadFilesAsync(path: string, options: LoadFilesOptions = LoadFilesDefaultOptions): Promise<any[]> {
+  const execOptions = { ...LoadFilesDefaultOptions, ...options };
+  const relevantPaths = await scanForFilesAsync(isDirectory(path) ? buildGlob(path, execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive) : path, options.globOptions);
 
   const require$ = (path: string) => import(path);
 
@@ -194,8 +150,12 @@ export async function loadSchemaFilesAsync(path: string, options: LoadSchemaFile
           const fileExports = await (execOptions.requireMethod ? execOptions.requireMethod : require$)(path);
           const extractedExport = extractExports(fileExports, execOptions.exportNames);
 
-          if (extractedExport && extractedExport.kind === 'Document') {
-            return print(extractedExport);
+          if (extractedExport.resolver) {
+            return extractedExport.resolver;
+          }
+
+          if (extractedExport.resolvers) {
+            return extractedExport.resolvers;
           }
 
           return extractedExport;
@@ -214,34 +174,10 @@ export async function loadSchemaFilesAsync(path: string, options: LoadSchemaFile
   );
 }
 
-export async function loadResolversFilesAsync<Resolvers extends IResolvers = IResolvers>(path: string, options: LoadResolversFilesOptions = LoadResolversFilesDefaultOptions): Promise<Resolvers[]> {
-  const execOptions = { ...LoadResolversFilesDefaultOptions, ...options };
-  const relevantPaths = scanForFiles(isDirectory(path) ? buildGlob(path, execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive) : path, options.globOptions);
-
-  const require$ = (path: string) => import(path);
-
-  return Promise.all(
-    relevantPaths.map(async path => {
-      if (!checkExtension(path, options)) {
-        return;
-      }
-
-      if (isIndex(path, execOptions.extensions) && options.ignoreIndex) {
-        return false;
-      }
-
-      try {
-        const fileExports = await (execOptions.requireMethod ? execOptions.requireMethod : require$)(path);
-
-        return extractExports(fileExports, execOptions.exportNames);
-      } catch (e) {
-        throw new Error(`Unable to load resolver file: ${path}, error: ${e}`);
-      }
-    })
-  );
-}
-
 function isIndex(path: string, extensions: string[] = []): boolean {
   const IS_INDEX = /(\/|\\)index\.[^\/\\]+$/i; // (/ or \) AND `index.` AND (everything except \ and /)(end of line)
   return IS_INDEX.test(path) && extensions.some(ext => path.endsWith('.' + ext));
 }
+
+export { loadFilesAsync as loadSchemaFilesAsync, loadFiles as loadSchemaFiles };
+export { loadFilesAsync as loadResolversFilesAsync, loadFiles as loadResolversFiles };

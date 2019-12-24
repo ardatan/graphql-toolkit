@@ -1,4 +1,5 @@
 import { loadResolversFiles, loadSchemaFiles } from '../src';
+import { print } from 'graphql';
 
 function testSchemaDir({ path, expected, note, extensions, ignoreIndex }: { path: string; expected: any; note: string; extensions?: string[] | null; ignoreIndex?: boolean }) {
   it(`should return the correct schema results for path: ${path} (${note})`, () => {
@@ -6,7 +7,12 @@ function testSchemaDir({ path, expected, note, extensions, ignoreIndex }: { path
     const result = loadSchemaFiles(path, extensions ? { ...options, extensions } : options);
 
     expect(result.length).toBe(expected.length);
-    expect(result.map(stripWhitespaces)).toEqual(expected.map(stripWhitespaces));
+    expect(result.map(res => {
+      if (res['kind'] === 'Document') {
+        res = print(res);
+      }
+      return stripWhitespaces(res);
+    })).toEqual(expected.map(stripWhitespaces));
   });
 }
 
@@ -29,8 +35,8 @@ function testResolversDir({ path, expected, note, extensions, compareValue, igno
   });
 }
 
-function stripWhitespaces(str: string): string {
-  return str.replace(/\s+/g, ' ').trim();
+function stripWhitespaces(str: any): string {
+  return str.toString().replace(/\s+/g, ' ').trim();
 }
 
 describe('file scanner', function() {
