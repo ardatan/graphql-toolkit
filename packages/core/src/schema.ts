@@ -12,13 +12,15 @@ export async function loadSchemaUsingLoaders(loaders: Loader[], schemaPointers: 
   const schemas: GraphQLSchema[] = [];
   const typeDefs: DocumentNode[] = [];
 
-  for (const source of sources) {
-    if (source.schema) {
-      schemas.push(source.schema);
-    } else {
-      typeDefs.push(source.document);
-    }
-  }
+  await Promise.all(
+    sources.map(async source => {
+      if (source.schema) {
+        schemas.push(source.schema);
+      } else {
+        typeDefs.push(source.document);
+      }
+    })
+  );
 
   return mergeSchemasAsync({
     schemas,

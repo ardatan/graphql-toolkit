@@ -1,4 +1,4 @@
-import { DocumentNode, GraphQLSchema, parse, IntrospectionQuery, buildClientSchema } from 'graphql';
+import { DocumentNode, GraphQLSchema, parse, IntrospectionQuery, buildClientSchema, Source as GraphQLSource } from 'graphql';
 import { resolve, isAbsolute, extname } from 'path';
 import { SchemaPointerSingle, DocumentPointerSingle, debugLog, printSchemaWithDirectives, Source, UniversalLoader, asArray, fixWindowsPath, isValidPath, fixSchemaAst } from '@graphql-toolkit/common';
 import { existsSync } from 'fs';
@@ -44,7 +44,7 @@ function resolveExport(fileExport: GraphQLSchema | DocumentNode | string | { dat
   return null;
 }
 
-async function tryToLoadFromExport(rawFilePath: string): Promise<GraphQLSchema | DocumentNode> {
+async function tryToLoadFromExport(rawFilePath: string): Promise<GraphQLSchema | DocumentNode | Object | string> {
   let filePath = rawFilePath;
 
   try {
@@ -81,16 +81,16 @@ async function tryToLoadFromExport(rawFilePath: string): Promise<GraphQLSchema |
   }
 }
 
-async function tryToLoadFromCodeAst(filePath: string, options?: CodeFileLoaderOptions): Promise<DocumentNode> {
+async function tryToLoadFromCodeAst(filePath: string, options?: CodeFileLoaderOptions): Promise<string> {
   const foundDoc = await gqlPluckFromFile(filePath, options && options.pluckConfig);
   if (foundDoc) {
-    return parse(foundDoc);
+    return foundDoc;
   } else {
     return null;
   }
 }
 
-export type CodeFileLoaderOptions = { noRequire?: boolean; cwd?: string; require?: string | string[]; pluckConfig?: GraphQLTagPluckOptions };
+export type CodeFileLoaderOptions = { forceRawSDL: boolean; noRequire?: boolean; cwd?: string; require?: string | string[]; pluckConfig?: GraphQLTagPluckOptions };
 
 const CODE_FILE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.vue'];
 
@@ -118,13 +118,24 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
     const normalizedFilePath = isAbsolute(pointer) ? pointer : resolve(options.cwd || process.cwd(), pointer);
 
     try {
-      const result = await tryToLoadFromCodeAst(normalizedFilePath, options);
+      const rawSDL = await tryToLoadFromCodeAst(normalizedFilePath, options);
 
-      if (result) {
-        return {
-          location: normalizedFilePath,
-          document: result,
-        };
+      if (rawSDL) {
+        if (options && options.forceRawSDL) {
+          return {
+            location: normalizedFilePath,
+            get document() {
+              return parse(new GraphQLSource(rawSDL, normalizedFilePath));
+            },
+            rawSDL,
+          };
+        } else {
+          return {
+            location: normalizedFilePath,
+            document: parse(new GraphQLSource(rawSDL, normalizedFilePath)),
+            rawSDL,
+          };
+        }
       }
     } catch (e) {
       debugLog(`Failed to load schema from code file "${normalizedFilePath}" using AST: ${e.message}`);
@@ -141,14 +152,27 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
         const schema = fixSchemaAst(schemaOrDocument, options as any);
         return {
           get document() {
-            return parse(printSchemaWithDirectives(schema));
+            return parse(new GraphQLSource(printSchemaWithDirectives(schema), normalizedFilePath));
           },
           schema,
           location: normalizedFilePath,
         };
-      } else {
+      } else if (typeof schemaOrDocument === 'string') {
+        return {
+          get document() {
+            return parse(new GraphQLSource(schemaOrDocument as string, normalizedFilePath));
+          },
+          location: normalizedFilePath,
+          rawSDL: schemaOrDocument,
+        };
+      } else if ('kind' in schemaOrDocument && schemaOrDocument.kind === 'Document') {
         return {
           document: schemaOrDocument,
+          location: normalizedFilePath,
+        };
+      } else {
+        return {
+          document: parse(new GraphQLSource(printSchemaWithDirectives(buildClientSchema(schemaOrDocument['data'] ? schemaOrDocument['data'] : schemaOrDocument)))),
           location: normalizedFilePath,
         };
       }

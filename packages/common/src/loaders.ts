@@ -3,6 +3,7 @@ import { DocumentNode, GraphQLSchema } from 'graphql';
 export declare class Source {
   document: DocumentNode;
   schema?: GraphQLSchema;
+  rawSDL?: string;
   location?: string;
   constructor({ document, location, schema }: { document: DocumentNode; location?: string; schema?: GraphQLSchema });
 }

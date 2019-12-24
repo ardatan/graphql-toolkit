@@ -1,10 +1,9 @@
 import { Source, UniversalLoader, DocumentPointerSingle, SchemaPointerSingle, isValidPath } from '@graphql-toolkit/common';
-import { parse, Source as GraphQLSource } from 'graphql';
+import { parse, Source as GraphQLSource, Kind } from 'graphql';
 import { extname, isAbsolute, resolve } from 'path';
 import { readFileSync, existsSync } from 'fs';
-import { importSchema } from 'graphql-import';
 
-export type GraphQLFileLoaderOptions = { skipGraphQLImport: boolean; cwd?: string };
+export type GraphQLFileLoaderOptions = { skipGraphQLImport?: boolean; cwd?: string };
 
 const GQL_EXTENSIONS = ['.gql', '.graphql', '.graphqls'];
 
@@ -33,16 +32,25 @@ export class GraphQLFileLoader implements UniversalLoader<GraphQLFileLoaderOptio
 
     if (content && content !== '') {
       if (!options.skipGraphQLImport && /^\#.*import /i.test(content.trimLeft())) {
-        const importedSchema = importSchema(normalizedFilePath);
-
         return {
           location: pointer,
-          document: parse(importedSchema),
+          get document() {
+            try {
+              return parse(new GraphQLSource(content, pointer));
+            } catch (e) {
+              return {
+                kind: Kind.DOCUMENT,
+                definitions: [],
+              };
+            }
+          },
+          rawSDL: content,
         };
       } else {
         return {
           location: pointer,
           document: parse(new GraphQLSource(content, pointer)),
+          rawSDL: content,
         };
       }
     }

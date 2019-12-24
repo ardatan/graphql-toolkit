@@ -33,7 +33,6 @@
   },
   "dependencies": {
     "@graphql-toolkit/common": "0.7.5",
-    "graphql-import": "0.7.1",
     "tslib": "1.10.0"
   },
   "publishConfig": {
