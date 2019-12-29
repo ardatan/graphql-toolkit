@@ -1,4 +1,4 @@
-import { Source as GraphQLSource, buildClientSchema, parse, ParseOptions } from 'graphql';
+import { buildClientSchema, parse, ParseOptions } from 'graphql';
 import { printSchemaWithDirectives, Source } from '.';
 import { GraphQLSchemaValidationOptions } from 'graphql/type/schema';
 
@@ -33,9 +33,11 @@ export function parseGraphQLJSON(location: string, jsonContent: string, options:
     };
   } else if (parsedJson.__schema) {
     const schema = buildClientSchema(parsedJson, options);
+    const rawSDL = printSchemaWithDirectives(schema);
     return {
       location,
-      document: parse(printSchemaWithDirectives(schema), options),
+      document: parse(rawSDL, options),
+      rawSDL,
       schema,
     };
   }
