@@ -1,13 +1,15 @@
-import { loadTypedefsUsingLoaders, LoadTypedefsOptions, UnnormalizedTypeDefPointer } from './load-typedefs';
+import { loadTypedefs, LoadTypedefsOptions, UnnormalizedTypeDefPointer } from './load-typedefs';
 import { GraphQLSchema, BuildSchemaOptions, DocumentNode } from 'graphql';
 import { OPERATION_KINDS } from './documents';
 import { mergeSchemasAsync } from '@graphql-toolkit/schema-merging';
-import { Loader } from '@graphql-toolkit/common';
 
 export type LoadSchemaOptions = BuildSchemaOptions & LoadTypedefsOptions;
 
-export async function loadSchemaUsingLoaders(loaders: Loader[], schemaPointers: UnnormalizedTypeDefPointer | UnnormalizedTypeDefPointer[], options?: LoadSchemaOptions, cwd = process.cwd()): Promise<GraphQLSchema> {
-  const sources = await loadTypedefsUsingLoaders(loaders, schemaPointers, options, OPERATION_KINDS, cwd);
+export async function loadSchema(schemaPointers: UnnormalizedTypeDefPointer | UnnormalizedTypeDefPointer[], options: LoadSchemaOptions): Promise<GraphQLSchema> {
+  const sources = await loadTypedefs(schemaPointers, {
+    filterKinds: OPERATION_KINDS,
+    ...options,
+  });
 
   const schemas: GraphQLSchema[] = [];
   const typeDefs: DocumentNode[] = [];

@@ -67,10 +67,6 @@ export function printComment(comment: string): string {
   return '\n# ' + comment.replace(/\n/g, '\n # ');
 }
 
-export function printWithComments(doc: DocumentNode): string {
-  return print(doc);
-}
-
 /**
  * Copyright (c) 2015-present, Facebook, Inc.
  *
@@ -149,7 +145,7 @@ function printBlockString(value: string, isDescription: boolean) {
  * Converts an AST into a string, using one set of reasonable
  * formatting rules.
  */
-function print(ast: ASTNode) {
+export function printWithComments(ast: ASTNode) {
   return visit(ast, {
     leave: {
       Name: node => node.value,

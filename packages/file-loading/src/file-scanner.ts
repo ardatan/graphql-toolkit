@@ -60,7 +60,9 @@ const LoadFilesDefaultOptions: LoadFilesOptions = {
   extensions: DEFAULT_EXTENSIONS,
   useRequire: false,
   requireMethod: null,
-  globOptions: {},
+  globOptions: {
+    absolute: true,
+  },
   exportNames: DEFAULT_EXPORT_NAMES,
   recursive: true,
   ignoreIndex: false,
@@ -103,7 +105,7 @@ export function loadFiles(path: string, options: LoadFilesOptions = LoadFilesDef
 }
 
 function scanForFilesAsync(globStr: string, globOptions: import('globby').GlobbyOptions = {}): Promise<string[]> {
-  return globby(globStr, { absolute: true, ...globOptions });
+  return globby(globStr, { absolute: true, ...globOptions, ignore: [] });
 }
 
 const checkExtension = (path: string, { extensions, ignoredExtensions }: { extensions?: string[]; ignoredExtensions?: string[] }) => {

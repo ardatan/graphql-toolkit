@@ -14,3 +14,5 @@ export * from './get-fields-with-directives';
 export * from './validate-documents';
 export * from './resolvers-composition';
 export * from './fix-schema-ast';
+export * from './parse-graphql-json';
+export * from './parse-graphql-sdl';

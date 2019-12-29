@@ -1,5 +1,5 @@
 import { buildClientSchema, parse, IntrospectionQuery, print, getIntrospectionQuery } from 'graphql';
-import { SchemaPointerSingle, Source, printSchemaWithDirectives, DocumentLoader, fixSchemaAst } from '@graphql-toolkit/common';
+import { SchemaPointerSingle, Source, DocumentLoader, SingleFileOptions } from '@graphql-toolkit/common';
 import { isUri } from 'valid-url';
 import { fetch as crossFetch } from 'cross-fetch';
 import { makeRemoteExecutableSchema } from '@kamilkisiela/graphql-tools';
@@ -9,7 +9,7 @@ export type FetchFn = typeof import('cross-fetch').fetch;
 
 type Headers = Record<string, string> | Array<Record<string, string>>;
 
-export interface LoadFromUrlOptions {
+export interface LoadFromUrlOptions extends SingleFileOptions {
   headers?: Headers;
   customFetch?: FetchFn | string;
   method?: 'GET' | 'POST';
@@ -95,14 +95,10 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
       schema: clientSchema,
       fetcher,
     });
-    const schema = fixSchemaAst(remoteExecutableSchema, options as any);
 
     return {
       location: pointer,
-      get document() {
-        return parse(printSchemaWithDirectives(schema));
-      },
-      schema,
+      schema: remoteExecutableSchema,
     };
   }
 }

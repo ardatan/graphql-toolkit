@@ -224,6 +224,7 @@ export function mergeGraphQLTypes(types: Array<string | Source | DocumentNode | 
       subscription: null,
     }
   );
+
   const mergedNodes: MergedResultMap = mergeGraphQLNodes(allNodes, config);
   const allTypes = Object.keys(mergedNodes);
   if (config && config.sort) {

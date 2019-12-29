@@ -1,5 +1,5 @@
 import { parse, isSchema } from 'graphql';
-import { UniversalLoader, fixSchemaAst, printSchemaWithDirectives } from '@graphql-toolkit/common';
+import { UniversalLoader, fixSchemaAst, printSchemaWithDirectives, SingleFileOptions } from '@graphql-toolkit/common';
 
 // module:node/module#export
 function extractData(
@@ -27,7 +27,7 @@ export class ModuleLoader implements UniversalLoader {
   async canLoad(pointer: string) {
     return typeof pointer === 'string' && pointer.toLowerCase().startsWith('module:');
   }
-  async load(pointer: string, options: any) {
+  async load(pointer: string, options: SingleFileOptions) {
     const { modulePath, exportName } = extractData(pointer);
 
     let thing: any;

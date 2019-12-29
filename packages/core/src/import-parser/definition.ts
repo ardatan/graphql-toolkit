@@ -1,11 +1,11 @@
-import { keyBy, uniqBy, includes } from 'lodash';
-import { TypeDefinitionNode, TypeNode, NamedTypeNode, DirectiveNode, DirectiveDefinitionNode, InputValueDefinitionNode, FieldDefinitionNode } from 'graphql';
+import { keyBy, uniqBy, includes, reverse } from 'lodash';
+import { TypeDefinitionNode, TypeNode, NamedTypeNode, DirectiveNode, DirectiveDefinitionNode, InputValueDefinitionNode, FieldDefinitionNode, SchemaDefinitionNode } from 'graphql';
 
 const builtinTypes = ['String', 'Float', 'Int', 'Boolean', 'ID'];
 
 const builtinDirectives = ['deprecated', 'skip', 'include', 'key', 'external', 'requires', 'provides'];
 
-export type ValidDefinitionNode = DirectiveDefinitionNode | TypeDefinitionNode;
+export type ValidDefinitionNode = DirectiveDefinitionNode | TypeDefinitionNode | SchemaDefinitionNode;
 
 export interface DefinitionMap {
   [key: string]: ValidDefinitionNode;
@@ -23,9 +23,9 @@ export interface DefinitionMap {
 export function completeDefinitionPool(allDefinitions: ValidDefinitionNode[], definitionPool: ValidDefinitionNode[], newTypeDefinitions: ValidDefinitionNode[]): ValidDefinitionNode[] {
   const visitedDefinitions: { [name: string]: boolean } = {};
   while (newTypeDefinitions.length > 0) {
-    const schemaMap: DefinitionMap = keyBy(allDefinitions, d => d.name.value);
+    const schemaMap: DefinitionMap = keyBy(reverse(allDefinitions), d => ('name' in d ? d.name.value : 'schema'));
     const newDefinition = newTypeDefinitions.shift();
-    if (visitedDefinitions[newDefinition.name.value]) {
+    if (visitedDefinitions['name' in newDefinition ? newDefinition.name.value : 'schema']) {
       continue;
     }
 
@@ -33,7 +33,7 @@ export function completeDefinitionPool(allDefinitions: ValidDefinitionNode[], de
     newTypeDefinitions.push(...collectedTypedDefinitions);
     definitionPool.push(...collectedTypedDefinitions);
 
-    visitedDefinitions[newDefinition.name.value] = true;
+    visitedDefinitions['name' in newDefinition ? newDefinition.name.value : 'schema'] = true;
   }
 
   return uniqBy(definitionPool, 'name.value');
@@ -73,7 +73,7 @@ function collectNewTypeDefinitions(allDefinitions: ValidDefinitionNode[], defini
 
   if (newDefinition.kind === 'UnionTypeDefinition') {
     newDefinition.types.forEach(type => {
-      if (!definitionPool.some(d => d.name.value === type.name.value)) {
+      if (!definitionPool.some(d => 'name' in d && d.name.value === type.name.value)) {
         const typeName = type.name.value;
         const typeMatch = schemaMap[typeName];
         if (!typeMatch) {
@@ -87,7 +87,7 @@ function collectNewTypeDefinitions(allDefinitions: ValidDefinitionNode[], defini
   if (newDefinition.kind === 'ObjectTypeDefinition') {
     // collect missing interfaces
     newDefinition.interfaces.forEach(int => {
-      if (!definitionPool.some(d => d.name.value === int.name.value)) {
+      if (!definitionPool.some(d => 'name' in d && d.name.value === int.name.value)) {
         const interfaceName = int.name.value;
         const interfaceMatch = schemaMap[interfaceName];
         if (!interfaceMatch) {
@@ -105,6 +105,19 @@ function collectNewTypeDefinitions(allDefinitions: ValidDefinitionNode[], defini
     });
   }
 
+  if (newDefinition.kind === 'SchemaDefinition') {
+    newDefinition.operationTypes.forEach(operationType => {
+      if (!definitionPool.some(d => 'name' in d && d.name.value === operationType.type.name.value)) {
+        const typeName = operationType.type.name.value;
+        const typeMatch = schemaMap[typeName];
+        if (!typeMatch) {
+          throw new Error(`Couldn't find type ${typeName} in any of the schemas.`);
+        }
+        newTypeDefinitions.push(schemaMap[operationType.type.name.value]);
+      }
+    });
+  }
+
   return newTypeDefinitions;
 
   function collectNode(node: FieldDefinitionNode | InputValueDefinitionNode) {
@@ -112,7 +125,7 @@ function collectNewTypeDefinitions(allDefinitions: ValidDefinitionNode[], defini
     const nodeTypeName = nodeType.name.value;
 
     // collect missing argument input types
-    if (!definitionPool.some(d => d.name.value === nodeTypeName) && !includes(builtinTypes, nodeTypeName)) {
+    if (!definitionPool.some(d => 'name' in d && d.name.value === nodeTypeName) && !includes(builtinTypes, nodeTypeName)) {
       const argTypeMatch = schemaMap[nodeTypeName];
       if (!argTypeMatch) {
         throw new Error(`Field ${node.name.value}: Couldn't find type ${nodeTypeName} in any of the schemas.`);
@@ -125,7 +138,7 @@ function collectNewTypeDefinitions(allDefinitions: ValidDefinitionNode[], defini
 
   function collectDirective(directive: DirectiveNode) {
     const directiveName = directive.name.value;
-    if (!definitionPool.some(d => d.name.value === directiveName) && !includes(builtinDirectives, directiveName)) {
+    if (!definitionPool.some(d => 'name' in d && d.name.value === directiveName) && !includes(builtinDirectives, directiveName)) {
       const directive = schemaMap[directiveName] as DirectiveDefinitionNode;
       if (!directive) {
         throw new Error(`Directive ${directiveName}: Couldn't find type ${directiveName} in any of the schemas.`);

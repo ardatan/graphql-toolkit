@@ -1,6 +1,6 @@
-import { DocumentNode, GraphQLSchema, parse, IntrospectionQuery, buildClientSchema, Source as GraphQLSource } from 'graphql';
+import { DocumentNode, GraphQLSchema, parse, IntrospectionQuery, buildClientSchema } from 'graphql';
 import { resolve, isAbsolute, extname } from 'path';
-import { SchemaPointerSingle, DocumentPointerSingle, debugLog, printSchemaWithDirectives, Source, UniversalLoader, asArray, fixWindowsPath, isValidPath, fixSchemaAst } from '@graphql-toolkit/common';
+import { SchemaPointerSingle, DocumentPointerSingle, debugLog, SingleFileOptions, Source, UniversalLoader, asArray, fixWindowsPath, isValidPath, fixSchemaAst } from '@graphql-toolkit/common';
 import { existsSync } from 'fs';
 import { gqlPluckFromFile, GraphQLTagPluckOptions } from '@graphql-toolkit/graphql-tag-pluck';
 
@@ -90,7 +90,7 @@ async function tryToLoadFromCodeAst(filePath: string, options?: CodeFileLoaderOp
   }
 }
 
-export type CodeFileLoaderOptions = { forceRawSDL: boolean; noRequire?: boolean; cwd?: string; require?: string | string[]; pluckConfig?: GraphQLTagPluckOptions };
+export type CodeFileLoaderOptions = { require?: string | string[]; pluckConfig?: GraphQLTagPluckOptions } & SingleFileOptions;
 
 const CODE_FILE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.vue'];
 
@@ -114,73 +114,52 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
   }
 
   async load(pointer: SchemaPointerSingle | DocumentPointerSingle, options: CodeFileLoaderOptions): Promise<Source> {
-    let loaded: GraphQLSchema | DocumentNode | null = null;
     const normalizedFilePath = isAbsolute(pointer) ? pointer : resolve(options.cwd || process.cwd(), pointer);
 
     try {
       const rawSDL = await tryToLoadFromCodeAst(normalizedFilePath, options);
-
       if (rawSDL) {
-        if (options && options.forceRawSDL) {
-          return {
-            location: normalizedFilePath,
-            get document() {
-              return parse(new GraphQLSource(rawSDL, normalizedFilePath));
-            },
-            rawSDL,
-          };
-        } else {
-          return {
-            location: normalizedFilePath,
-            document: parse(new GraphQLSource(rawSDL, normalizedFilePath)),
-            rawSDL,
-          };
-        }
+        return {
+          location: normalizedFilePath,
+          rawSDL,
+        };
       }
     } catch (e) {
-      debugLog(`Failed to load schema from code file "${normalizedFilePath}" using AST: ${e.message}`);
+      debugLog(`Failed to load schema from code file "${normalizedFilePath}": ${e.message}`);
 
       throw e;
     }
 
-    if (!loaded && !options.noRequire) {
+    if (!options.noRequire) {
       if (options && options.require) {
         await Promise.all(asArray(options.require).map(m => import(m)));
       }
-      const schemaOrDocument = await tryToLoadFromExport(normalizedFilePath);
-      if (schemaOrDocument instanceof GraphQLSchema) {
-        const schema = fixSchemaAst(schemaOrDocument, options as any);
+      let loaded = await tryToLoadFromExport(normalizedFilePath);
+      loaded = loaded['data'] || loaded;
+      if (loaded instanceof GraphQLSchema) {
+        const schema = fixSchemaAst(loaded, options);
         return {
-          get document() {
-            return parse(new GraphQLSource(printSchemaWithDirectives(schema), normalizedFilePath));
-          },
+          location: normalizedFilePath,
           schema,
-          location: normalizedFilePath,
         };
-      } else if (typeof schemaOrDocument === 'string') {
+      } else if (typeof loaded === 'string') {
         return {
-          get document() {
-            return parse(new GraphQLSource(schemaOrDocument as string, normalizedFilePath));
-          },
           location: normalizedFilePath,
-          rawSDL: schemaOrDocument,
+          rawSDL: loaded,
         };
-      } else if ('kind' in schemaOrDocument && schemaOrDocument.kind === 'Document') {
+      } else if ('kind' in loaded && loaded.kind === 'Document') {
         return {
-          document: schemaOrDocument,
           location: normalizedFilePath,
+          document: loaded,
         };
-      } else {
+      } else if ('__schema' in loaded) {
         return {
-          document: parse(new GraphQLSource(printSchemaWithDirectives(buildClientSchema(schemaOrDocument['data'] ? schemaOrDocument['data'] : schemaOrDocument)))),
+          schema: buildClientSchema(loaded, options),
           location: normalizedFilePath,
         };
       }
     }
 
-    return {
-      document: null,
-      location: normalizedFilePath,
-    };
+    return null;
   }
 }
