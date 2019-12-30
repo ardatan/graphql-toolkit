@@ -11,7 +11,7 @@ function isDirectory(path: string) {
 }
 
 function scanForFiles(globStr: string, globOptions: import('globby').GlobbyOptions = {}): string[] {
-  return globby.sync(globStr, { absolute: true, ...globOptions });
+  return globby.sync(globStr.replace(/\\/g, '/'), { absolute: true, ...globOptions });
 }
 
 function buildGlob(basePath: string, extensions: string[], ignoredExtensions: string[] = [], recursive: boolean): string {
@@ -103,7 +103,7 @@ export function loadFiles(path: string, options: LoadFilesOptions = LoadFilesDef
 }
 
 function scanForFilesAsync(globStr: string, globOptions: import('globby').GlobbyOptions = {}): Promise<string[]> {
-  return globby(globStr, { absolute: true, ...globOptions, ignore: [] });
+  return globby(globStr.replace(/\\/g, '/'), { absolute: true, ...globOptions, ignore: [] });
 }
 
 const checkExtension = (path: string, { extensions, ignoredExtensions }: { extensions?: string[]; ignoredExtensions?: string[] }) => {
