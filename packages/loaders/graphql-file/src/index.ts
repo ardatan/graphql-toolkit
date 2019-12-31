@@ -1,5 +1,4 @@
 import { Source, UniversalLoader, DocumentPointerSingle, SchemaPointerSingle, isValidPath, parseGraphQLSDL, SingleFileOptions } from '@graphql-toolkit/common';
-import { ParseOptions } from 'graphql';
 import { extname, isAbsolute, resolve } from 'path';
 import { readFileSync, existsSync } from 'fs';
 

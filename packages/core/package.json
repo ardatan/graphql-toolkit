@@ -26,8 +26,7 @@
     "input": "./src/index.ts"
   },
   "devDependencies": {
-    "@ardatan/bob": "0.1.8",
-    "@types/glob": "7.1.1",
+    "bob-the-bundler": "0.2.2",
     "@types/is-glob": "4.0.1",
     "@types/jest": "24.0.25",
     "@types/node": "10.17.13",
@@ -47,9 +46,10 @@
     "aggregate-error": "3.0.1",
     "globby": "10.0.1",
     "is-glob": "4.0.1",
+    "resolve-from": "5.0.0",
     "tslib": "1.10.0",
-    "valid-url": "1.0.9",
-    "resolve-from": "5.0.0"
+    "unixify": "1.0.0",
+    "valid-url": "1.0.9"
   },
   "publishConfig": {
     "access": "public",

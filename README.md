@@ -23,13 +23,36 @@ Specifiying the loader is not necessary. The user need only provide the inputs. 
 Usage:
 
 ```ts
-import { loadSchema } from 'graphql-toolkit';
+import { loadSchema } from '@graphql-toolkit/core';
+import { UrlLoader } from '@graphql-toolkit/url-loader';
+import { JSONFileLoader } from '@graphql-toolkit/json-file-loader';
+import { GraphQLFileLoader } from '@graphql-toolkit/graphql-file-loader';
 
-const schema1 = loadSchema('type A { foo: String }'); // load from string
-const schema2 = loadSchema('http://localhost:3000/graphql'); // load from endpoint
-const schema3 = loadSchema('./schema.json'); // load from local json file
-const schema4 = loadSchema('schema.graphql'); // load from a single schema file
-const schema5 = loadSchema('./src/**/*.graphql'); // load from multiple files using glob
+const schema1 = loadSchema('type A { foo: String }');   // load from string w/ no loaders
+
+const schema2 = loadSchema('http://localhost:3000/graphql', {   // load from endpoint
+    loaders: [
+        new UrlLoader()
+    ]
+});
+
+const schema3 = loadSchema('./schema.json', {   // load from local json file
+    loaders: [
+        new JSONFileLoader()
+    ]
+}); 
+
+const schema4 = loadSchema('schema.graphql', {  // load from a single schema file
+    loaders: [
+        new GraphQLFileLoader()
+    ]
+}); 
+
+const schema5 = loadSchema('./src/**/*.graphql', { // load from multiple files using glob
+    loaders: [
+        new GraphQLFileLoader()
+    ]
+});
 ```
 
 ### Documents Loading
@@ -43,30 +66,83 @@ It also extracts usages of `gql` from code files using [`graphql-tag-pluck`](htt
 Usage:
 
 ```ts
-import { loadDocuments } from 'graphql-toolkit';
+import { loadDocuments } from '@graphql-toolkit/core';
+import { GraphQLFileLoader } from '@graphql-toolkit/graphql-file-loader';
+import { CodeFileLoader } from '@graphql-toolkit/code-file-loader';
 
 const document1 = loadDocuments('query { f }'); // load from string
-const document2 = loadDocuments('./users.query.graphql'); // load from a single file 
-const document3 = loadDocuments('./src/**/*.graphql'); // load from multiple files using glob
-const document4 = loadDocuments('./src/my-component.ts'); // load from code file
+
+const document2 = loadDocuments('./users.query.graphql', {  // load from a single file 
+    loaders: [
+        new GraphQLFileLoader()
+    ]
+});
+
+const document3 = loadDocuments('./src/**/*.graphql', { // load from multiple files using glob
+    loaders: [
+        new GraphQLFileLoader()
+    ]
+});
+
+const document4 = loadDocuments('./src/my-component.ts', {  // load from code file
+    loaders: [
+        new CodeFileLoadder()
+    ]
+});
+
+
 ```
 
-### Epoxy
+### Schema Merging
 
 Originally implemented in [graphql-modules](https://github.com/Urigo/graphql-modules). This tools merged GraphQL type definitions and schema. It aims to merge all possible types, interfaces, enums and unions, without conflicts.
 
 Resolvers are merged using deep-merge. Resolver implementations can be separated across multiple objects and then merged into a single `resolvers` object.
 
-```graphql
-# a1.graphql
-type A {
-    f1: String
-}
+#### Merging different `GraphQLSchema`s
+You can use `mergeSchemas` to merge `GraphQLSchema` objects together with extra `typeDefs` and `resolvers`.
 
-# a2.graphql
-type A {
+```ts
+import { mergeSchemas } from '@graphql-toolkit/schema-merging';
+
+const mergedSchema = mergeSchemas({
+    schemas: [
+        BarSchema,
+        BazSchema,
+    ],
+    typeDefs: `
+        type ExtraType {
+            foo: String
+        }
+    `,
+    resolvers: {
+        ExtraType: {
+            foo: () => 'FOO',
+        }
+    }
+});
+```
+
+> There is also `mergeSchemasAsync` as a faster asynchronous alternative.
+
+### Merging GraphQL Type Definitions (SDL)
+
+```ts
+import { mergeTypeDefs } from '@graphql-toolkit/schema-merging';
+
+const typeDef1 = /* GraphQL */`
+    type A {
+        f1: String
+    }
+`;
+
+const typeDef2 = /* GraphQL */`
+    type A {
     f2: String
-}
+    }
+`;
+
+const result = mergeTypeDefs([typeDef1, typeDef2]);
 ```
 
 Will result:
@@ -77,13 +153,25 @@ type A {
 }
 ```
 
-### Sonar
+### File Loading for both schema and resolvers
 
-Sonar is a small util that scans you file-system and find GraphQL files (`.graphql`) and resolvers files (`.js`/`.ts`) and loads them (using `readFile` for GraphQL files and `require` for resolvers files).
+There is a small util in GraphQL Toolkit that scans you file-system and find GraphQL files (`.graphql`) and resolvers files (`.js`/`.ts`) and loads them (using `readFile` for GraphQL files and `require` for resolvers files).
+
+```ts
+const typeDefs = loadFiles(join(__dirname, 'typeDefs', '**/*.graphql'));
+const resolvers = loadFiles(join(__dirname, 'resolvers', '**/*.ts'));
+
+const graphQLServer = new ApolloServer({
+    typeDefs,
+    resolvers,
+});
+```
+
+> There is also `loadFilesAsync` as a faster asynchronous alternative.
 
 ### Other Utils
 
-There are some more utils under `utils` directory:
+There are some more utils under `@graphql-toolkit/common` package:
 
 #### `validateGraphQlDocuments`
 

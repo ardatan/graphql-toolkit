@@ -1,5 +1,5 @@
 import { GraphQLSchema, parse, Kind, Source as GraphQLSource } from 'graphql';
-import { Source, asArray, isDocumentString, debugLog, fixWindowsPath, printSchemaWithDirectives, parseGraphQLSDL, fixSchemaAst, SingleFileOptions, Loader } from '@graphql-toolkit/common';
+import { Source, asArray, isDocumentString, debugLog, printSchemaWithDirectives, parseGraphQLSDL, fixSchemaAst, SingleFileOptions, Loader } from '@graphql-toolkit/common';
 import { join } from 'path';
 import isGlob from 'is-glob';
 import globby from 'globby';
@@ -85,6 +85,8 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
   options.allDefinitions = options.allDefinitions || [];
   options.typeDefinitions = options.typeDefinitions || [];
 
+  const unixify = require('unixify');
+
   for (const pointer in normalizedPointerOptionsMap) {
     const pointerOptions = normalizedPointerOptionsMap[pointer];
     if (isDocumentString(pointer)) {
@@ -95,8 +97,8 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
           options.cache[pointer] = result;
         })
       );
-    } else if (isGlob(pointer)) {
-      foundGlobs.push(pointer);
+    } else if (isGlob(unixify(pointer))) {
+      foundGlobs.push(unixify(pointer));
       Object.assign(globOptions, pointerOptions);
     } else if (pointerOptions.loader) {
       loadPromises$.push(
@@ -152,7 +154,7 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
     if (options.ignore) {
       const ignoreList = asArray(options.ignore)
         .map(g => `!(${g})`)
-        .map(p => fixWindowsPath(p));
+        .map<string>(unixify);
 
       if (ignoreList.length > 0) {
         foundGlobs.push(...ignoreList);

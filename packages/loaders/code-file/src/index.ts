@@ -1,6 +1,6 @@
 import { DocumentNode, GraphQLSchema, parse, IntrospectionQuery, buildClientSchema } from 'graphql';
 import { resolve, isAbsolute, extname } from 'path';
-import { SchemaPointerSingle, DocumentPointerSingle, debugLog, SingleFileOptions, Source, UniversalLoader, asArray, fixWindowsPath, isValidPath, fixSchemaAst } from '@graphql-toolkit/common';
+import { SchemaPointerSingle, DocumentPointerSingle, debugLog, SingleFileOptions, Source, UniversalLoader, asArray, isValidPath, fixSchemaAst } from '@graphql-toolkit/common';
 import { existsSync } from 'fs';
 import { gqlPluckFromFile, GraphQLTagPluckOptions } from '@graphql-toolkit/graphql-tag-pluck';
 
@@ -48,7 +48,6 @@ async function tryToLoadFromExport(rawFilePath: string): Promise<GraphQLSchema |
   let filePath = rawFilePath;
 
   try {
-    filePath = fixWindowsPath(filePath);
     if (require && require.cache) {
       filePath = require.resolve(filePath);
 
@@ -81,8 +80,8 @@ async function tryToLoadFromExport(rawFilePath: string): Promise<GraphQLSchema |
   }
 }
 
-async function tryToLoadFromCodeAst(filePath: string, options?: CodeFileLoaderOptions): Promise<string> {
-  const foundDoc = await gqlPluckFromFile(filePath, options && options.pluckConfig);
+async function tryToLoadFromCodeAst(filePath: string, options: CodeFileLoaderOptions): Promise<string> {
+  const foundDoc = await gqlPluckFromFile(filePath, options.pluckConfig);
   if (foundDoc) {
     return foundDoc;
   } else {

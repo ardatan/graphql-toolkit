@@ -1,5 +1,5 @@
 import { DefinitionNode, parse, ObjectTypeDefinitionNode, DocumentNode, Kind } from 'graphql';
-import { groupBy, keyBy, isEqual, uniqBy } from 'lodash';
+import { groupBy, keyBy, isEqual, uniqBy, flatten } from 'lodash';
 import resolveFrom from 'resolve-from';
 import { loadSingleFile } from '../load-typedefs';
 import { LoadSchemaOptions } from '../schema';
@@ -79,9 +79,9 @@ export async function processImportSyntax(documentSource: Source, options: LoadS
   // Query, Mutation and Subscription should be merged
   // And should always be in the first set, to make sure they
   // are not filtered out.
-  const firstTypes = options.typeDefinitions.flat();
+  const firstTypes = flatten(options.typeDefinitions);
   const secondFirstTypes = options.typeDefinitions[0];
-  const otherFirstTypes = options.typeDefinitions.slice(1).flat();
+  const otherFirstTypes = flatten(options.typeDefinitions.slice(1));
 
   const firstSet = firstTypes.concat(secondFirstTypes, otherFirstTypes);
   const processedTypeNames: string[] = [];
@@ -101,7 +101,7 @@ export async function processImportSyntax(documentSource: Source, options: LoadS
     }
   }
 
-  (document as any).definitions = completeDefinitionPool(options.allDefinitions.flat(), firstSet, options.typeDefinitions.flat());
+  (document as any).definitions = completeDefinitionPool(flatten(options.allDefinitions), firstSet, flatten(options.typeDefinitions));
 }
 
 /**
@@ -222,10 +222,7 @@ function filterImportedDefinitions(imports: string[], typeDefinitions: ReadonlyA
   if (imports.includes('*')) {
     if (imports.length === 1 && imports[0] === '*' && allDefinitions.length > 1) {
       const previousTypeDefinitions: { [key: string]: DefinitionNode } = keyBy(
-        allDefinitions
-          .slice(0, allDefinitions.length - 1)
-          .flat()
-          .filter(def => 'name' in def && !rootFields.includes(def.name.value)),
+        flatten(allDefinitions.slice(0, allDefinitions.length - 1)).filter(def => 'name' in def && !rootFields.includes(def.name.value)),
         def => 'name' in def && def.name.value
       );
       return typeDefinitions.filter(typeDef => typeDef.kind === 'ObjectTypeDefinition' && previousTypeDefinitions[typeDef.name.value]) as ObjectTypeDefinitionNode[];
