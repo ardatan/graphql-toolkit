@@ -1,6 +1,6 @@
 {
   "name": "@graphql-toolkit/apollo-engine-loader",
-  "version": "0.7.5",
+  "version": "0.8.0",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": "git@github.com:ardatan/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
@@ -26,15 +26,15 @@
     "input": "./src/index.ts"
   },
   "devDependencies": {
-    "bob-the-bundler": "0.2.2",
     "@types/jest": "24.0.25",
+    "bob-the-bundler": "0.2.2",
     "graphql": "14.5.8",
     "jest": "24.9.0",
     "ts-jest": "24.2.0",
     "typescript": "3.7.4"
   },
   "dependencies": {
-    "@graphql-toolkit/common": "0.7.5",
+    "@graphql-toolkit/common": "0.8.0",
     "apollo-language-server": "1.17.2",
     "tslib": "1.10.0"
   },
