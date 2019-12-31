@@ -158,6 +158,8 @@ type A {
 There is a small util in GraphQL Toolkit that scans you file-system and find GraphQL files (`.graphql`) and resolvers files (`.js`/`.ts`) and loads them (using `readFile` for GraphQL files and `require` for resolvers files).
 
 ```ts
+import { loadFiles } from '@graphql-toolkit/file-loading';
+
 const typeDefs = loadFiles(join(__dirname, 'typeDefs', '**/*.graphql'));
 const resolvers = loadFiles(join(__dirname, 'resolvers', '**/*.ts'));
 
