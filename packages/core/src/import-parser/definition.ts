@@ -3,7 +3,7 @@ import { TypeDefinitionNode, TypeNode, NamedTypeNode, DirectiveNode, DirectiveDe
 
 const builtinTypes = ['String', 'Float', 'Int', 'Boolean', 'ID'];
 
-const builtinDirectives = ['deprecated', 'skip', 'include', 'key', 'external', 'requires', 'provides'];
+const builtinDirectives = ['deprecated', 'skip', 'include', 'cacheControl', 'key', 'external', 'requires', 'provides'];
 
 export type ValidDefinitionNode = DirectiveDefinitionNode | TypeDefinitionNode | SchemaDefinitionNode;
 
