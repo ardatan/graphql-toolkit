@@ -45,6 +45,14 @@ test('parseImportLine: invalid 2', async () => {
   expect(() => parseImportLine(`import A from ""`)).toThrow();
 })
 
+test('parseImportLine: invalid 3', async () => {
+  expect(() => parseImportLine(`import A. from ""`)).toThrow();
+})
+
+test('parseImportLine: invalid 4', async () => {
+  expect(() => parseImportLine(`import A.* from ""`)).toThrow();
+})
+
 test('parseImportLine: parse multi import', async () => {
   expect(parseImportLine(`import A, B from "schema.graphql"`)).toEqual({
     imports: ['A', 'B'],
@@ -69,6 +77,20 @@ test('parseImportLine: different path', async () => {
 test('parseImportLine: module in node_modules', async () => {
   expect(parseImportLine(`import A from "module-name"`)).toEqual({
     imports: ['A'],
+    from: 'module-name',
+  })
+})
+
+test('parseImportLine: specific field', async () => {
+  expect(parseImportLine(`import A.b from "module-name"`)).toEqual({
+    imports: ['A.b'],
+    from: 'module-name',
+  })
+})
+
+test('parseImportLine: multiple specific fields', async () => {
+  expect(parseImportLine(`import A.b, G.q from "module-name"`)).toEqual({
+    imports: ['A.b', 'G.q'],
     from: 'module-name',
   })
 })
@@ -105,7 +127,7 @@ test('Module in node_modules', async () => {
   const lower = `\
         directive @lower on FIELD_DEFINITION
         `
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A {
           id: ID!
           author: B!
@@ -129,7 +151,7 @@ test('Module in node_modules', async () => {
 })
 
 test('importSchema: imports only', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type Query {
           first: String
           second: Float
@@ -140,7 +162,7 @@ test('importSchema: imports only', async () => {
 })
 
 test('importSchema: import .gql extension', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A {
           id: ID!
         }
@@ -149,7 +171,7 @@ test('importSchema: import .gql extension', async () => {
 })
 
 test('importSchema: import duplicate', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type Query {
           first: String
           second: Float
@@ -160,7 +182,7 @@ test('importSchema: import duplicate', async () => {
 })
 
 test('importSchema: import nested', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type Query {
           first: String
           second: Float
@@ -171,7 +193,7 @@ test('importSchema: import nested', async () => {
 })
 
 test('importSchema: field types', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A {
           first: String
           second: Float
@@ -191,7 +213,7 @@ test('importSchema: field types', async () => {
 })
 
 test('importSchema: enums', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A {
           first: String
           second: Float
@@ -208,7 +230,7 @@ test('importSchema: enums', async () => {
 })
 
 test('importSchema: import all', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A {
           first: String
           second: Float
@@ -272,7 +294,7 @@ test('importSchema: import all from objects', async () => {
     schemaC,
   }
 
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A {
           first: String
           second: Float
@@ -303,7 +325,7 @@ test(`importSchema: single object schema`, async () => {
             }
         `
 
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A {
           field: String
         }
@@ -336,7 +358,7 @@ test(`importSchema: import all mix 'n match`, async () => {
     schemaB,
   }
 
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A {
           first: String
           second: Float
@@ -372,7 +394,7 @@ test(`importSchema: import all mix 'n match 2`, async () => {
             }
         `
 
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A {
           first: String
           second: Float
@@ -453,7 +475,7 @@ test(`importSchema: import all - exclude Query/Mutation/Subscription type`, asyn
     schemaC,
   }
 
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type Query {
           greet: String!
         }
@@ -482,7 +504,7 @@ test(`importSchema: import all - exclude Query/Mutation/Subscription type`, asyn
 })
 
 test('importSchema: scalar', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A {
           b: B
         }
@@ -493,7 +515,7 @@ test('importSchema: scalar', async () => {
 })
 
 test('importSchema: directive', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A {
           first: String @upper
           second: String @withB @deprecated
@@ -509,7 +531,7 @@ test('importSchema: directive', async () => {
 })
 
 test('importSchema: key directive', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         scalar UPC
         
         type Product @key(fields: "upc") {
@@ -521,7 +543,7 @@ test('importSchema: key directive', async () => {
 })
 
 test('importSchema: multiple key directive', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         scalar UPC
         
         scalar SKU
@@ -536,7 +558,7 @@ test('importSchema: multiple key directive', async () => {
 })
 
 test('importSchema: external directive', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type Review @key(fields: "id") {
           product: Product @provides(fields: "name")
         }
@@ -550,7 +572,7 @@ test('importSchema: external directive', async () => {
 })
 
 test('importSchema: requires directive', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type Review {
           id: ID
         }
@@ -565,7 +587,7 @@ test('importSchema: requires directive', async () => {
 })
 
 test('importSchema: interfaces', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A implements B {
           first: String
           second: Float
@@ -584,7 +606,7 @@ test('importSchema: interfaces', async () => {
 })
 
 test('importSchema: interfaces-many', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A implements B {
           first: String
           second: Float
@@ -611,7 +633,7 @@ test('importSchema: interfaces-many', async () => {
 })
 
 test('importSchema: interfaces-implements', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A implements B {
           id: ID!
         }
@@ -628,7 +650,7 @@ test('importSchema: interfaces-implements', async () => {
 })
 
 test('importSchema: interfaces-implements-many', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A implements B {
           id: ID!
         }
@@ -650,7 +672,7 @@ test('importSchema: interfaces-implements-many', async () => {
 })
 
 test('importSchema: input types', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A {
           first(b: B): String
           second: Float
@@ -677,7 +699,7 @@ test('importSchema: complex test', async () => {
 })
 
 test('circular imports', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A {
           first: String
           second: Float
@@ -704,7 +726,7 @@ test('circular imports', async () => {
 })
 
 test('related types', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A {
           first: String
           second: Float
@@ -725,7 +747,7 @@ test('related types', async () => {
 })
 
 test('relative paths', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type Query {
           feed: [Post!]!
         }
@@ -751,7 +773,7 @@ test('relative paths', async () => {
 })
 
 test('root field imports', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type Query {
           posts(filter: PostFilter): [Post]
         }
@@ -773,7 +795,7 @@ test('root field imports', async () => {
 })
 
 test('extend root field', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         extend type Query {
           me: User
         }
@@ -788,7 +810,7 @@ test('extend root field', async () => {
 })
 
 test('extend root field imports', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         extend type Query {
           me: User
           post: Post
@@ -808,7 +830,7 @@ test('extend root field imports', async () => {
 })
 
 test('merged root field imports', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type Query {
           helloA: String
           posts(filter: PostFilter): [Post]
@@ -839,7 +861,7 @@ test('global schema modules', async () => {
             }
         
           `
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type A {
           first: String
           second: Shared
@@ -928,7 +950,7 @@ test('missing type on directive', async () => {
 
 test('import with collision', async () => {
   // Local type gets preference over imported type
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
         type User {
           id: ID!
           name: String!
@@ -993,7 +1015,7 @@ test('respect schema definition', async () => {
 });
 
 test('import schema with shadowed type', async () => {
-  const expectedSDL = `\
+  const expectedSDL = /* GraphQL */`\
     type Query {
       b: B!
     }
@@ -1003,4 +1025,39 @@ test('import schema with shadowed type', async () => {
     scalar X
 `
   expect(normalizeDocumentString(await importSchema('./fixtures/import-shadowed/a.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+})
+
+test('import specific types', async () => {
+  const expectedSDL = /* GraphQL */`\
+type User implements B {
+  b: String!
+  c: [C!]!
+}
+interface B {
+  B: String!
+}
+type C {
+  c: String
+}
+`
+  expect(normalizeDocumentString(await importSchema('./fixtures/specific/a.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+})
+
+test('imports missing named imports for file imported multiple time without duplicates', async () => {
+  const expectedSDL = /* GraphQL */`\
+type Query {
+  a: B
+  b: B
+  c: B
+}
+type Mutation {
+  a: B
+  b: B
+  c: B
+}
+type B {
+  x: String
+}
+`
+  expect(normalizeDocumentString(await importSchema('fixtures/multiple-imports/schema.graphql'))).toBe(normalizeDocumentString(expectedSDL));
 })
