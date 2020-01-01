@@ -35,7 +35,12 @@ export function parseImportLine(importLine: string): RawModule {
   // Apply regex to import line
   const matches = importLine.match(/^import\s+(\*|(.*))\s+from\s+('|")(.*)('|");?$/);
   if (!matches || matches.length !== 6 || !matches[4]) {
-    throw new Error(`Too few regex matches: ${matches}`);
+    throw new Error(`
+      Import statement is not valid: ${importLine}
+      If you want to have comments starting with '# import', please use ''' instead!
+      You can only have 'import' statements in the following pattern;
+      # import [Type].[Field] from [File]
+    `);
   }
 
   // Extract matches into named variables

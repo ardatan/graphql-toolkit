@@ -1,7 +1,7 @@
 import { keyBy, uniqBy, includes, reverse } from 'lodash';
 import { TypeDefinitionNode, TypeNode, NamedTypeNode, DirectiveNode, DirectiveDefinitionNode, InputValueDefinitionNode, FieldDefinitionNode, SchemaDefinitionNode } from 'graphql';
 
-const builtinTypes = ['String', 'Float', 'Int', 'Boolean', 'ID'];
+const builtinTypes = ['String', 'Float', 'Int', 'Boolean', 'ID', 'Upload'];
 
 const builtinDirectives = ['deprecated', 'skip', 'include', 'cacheControl', 'key', 'external', 'requires', 'provides'];
 
