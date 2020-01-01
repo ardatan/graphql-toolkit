@@ -106,4 +106,12 @@ describe('documentsFromGlob', () => {
     });
     expect(result.length).toBe(1);
   });
+
+  it('should respect brackets in file path', async () => {
+    const glob = join(__dirname, './test-with-brackets/', '**/*.ts');
+    const result = await loadDocuments(glob, {
+      loaders: [new CodeFileLoader()],
+    })
+    expect(result.length).toBe(1);
+  });
 });
