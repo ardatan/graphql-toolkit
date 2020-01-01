@@ -45,6 +45,7 @@ describe('documentsFromGlob', () => {
             identifier: 'parse',
           },
         ],
+        globalGqlIdentifierName: 'somethingElse',
       },
       loaders: [
         new CodeFileLoader()

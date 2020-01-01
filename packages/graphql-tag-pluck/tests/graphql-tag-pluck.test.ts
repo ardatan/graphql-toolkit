@@ -763,8 +763,6 @@ describe('graphql-tag-pluck', () => {
     })
 
     writeFileSync(file.name, freeText(`
-    import gql from 'graphql-tag'
-
       const fragment = gql(\`
         fragment Foo on FooType {
           id

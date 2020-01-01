@@ -72,6 +72,7 @@ const defaults: GraphQLTagPluckOptions = {
     },
   ],
   gqlMagicComment: 'graphql',
+  globalGqlIdentifierName: 'gql',
 };
 
 export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
