@@ -1,5 +1,5 @@
 import { Config } from './merge-typedefs';
-import { ObjectTypeDefinitionNode, ObjectTypeExtensionNode } from 'graphql';
+import { ObjectTypeDefinitionNode, ObjectTypeExtensionNode, Kind } from 'graphql';
 import { mergeFields } from './fields';
 import { mergeDirectives } from './directives';
 import { mergeNamedTypeArray } from './merge-named-type-array';
@@ -10,7 +10,7 @@ export function mergeType(node: ObjectTypeDefinitionNode | ObjectTypeExtensionNo
       return {
         name: node.name,
         description: node['description'] || existingNode['description'],
-        kind: node.kind === 'ObjectTypeDefinition' || existingNode.kind === 'ObjectTypeDefinition' ? 'ObjectTypeDefinition' : 'ObjectTypeExtension',
+        kind: (config && config.convertExtensions) || node.kind === 'ObjectTypeDefinition' || existingNode.kind === 'ObjectTypeDefinition' ? 'ObjectTypeDefinition' : 'ObjectTypeExtension',
         loc: node.loc,
         fields: mergeFields(node, node.fields, existingNode.fields, config),
         directives: mergeDirectives(node.directives, existingNode.directives, config),
@@ -21,5 +21,10 @@ export function mergeType(node: ObjectTypeDefinitionNode | ObjectTypeExtensionNo
     }
   }
 
-  return node;
+  return config && config.convertExtensions
+    ? {
+        ...node,
+        kind: 'ObjectTypeDefinition',
+      }
+    : node;
 }

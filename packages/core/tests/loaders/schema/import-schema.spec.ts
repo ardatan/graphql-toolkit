@@ -95,6 +95,13 @@ test('parseImportLine: multiple specific fields', async () => {
   })
 })
 
+test('parseImportLine: default import', async () => {
+  expect(parseImportLine(`import "module-name"`)).toEqual({
+    imports: ['*'],
+    from: 'module-name',
+  })
+});
+
 test('parseSDL: non-import comment', async () => {
   expect(parseSDL(`#importent: comment`)).toEqual([]);
 })

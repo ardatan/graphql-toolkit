@@ -1,10 +1,9 @@
 import { DefinitionNode, parse, ObjectTypeDefinitionNode, DocumentNode, Kind } from 'graphql';
 import { groupBy, keyBy, isEqual, uniqBy, flatten } from 'lodash';
 import resolveFrom from 'resolve-from';
-import { loadSingleFile } from '../load-typedefs';
-import { LoadSchemaOptions } from '../schema';
+import { loadSingleFile, LoadTypedefsOptions } from '../load-typedefs';
 
-import { completeDefinitionPool, ValidDefinitionNode } from './definition';
+import { completeDefinitionPool } from './definition';
 import { realpathSync } from 'fs';
 import { join, dirname, resolve } from 'path';
 import { Source } from '@graphql-toolkit/common';
@@ -20,10 +19,13 @@ export interface RawModule {
 
 const rootFields = ['Query', 'Mutation', 'Subscription'];
 
-const gqlExt = /\.g(raph)?ql$/;
+const gqlExt = /\.g(raph)?ql(s)?$/;
 function isGraphQLFile(f: string) {
   return gqlExt.test(f);
 }
+
+const IMPORT_FROM_REGEX = /^import\s+(\*|(.*))\s+from\s+('|")(.*)('|");?$/;
+const IMPORT_DEFAULT_REGEX = /^import\s+('|")(.*)('|");?$/;
 
 /**
  * Parse a single import line and extract imported types and schema filename
@@ -32,25 +34,31 @@ function isGraphQLFile(f: string) {
  * @returns Processed import line
  */
 export function parseImportLine(importLine: string): RawModule {
-  // Apply regex to import line
-  const matches = importLine.match(/^import\s+(\*|(.*))\s+from\s+('|")(.*)('|");?$/);
-  if (!matches || matches.length !== 6 || !matches[4]) {
-    throw new Error(`
-      Import statement is not valid: ${importLine}
-      If you want to have comments starting with '# import', please use ''' instead!
-      You can only have 'import' statements in the following pattern;
-      # import [Type].[Field] from [File]
-    `);
+  if (IMPORT_FROM_REGEX.test(importLine)) {
+    // Apply regex to import line
+    const matches = importLine.match(IMPORT_FROM_REGEX);
+
+    if (matches && matches.length === 6 && matches[4]) {
+      // Extract matches into named variables
+      const [, wildcard, importsString, , from] = matches;
+
+      // Extract imported types
+      const imports = wildcard === '*' ? ['*'] : importsString.split(',').map(d => d.trim());
+
+      // Return information about the import line
+      return { imports, from };
+    }
+  } else if (IMPORT_DEFAULT_REGEX.test(importLine)) {
+    const [, , from] = importLine.match(IMPORT_DEFAULT_REGEX);
+
+    return { imports: ['*'], from };
   }
-
-  // Extract matches into named variables
-  const [, wildcard, importsString, , from] = matches;
-
-  // Extract imported types
-  const imports = wildcard === '*' ? ['*'] : importsString.split(',').map(d => d.trim());
-
-  // Return information about the import line
-  return { imports, from };
+  throw new Error(`
+    Import statement is not valid: ${importLine}
+    If you want to have comments starting with '# import', please use ''' instead!
+    You can only have 'import' statements in the following pattern;
+    # import [Type].[Field] from [File]
+  `);
 }
 
 /**
@@ -74,7 +82,7 @@ export function parseSDL(sdl: string): RawModule[] {
  * @param filePath File path to the initial schema file
  * @returns Single bundled schema with all imported types
  */
-export async function processImportSyntax(documentSource: Source, options: LoadSchemaOptions): Promise<void> {
+export async function processImportSyntax(documentSource: Source, options: LoadTypedefsOptions): Promise<void> {
   let document = documentSource.document;
 
   // Recursively process the imports, starting by importing all types from the initial schema
@@ -178,15 +186,15 @@ export function resolveModuleFilePath(filePath: string, importFrom: string): str
  * @param Tracking of all type definitions per schema
  * @returns Both the collection of all type definitions, and the collection of imported type definitions
  */
-export async function collectDefinitions(imports: string[], documentSource: Source, options: LoadSchemaOptions): Promise<void> {
+export async function collectDefinitions(imports: string[], documentSource: Source, options: LoadTypedefsOptions): Promise<void> {
   // Get TypeDefinitionNodes from current schema
   const document = documentSource.document;
 
   // Add all definitions to running total
-  options.allDefinitions.push(filterTypeDefinitions(document.definitions));
+  options.allDefinitions.push(document.definitions as DefinitionNode[]);
 
   // Filter TypeDefinitionNodes by type and defined imports
-  const currentTypeDefinitions = filterImportedDefinitions(imports, document.definitions, options.allDefinitions);
+  const currentTypeDefinitions = filterImportedDefinitions(imports, document.definitions as DefinitionNode[], options.allDefinitions);
 
   // Add typedefinitions to running total
   options.typeDefinitions.push(currentTypeDefinitions);
@@ -219,10 +227,10 @@ export async function collectDefinitions(imports: string[], documentSource: Sour
  * @param typeDefinitions All definitions from a schema
  * @returns Filtered collection of type definitions
  */
-function filterImportedDefinitions(imports: string[], typeDefinitions: ReadonlyArray<DefinitionNode>, allDefinitions: ValidDefinitionNode[][] = []): ValidDefinitionNode[] {
+function filterImportedDefinitions(imports: string[], typeDefinitions: DefinitionNode[], allDefinitions: DefinitionNode[][] = []): DefinitionNode[] {
   // This should do something smart with fields
 
-  const filteredDefinitions = filterTypeDefinitions(typeDefinitions);
+  const filteredDefinitions = typeDefinitions;
 
   if (imports.includes('*')) {
     if (imports.length === 1 && imports[0] === '*' && allDefinitions.length > 1) {
@@ -251,14 +259,3 @@ function filterImportedDefinitions(imports: string[], typeDefinitions: ReadonlyA
     return result;
   }
 }
-
-/**
- * Filter relevant definitions from schema
- *
- * @param definitions All definitions from a schema
- * @returns Relevant type definitions
- */
-export function filterTypeDefinitions(definitions: ReadonlyArray<DefinitionNode>): ValidDefinitionNode[] {
-  return definitions.filter(d => validKinds.includes(d.kind)).map(d => d as ValidDefinitionNode);
-}
-const validKinds = ['DirectiveDefinition', 'ScalarTypeDefinition', 'ObjectTypeDefinition', 'ObjectTypeExtension', 'InterfaceTypeDefinition', 'EnumTypeDefinition', 'UnionTypeDefinition', 'InputObjectTypeDefinition', 'SchemaDefinition'];

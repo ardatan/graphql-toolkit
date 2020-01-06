@@ -1,21 +1,4 @@
-import {
-  buildASTSchema,
-  printSchema,
-  DefinitionNode,
-  DocumentNode,
-  GraphQLSchema,
-  parse,
-  print,
-  Source,
-  GraphQLObjectType,
-  isSpecifiedScalarType,
-  isIntrospectionType,
-  GraphQLScalarType,
-  printType,
-  ObjectTypeExtensionNode,
-  GraphQLNamedType,
-  Kind,
-} from 'graphql';
+import { DefinitionNode, DocumentNode, GraphQLSchema, parse, print, Source, GraphQLObjectType, isSpecifiedScalarType, isIntrospectionType, GraphQLScalarType, printType, ObjectTypeExtensionNode, GraphQLNamedType, Kind } from 'graphql';
 import { isGraphQLSchema, isSourceTypes, isStringTypes, isSchemaDefinition } from './utils';
 import { MergedResultMap, mergeGraphQLNodes } from './merge-nodes';
 import { resetComments, printWithComments } from './comments';
@@ -73,6 +56,7 @@ export interface Config {
   reverseDirectives?: boolean;
   exclusions?: string[];
   sort?: boolean | CompareFn<string>;
+  convertExtensions?: boolean;
 }
 
 export function mergeGraphQLSchemas(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Omit<Partial<Config>, 'commentDescriptions'>) {

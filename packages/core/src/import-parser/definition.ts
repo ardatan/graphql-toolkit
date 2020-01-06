@@ -1,14 +1,12 @@
 import { keyBy, uniqBy, includes, reverse } from 'lodash';
-import { TypeDefinitionNode, TypeNode, NamedTypeNode, DirectiveNode, DirectiveDefinitionNode, InputValueDefinitionNode, FieldDefinitionNode, SchemaDefinitionNode } from 'graphql';
+import { NamedTypeNode, DirectiveNode, DirectiveDefinitionNode, InputValueDefinitionNode, FieldDefinitionNode, DefinitionNode, TypeNode, Kind, SelectionNode } from 'graphql';
 
 const builtinTypes = ['String', 'Float', 'Int', 'Boolean', 'ID', 'Upload'];
 
 const builtinDirectives = ['deprecated', 'skip', 'include', 'cacheControl', 'key', 'external', 'requires', 'provides'];
 
-export type ValidDefinitionNode = DirectiveDefinitionNode | TypeDefinitionNode | SchemaDefinitionNode;
-
 export interface DefinitionMap {
-  [key: string]: ValidDefinitionNode;
+  [key: string]: DefinitionNode;
 }
 
 /**
@@ -20,7 +18,7 @@ export interface DefinitionMap {
  * @param newTypeDefinitions All imported definitions
  * @returns Final collection of type definitions for the resulting schema
  */
-export function completeDefinitionPool(allDefinitions: ValidDefinitionNode[], definitionPool: ValidDefinitionNode[], newTypeDefinitions: ValidDefinitionNode[]): ValidDefinitionNode[] {
+export function completeDefinitionPool(allDefinitions: DefinitionNode[], definitionPool: DefinitionNode[], newTypeDefinitions: DefinitionNode[]): DefinitionNode[] {
   const visitedDefinitions: { [name: string]: boolean } = {};
   while (newTypeDefinitions.length > 0) {
     const schemaMap: DefinitionMap = keyBy(reverse(allDefinitions), d => ('name' in d ? d.name.value : 'schema'));
@@ -52,8 +50,8 @@ export function completeDefinitionPool(allDefinitions: ValidDefinitionNode[], de
  * @param schemaMap Map of all definitions for easy lookup
  * @returns All relevant type definitions to add to the final schema
  */
-function collectNewTypeDefinitions(allDefinitions: ValidDefinitionNode[], definitionPool: ValidDefinitionNode[], newDefinition: ValidDefinitionNode, schemaMap: DefinitionMap): ValidDefinitionNode[] {
-  let newTypeDefinitions: ValidDefinitionNode[] = [];
+function collectNewTypeDefinitions(allDefinitions: DefinitionNode[], definitionPool: DefinitionNode[], newDefinition: DefinitionNode, schemaMap: DefinitionMap): DefinitionNode[] {
+  let newTypeDefinitions: DefinitionNode[] = [];
 
   if (newDefinition.kind !== 'DirectiveDefinition') {
     newDefinition.directives.forEach(collectDirective);
@@ -118,7 +116,35 @@ function collectNewTypeDefinitions(allDefinitions: ValidDefinitionNode[], defini
     });
   }
 
+  if (newDefinition.kind === Kind.OPERATION_DEFINITION || newDefinition.kind === Kind.FRAGMENT_DEFINITION) {
+    if (newDefinition.selectionSet) {
+      for (const selection of newDefinition.selectionSet.selections) {
+        collectFragments(selection);
+      }
+    }
+  }
+
   return newTypeDefinitions;
+
+  function collectFragments(node: SelectionNode) {
+    if (node.kind === Kind.FRAGMENT_SPREAD) {
+      const fragmentName = node.name.value;
+      if (!definitionPool.some(d => 'name' in d && d.name.value === fragmentName)) {
+        const fragmentMatch = schemaMap[fragmentName];
+        if (!fragmentMatch) {
+          throw new Error(`Fragment ${fragmentName}: Couldn't find fragment ${fragmentName} in any of the documents.`);
+        }
+        newTypeDefinitions.push(fragmentMatch);
+      }
+    } else if (node.selectionSet) {
+      for (const selection of node.selectionSet.selections) {
+        for (const directive of node.directives) {
+          collectDirective(directive);
+        }
+        collectFragments(selection);
+      }
+    }
+  }
 
   function collectNode(node: FieldDefinitionNode | InputValueDefinitionNode) {
     const nodeType = getNamedType(node.type);

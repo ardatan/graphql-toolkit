@@ -9,11 +9,16 @@ export function mergeUnion(first: UnionTypeDefinitionNode | UnionTypeExtensionNo
       name: first.name,
       description: first['description'] || second['description'],
       directives: mergeDirectives(first.directives, second.directives, config),
-      kind: first.kind === 'UnionTypeDefinition' || second.kind === 'UnionTypeDefinition' ? 'UnionTypeDefinition' : 'UnionTypeExtension',
+      kind: (config && config.convertExtensions) || first.kind === 'UnionTypeDefinition' || second.kind === 'UnionTypeDefinition' ? 'UnionTypeDefinition' : 'UnionTypeExtension',
       loc: first.loc,
       types: mergeNamedTypeArray(first.types, second.types, config),
     };
   }
 
-  return first;
+  return config && config.convertExtensions
+    ? {
+        ...first,
+        kind: 'UnionTypeDefinition',
+      }
+    : first;
 }

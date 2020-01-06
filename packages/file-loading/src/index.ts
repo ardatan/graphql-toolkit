@@ -77,7 +77,10 @@ const LoadFilesDefaultOptions: LoadFilesOptions = {
 export function loadFiles(pattern: string | string[], options: LoadFilesOptions = LoadFilesDefaultOptions): any[] {
   const execOptions = { ...LoadFilesDefaultOptions, ...options };
   const unixify = require('unixify');
-  const relevantPaths = scanForFiles(asArray(pattern).map(path => (isDirectory(path) ? buildGlob(unixify(path), execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive) : unixify(path))));
+  const relevantPaths = scanForFiles(
+    asArray(pattern).map(path => (isDirectory(path) ? buildGlob(unixify(path), execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive) : unixify(path))),
+    options.globOptions
+  );
 
   return relevantPaths
     .map(path => {
@@ -112,7 +115,7 @@ export function loadFiles(pattern: string | string[], options: LoadFilesOptions 
 }
 
 function scanForFilesAsync(globStr: string | string[], globOptions: import('globby').GlobbyOptions = {}): Promise<string[]> {
-  return globby(globStr, { absolute: true, ...globOptions, ignore: [] });
+  return globby(globStr, { absolute: true, ...globOptions });
 }
 
 const checkExtension = (path: string, { extensions, ignoredExtensions }: { extensions?: string[]; ignoredExtensions?: string[] }) => {
