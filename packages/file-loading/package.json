@@ -35,7 +35,7 @@
     "typescript": "3.7.4"
   },
   "dependencies": {
-    "globby": "10.0.1",
+    "globby": "10.0.2",
     "unixify": "1.0.0"
   },
   "publishConfig": {

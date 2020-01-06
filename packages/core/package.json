@@ -44,7 +44,7 @@
     "@graphql-toolkit/common": "0.8.1",
     "@graphql-toolkit/schema-merging": "0.8.1",
     "aggregate-error": "3.0.1",
-    "globby": "10.0.1",
+    "globby": "10.0.2",
     "is-glob": "4.0.1",
     "resolve-from": "5.0.0",
     "tslib": "1.10.0",
