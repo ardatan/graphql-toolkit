@@ -3,7 +3,7 @@
   "scripts": {
     "clean": "lerna clean --yes && rm -rf node_modules",
     "build": "lerna run build",
-    "test": "lerna run test --parallel",
+    "test": "lerna run test",
     "lint": "lerna run lint ",
     "test-and-build": "yarn build && yarn test",
     "prerelease": "yarn test-and-build",

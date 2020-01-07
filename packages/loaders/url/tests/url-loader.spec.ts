@@ -97,5 +97,9 @@ describe('Schema URL Loader', () => {
         C: '3',
       });
     });
+    
+    it('Absolute file path should not be accepted as URL', async () => {
+      expect(await loader.canLoad(process.cwd())).toBeFalsy();
+    });
   });
 });

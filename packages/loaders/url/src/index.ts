@@ -1,6 +1,6 @@
-import { buildClientSchema, parse, IntrospectionQuery, print, getIntrospectionQuery } from 'graphql';
+import { buildClientSchema, parse, IntrospectionQuery, print, getIntrospectionQuery, IntrospectionOptions } from 'graphql';
 import { SchemaPointerSingle, Source, DocumentLoader, SingleFileOptions } from '@graphql-toolkit/common';
-import { isUri } from 'valid-url';
+import { isWebUri } from 'valid-url';
 import { fetch as crossFetch } from 'cross-fetch';
 import { makeRemoteExecutableSchema } from '@kamilkisiela/graphql-tools';
 import { Fetcher } from '@kamilkisiela/graphql-tools/dist/stitching/makeRemoteExecutableSchema';
@@ -9,7 +9,7 @@ export type FetchFn = typeof import('cross-fetch').fetch;
 
 type Headers = Record<string, string> | Array<Record<string, string>>;
 
-export interface LoadFromUrlOptions extends SingleFileOptions {
+export interface LoadFromUrlOptions extends SingleFileOptions, Partial<IntrospectionOptions> {
   headers?: Headers;
   customFetch?: FetchFn | string;
   method?: 'GET' | 'POST';
@@ -20,8 +20,8 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
     return 'url';
   }
 
-  async canLoad(pointer: SchemaPointerSingle, options: LoadFromUrlOptions): Promise<boolean> {
-    return !!isUri(pointer);
+  async canLoad(pointer: SchemaPointerSingle): Promise<boolean> {
+    return !!isWebUri(pointer);
   }
 
   async load(pointer: SchemaPointerSingle, options: LoadFromUrlOptions): Promise<Source> {
@@ -68,7 +68,7 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
     };
 
     const body = await fetcher({
-      query: parse(getIntrospectionQuery({ descriptions: true })),
+      query: parse(getIntrospectionQuery({ descriptions: true, ...options })),
       variables: {},
       operationName: 'IntrospectionQuery',
       context: {},
@@ -90,7 +90,7 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
       throw new Error('Invalid schema provided!');
     }
 
-    const clientSchema = buildClientSchema(body.data as IntrospectionQuery, options as any);
+    const clientSchema = buildClientSchema(body.data as IntrospectionQuery, options);
     const remoteExecutableSchema = makeRemoteExecutableSchema({
       schema: clientSchema,
       fetcher,

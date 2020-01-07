@@ -44,7 +44,7 @@ jobs:
     runs-on: ${{matrix.os}}
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest, ubuntu-latest, macos-latest]
         node_version: [10, 12, 13]
     steps:
       - name: Checkout Master

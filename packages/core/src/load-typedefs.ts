@@ -262,23 +262,29 @@ export async function loadSingleFile(pointer: string, options: LoadTypedefsOptio
   if (pointer in options.cache) {
     return options.cache[pointer];
   }
-  try {
-    for (const loader of options.loaders) {
-      const canLoad = await loader.canLoad(pointer, options);
 
-      if (canLoad) {
-        const found = await loader.load(pointer, options);
+  let error: Error;
+  let found: Source;
 
-        if (found) {
-          return found;
+  await Promise.all(
+    options.loaders.map(async loader => {
+      try {
+        const canLoad = await loader.canLoad(pointer, options);
+
+        if (canLoad) {
+          found = await loader.load(pointer, options);
         }
+      } catch (e) {
+        error = e;
       }
-    }
-  } catch (e) {
-    debugLog(`Failed to find any GraphQL type definitions in: ${pointer} - ${e.message}`);
+    })
+  );
 
-    throw e;
+  if (!found && error) {
+    debugLog(`Failed to find any GraphQL type definitions in: ${pointer} - ${error.message}`);
+
+    throw error;
   }
 
-  return null;
+  return found;
 }
