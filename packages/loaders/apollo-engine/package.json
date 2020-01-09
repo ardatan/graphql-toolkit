@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@graphql-toolkit/common": "0.9.0",
-    "apollo-language-server": "1.17.2",
+    "apollo-language-server": "1.18.0",
     "tslib": "1.10.0"
   },
   "publishConfig": {
