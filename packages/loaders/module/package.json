@@ -28,7 +28,7 @@
   "devDependencies": {
     "@ardatan/bob": "0.2.6",
     "graphql": "14.5.8",
-    "typescript": "3.7.4"
+    "typescript": "3.7.5"
   },
   "dependencies": {
     "@graphql-toolkit/common": "0.9.1",
