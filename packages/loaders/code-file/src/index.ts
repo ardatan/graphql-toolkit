@@ -1,8 +1,6 @@
 import { DocumentNode, GraphQLSchema, parse, IntrospectionQuery, buildClientSchema } from 'graphql';
-import { resolve, isAbsolute, extname } from 'path';
-import { SchemaPointerSingle, DocumentPointerSingle, debugLog, SingleFileOptions, Source, UniversalLoader, asArray, isValidPath, fixSchemaAst } from '@graphql-toolkit/common';
-import { existsSync } from 'fs';
-import { gqlPluckFromFile, GraphQLTagPluckOptions } from '@graphql-toolkit/graphql-tag-pluck';
+import { SchemaPointerSingle, DocumentPointerSingle, debugLog, SingleFileOptions, Source, UniversalLoader, asArray, isValidPath, parseGraphQLSDL, parseGraphQLJSON } from '@graphql-toolkit/common';
+import { GraphQLTagPluckOptions, gqlPluckFromCodeString } from '@graphql-toolkit/graphql-tag-pluck';
 
 function isSchemaText(obj: any): obj is string {
   return typeof obj === 'string';
@@ -48,7 +46,7 @@ async function tryToLoadFromExport(rawFilePath: string): Promise<GraphQLSchema |
   let filePath = rawFilePath;
 
   try {
-    if (require && require.cache) {
+    if (typeof require !== 'undefined' && require.cache) {
       filePath = require.resolve(filePath);
 
       if (require.cache[filePath]) {
@@ -80,18 +78,14 @@ async function tryToLoadFromExport(rawFilePath: string): Promise<GraphQLSchema |
   }
 }
 
-async function tryToLoadFromCodeAst(filePath: string, options: CodeFileLoaderOptions): Promise<string> {
-  const foundDoc = await gqlPluckFromFile(filePath, options.pluckConfig);
-  if (foundDoc) {
-    return foundDoc;
-  } else {
-    return null;
-  }
-}
+export type CodeFileLoaderOptions = {
+  require?: string | string[];
+  pluckConfig?: GraphQLTagPluckOptions;
+  fs?: typeof import('fs');
+  path?: typeof import('path');
+} & SingleFileOptions;
 
-export type CodeFileLoaderOptions = { require?: string | string[]; pluckConfig?: GraphQLTagPluckOptions } & SingleFileOptions;
-
-const CODE_FILE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.vue'];
+const FILE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.vue'];
 
 export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
   loaderId(): string {
@@ -99,11 +93,12 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
   }
 
   async canLoad(pointer: SchemaPointerSingle | DocumentPointerSingle, options: CodeFileLoaderOptions): Promise<boolean> {
-    if (isValidPath(pointer)) {
-      const extension = extname(pointer).toLowerCase();
-      if (CODE_FILE_EXTENSIONS.includes(extension)) {
+    if (isValidPath(pointer) && options.path && options.fs) {
+      const { resolve, isAbsolute } = options.path;
+      if (FILE_EXTENSIONS.find(extension => pointer.endsWith(extension))) {
         const normalizedFilePath = isAbsolute(pointer) ? pointer : resolve(options.cwd || process.cwd(), pointer);
-        if (existsSync(normalizedFilePath)) {
+        const { exists } = options.fs;
+        if (await new Promise(resolve => exists(normalizedFilePath, resolve))) {
           return true;
         }
       }
@@ -113,15 +108,16 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
   }
 
   async load(pointer: SchemaPointerSingle | DocumentPointerSingle, options: CodeFileLoaderOptions): Promise<Source> {
+    const { resolve, isAbsolute } = options.path;
     const normalizedFilePath = isAbsolute(pointer) ? pointer : resolve(options.cwd || process.cwd(), pointer);
 
     try {
-      const rawSDL = await tryToLoadFromCodeAst(normalizedFilePath, options);
+      const { readFile } = options.fs;
+      const content: string = await new Promise((resolve, reject) => readFile(normalizedFilePath, { encoding: 'utf-8' }, (err, data) => (err ? reject(err) : resolve(data))));
+
+      const rawSDL = await gqlPluckFromCodeString(normalizedFilePath, content, options.pluckConfig);
       if (rawSDL) {
-        return {
-          location: normalizedFilePath,
-          rawSDL,
-        };
+        return parseGraphQLSDL(pointer, rawSDL, options);
       }
     } catch (e) {
       debugLog(`Failed to load schema from code file "${normalizedFilePath}": ${e.message}`);
@@ -136,10 +132,9 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
       let loaded = await tryToLoadFromExport(normalizedFilePath);
       loaded = loaded['data'] || loaded;
       if (loaded instanceof GraphQLSchema) {
-        const schema = fixSchemaAst(loaded, options);
         return {
           location: normalizedFilePath,
-          schema,
+          schema: loaded,
         };
       } else if (typeof loaded === 'string') {
         return {

@@ -1,4 +1,4 @@
-import { IResolvers } from '@kamilkisiela/graphql-tools';
+import { IResolvers } from '@ardatan/graphql-tools';
 import * as deepMerge from 'deepmerge';
 import { GraphQLScalarType } from 'graphql';
 
@@ -67,46 +67,5 @@ export function mergeResolvers<TContext, T extends ResolversDefinition<TContext>
       }
     }
   }
-  return result;
-}
-
-export async function mergeResolversAsync<TContext, T extends ResolversDefinition<TContext>>(resolversDefinitions: T[], options?: MergeResolversOptions): Promise<T> {
-  if (!resolversDefinitions || resolversDefinitions.length === 0) {
-    return {} as T;
-  }
-
-  if (resolversDefinitions.length === 1) {
-    return resolversDefinitions[0];
-  }
-
-  const resolversFactories = new Array<ResolversFactory<TContext>>();
-  const resolvers = new Array<IResolvers<any, TContext>>();
-
-  for (const resolversDefinition of resolversDefinitions) {
-    if (typeof resolversDefinition === 'function') {
-      resolversFactories.push(resolversDefinition as ResolversFactory<TContext>);
-    } else if (typeof resolversDefinition === 'object') {
-      resolvers.push(resolversDefinition as IResolvers<any, TContext>);
-    }
-  }
-  let result: T = {} as T;
-  if (resolversFactories.length) {
-    result = ((...args: any[]) => {
-      const resultsOfFactories = resolversFactories.map(factory => factory(...args));
-      return deepMerge.all([...resolvers, ...resultsOfFactories], { isMergeableObject }) as any;
-    }) as any;
-  } else {
-    result = (deepMerge.all(resolvers, { isMergeableObject }) as IResolvers<any, TContext>) as T;
-  }
-  if (options && options.exclusions) {
-    for (const exclusion of options.exclusions) {
-      const [typeName, fieldName] = exclusion.split('.');
-      if (!fieldName || fieldName === '*') {
-        delete result[typeName];
-      }
-      delete result[typeName][fieldName];
-    }
-  }
-
   return result;
 }

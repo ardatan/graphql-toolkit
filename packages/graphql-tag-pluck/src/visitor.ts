@@ -1,6 +1,6 @@
-import * as t from '@babel/types';
 import { freeText } from './utils';
 import { GraphQLTagPluckOptions } from '.';
+import { isVariableDeclarator, isIdentifier, isTemplateLiteral, isImportDefaultSpecifier, isImportSpecifier } from '@babel/types';
 
 const defaults: GraphQLTagPluckOptions = {
   modules: [
@@ -151,8 +151,8 @@ export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
         // Find the identifier name used from graphql-tag, commonJS
         // e.g. import gql from 'graphql-tag' -> gql
         if (path.node.callee.name == 'require' && isValidPackage(path.node.arguments[0].value)) {
-          if (!t.isVariableDeclarator(path.parent)) return;
-          if (!t.isIdentifier(path.parent.id)) return;
+          if (!isVariableDeclarator(path.parent)) return;
+          if (!isIdentifier(path.parent.id)) return;
 
           definedIdentifierNames.push(path.parent.id.name);
 
@@ -163,7 +163,7 @@ export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
 
         // Push strings template literals to gql calls
         // e.g. gql(`query myQuery {}`) -> query myQuery {}
-        if (t.isIdentifier(path.node.callee) && isValidIdentifier(path.node.callee.name) && t.isTemplateLiteral(arg0)) {
+        if (isIdentifier(path.node.callee) && isValidIdentifier(path.node.callee.name) && isTemplateLiteral(arg0)) {
           const gqlTemplateLiteral = pluckStringFromFile(arg0);
 
           // If the entire template was made out of interpolations it should be an empty
@@ -185,12 +185,12 @@ export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
 
         const gqlImportSpecifier = path.node.specifiers.find(importSpecifier => {
           // When it's a default import and registered package has no named identifier
-          if (t.isImportDefaultSpecifier(importSpecifier) && !moduleNode.identifier) {
+          if (isImportDefaultSpecifier(importSpecifier) && !moduleNode.identifier) {
             return true;
           }
 
           // When it's a named import that matches registered package's identifier
-          if (t.isImportSpecifier(importSpecifier) && importSpecifier.imported.name === moduleNode.identifier) {
+          if (isImportSpecifier(importSpecifier) && importSpecifier.imported.name === moduleNode.identifier) {
             return true;
           }
 
@@ -208,7 +208,7 @@ export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
         // Push all template literals leaded by graphql magic comment
         // e.g. /* GraphQL */ `query myQuery {}` -> query myQuery {}
 
-        if (!t.isTemplateLiteral(path.node.expression)) return;
+        if (!isTemplateLiteral(path.node.expression)) return;
 
         pluckMagicTemplateLiteral(path.node, true);
       },
@@ -224,7 +224,7 @@ export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
       exit(path) {
         // Push all template literals provided to the found identifier name
         // e.g. gql `query myQuery {}` -> query myQuery {}
-        if (!t.isIdentifier(path.node.tag) || !isValidIdentifier(path.node.tag.name)) {
+        if (!isIdentifier(path.node.tag) || !isValidIdentifier(path.node.tag.name)) {
           return;
         }
 

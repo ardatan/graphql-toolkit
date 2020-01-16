@@ -25,15 +25,15 @@
     "input": "./src/index.ts"
   },
   "dependencies": {
-    "@babel/parser": "7.7.7",
-    "@babel/traverse": "7.7.4",
-    "@babel/types": "7.7.4"
+    "@babel/parser": "7.8.3",
+    "@babel/traverse": "7.8.3",
+    "@babel/types": "7.8.3"
   },
   "devDependencies": {
+    "@types/babel__traverse": "7.0.8",
     "@types/fs-extra": "8.0.1",
-    "@types/jest": "24.9.0",
-    "@types/node": "12.12.24",
-    "bob-the-bundler": "0.2.2",
+    "@types/jest": "24.0.25",
+    "@ardatan/bob": "0.2.6",
     "fs-extra": "8.1.0",
     "graphql": "14.5.8",
     "jest": "24.9.0",
@@ -44,8 +44,5 @@
   "publishConfig": {
     "access": "public",
     "directory": "dist"
-  },
-  "optionalDependencies": {
-    "vue-template-compiler": "^2.6.10"
   }
 }

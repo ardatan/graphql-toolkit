@@ -1,4 +1,4 @@
-import { IResolvers, IFieldResolver } from '@kamilkisiela/graphql-tools';
+import { IResolvers, IFieldResolver } from '@ardatan/graphql-tools';
 import { chainFunctions, asArray } from './helpers';
 import { flattenArray } from './flatten-array';
 import { get, set } from 'lodash';

@@ -1,8 +1,9 @@
 import { GraphQLSchema, print, printSchema, printType, GraphQLBoolean, GraphQLInt, GraphQLString, GraphQLFloat, GraphQLID } from 'graphql';
+import { Options } from 'graphql/utilities/schemaPrinter';
 
 const IGNORED_SCALARS = [GraphQLBoolean.name, GraphQLInt.name, GraphQLString.name, GraphQLFloat.name, GraphQLID.name];
 
-export function printSchemaWithDirectives(schema: GraphQLSchema): string {
+export function printSchemaWithDirectives(schema: GraphQLSchema, options?: Options): string {
   const allTypes = schema.getTypeMap();
   const allTypesAst = Object.keys(allTypes)
     .map(key => allTypes[key].astNode)
@@ -20,10 +21,10 @@ export function printSchemaWithDirectives(schema: GraphQLSchema): string {
     .filter(a => a);
 
   if (allTypesAst.length === 0 && directivesAst.length === 0 && allTypesExtensionAst.length === 0) {
-    return printSchema(schema);
+    return printSchema(schema, options);
   } else {
     const astTypesPrinted = [...allTypesAst, ...directivesAst, ...allTypesExtensionAst].map(ast => print(ast));
-    const nonAstPrinted = noAstTypes.map(p => printType(p));
+    const nonAstPrinted = noAstTypes.map(p => printType(p, options));
 
     return [...astTypesPrinted, ...nonAstPrinted].join('\n');
   }

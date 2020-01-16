@@ -29,14 +29,14 @@
     "@types/aggregate-error": "1.0.1",
     "@types/jest": "24.9.0",
     "@types/lodash": "4.14.149",
-    "bob-the-bundler": "0.2.2",
+    "@ardatan/bob": "0.2.6",
     "graphql": "14.5.8",
     "jest": "24.9.0",
     "ts-jest": "24.3.0",
     "typescript": "3.7.4"
   },
   "dependencies": {
-    "@kamilkisiela/graphql-tools": "4.0.6",
+    "@ardatan/graphql-tools": "4.1.0",
     "aggregate-error": "3.0.1",
     "lodash": "4.17.15"
   },

@@ -1,5 +1,6 @@
 import { parse, isSchema } from 'graphql';
 import { UniversalLoader, fixSchemaAst, printSchemaWithDirectives, SingleFileOptions } from '@graphql-toolkit/common';
+import { Options } from 'graphql/utilities/schemaPrinter';
 
 // module:node/module#export
 function extractData(
@@ -42,11 +43,11 @@ export class ModuleLoader implements UniversalLoader {
       }
 
       if (isSchema(thing)) {
-        const schema = fixSchemaAst(thing, options as any);
+        const schema = fixSchemaAst(thing, options);
         return {
           schema,
           get document() {
-            return parse(printSchemaWithDirectives(schema));
+            return parse(printSchemaWithDirectives(schema, options));
           },
           location: pointer,
         };

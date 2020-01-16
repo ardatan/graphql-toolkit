@@ -1,5 +1,6 @@
 import { UniversalLoader, parseGraphQLSDL, parseGraphQLJSON, SingleFileOptions } from '@graphql-toolkit/common';
 import simplegit from 'simple-git/promise';
+import { GraphQLTagPluckOptions, gqlPluckFromCodeString } from '@graphql-toolkit/graphql-tag-pluck';
 
 // git:branch:path/to/file
 function extractData(
@@ -20,6 +21,8 @@ function extractData(
   };
 }
 
+type GitLoaderOptions = SingleFileOptions & { pluckConfig: GraphQLTagPluckOptions };
+
 export class GitLoader implements UniversalLoader {
   loaderId() {
     return 'git-loader';
@@ -27,7 +30,7 @@ export class GitLoader implements UniversalLoader {
   async canLoad(pointer: string) {
     return typeof pointer === 'string' && pointer.toLowerCase().startsWith('git:');
   }
-  async load(pointer: string, options: SingleFileOptions) {
+  async load(pointer: string, options: GitLoaderOptions) {
     const { ref, path } = extractData(pointer);
     const git = simplegit();
 
@@ -45,6 +48,14 @@ export class GitLoader implements UniversalLoader {
 
     if (/\.json$/i.test(path)) {
       return parseGraphQLJSON(pointer, content, options);
+    }
+
+    const rawSDL = await gqlPluckFromCodeString(pointer, content, options.pluckConfig);
+    if (rawSDL) {
+      return {
+        location: pointer,
+        rawSDL,
+      };
     }
 
     throw new Error(`Invalid file extension: ${path}`);

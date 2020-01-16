@@ -25,7 +25,7 @@ Usage:
 ```ts
 import { loadSchema } from '@graphql-toolkit/core';
 import { UrlLoader } from '@graphql-toolkit/url-loader';
-import { JSONFileLoader } from '@graphql-toolkit/json-file-loader';
+import { JsonFileLoader } from '@graphql-toolkit/json-file-loader';
 import { GraphQLFileLoader } from '@graphql-toolkit/graphql-file-loader';
 
 const schema1 = loadSchema('type A { foo: String }');   // load from string w/ no loaders
@@ -38,7 +38,7 @@ const schema2 = loadSchema('http://localhost:3000/graphql', {   // load from end
 
 const schema3 = loadSchema('./schema.json', {   // load from local json file
     loaders: [
-        new JSONFileLoader()
+        new JsonFileLoader()
     ]
 }); 
 
@@ -280,4 +280,4 @@ This methods accepts `GraphQLSchema` object, and returns a map with field resolv
 
 #### `extractFieldResolversFromObjectType`
 
-This methods accepts `GraphQLObjectType` or `GraphQLInterfaceType` object, and returns a map with field resolvers of given type.
+This methods accepts `GraphQLObjectType` or `GraphQLInterfaceType` object, and returns a map with field resolvers of given type.![tool](https://user-images.githubusercontent.com/25294569/64810060-4d9c8680-d5a3-11e9-9a66-84ff20e1179f.gif)

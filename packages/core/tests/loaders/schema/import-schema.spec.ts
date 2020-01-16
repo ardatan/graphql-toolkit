@@ -1,10 +1,10 @@
 import { parseImportLine, parseSDL, loadTypedefs, LoadTypedefsOptions, OPERATION_KINDS } from '@graphql-toolkit/core';
 import * as fs from 'fs'
-import { print } from 'graphql';
-import { JsonFileLoader } from '@graphql-toolkit/json-file-loader';
+import { print, DocumentNode, DefinitionNode, ASTNode } from 'graphql';
 import { UrlLoader } from '@graphql-toolkit/url-loader';
-import { CodeFileLoader } from '@graphql-toolkit/code-file-loader';
 import { GraphQLFileLoader } from '@graphql-toolkit/graphql-file-loader';
+import { JsonFileLoader } from '@graphql-toolkit/json-file-loader';
+import { CodeFileLoader } from '@graphql-toolkit/code-file-loader';
 import { parse } from 'graphql';
 import { parseGraphQLSDL } from '@graphql-toolkit/common';
 import { mergeTypeDefs } from '@graphql-toolkit/schema-merging';
@@ -14,14 +14,21 @@ const importSchema = (
 ) =>
   loadTypedefs(
     schema, {
-    loaders: [new UrlLoader(), new JsonFileLoader(), new GraphQLFileLoader(), new CodeFileLoader()],
+    loaders: [new GraphQLFileLoader(), new JsonFileLoader(), new UrlLoader(), new CodeFileLoader()],
     filterKinds: OPERATION_KINDS,
     cache: schemas ? Object.keys(schemas).reduce((prev, location) => Object.assign(prev, { [location]: parseGraphQLSDL(location, schemas[location], options) }), {}) : {},
     sort: false,
     forceGraphQLImport: true,
     cwd: __dirname,
     ...options,
-  }).then(r => print(mergeTypeDefs(r.map(r => r.document), { useSchemaDefinition: false, ...options })));
+  }).then(r => {
+    const result = mergeTypeDefs(r.map(r => r.document), { useSchemaDefinition: false, ...options });
+    if (typeof result === 'string') {
+      return result;
+    } else {
+      return print(result);
+    }
+  });
 
 test('parseImportLine: parse single import', () => {
   expect(parseImportLine(`import A from "schema.graphql"`)).toEqual({
@@ -967,18 +974,45 @@ test('import with collision', async () => {
   expect(normalizeDocumentString(await importSchema('./fixtures/collision/a.graphql'))).toBe(normalizeDocumentString(expectedSDL))
 })
 
-function normalizeDocumentString(doc: any): string {
-  if (typeof doc === 'string') {
-    doc = parse(doc.replace(/\s+/g, ' ').trim(), { noLocation: true });
+function nodeToString(a: ASTNode, debug: boolean) {
+  if ('alias' in a) {
+    if (debug) {
+      console.log('alias:', a.alias.value);
+    }
+    return a.alias.value;
+  } else if ('name' in a) {
+    if (debug) {
+      console.log('name:', a.name.value);
+    }
+    return a.name.value;
+  } else {
+    if (debug) {
+      console.log('kind:', a.kind);
+    }
+    return a.kind;
   }
-  doc.definitions = doc.definitions.sort((a, b) => {
-    const aStr = 'name' in a ? a.name.value : a.kind;
-    const bStr = 'name' in b ? b.name.value : b.kind;
-    return aStr.localeCompare(bStr);
-  })
-  return print(doc);
 }
 
+function sortRecursive(a: ASTNode, debug: boolean) {
+  for (const attr in a) {
+    if (a[attr] instanceof Array) {
+      if(a[attr].length === 1) {
+        sortRecursive(a[attr][0], debug);
+      }
+      a[attr].sort((b: ASTNode, c: ASTNode) => {
+        sortRecursive(b, debug);
+        sortRecursive(c, debug);
+        return nodeToString(b, debug).localeCompare(nodeToString(c, debug));
+      })
+    }
+  }
+}
+
+function normalizeDocumentString(docStr: string, debug?: boolean) {
+  let doc = parse(docStr, { noLocation: true }) as DocumentNode & { definitions: DefinitionNode[] };
+  sortRecursive(doc, debug);
+  return print(doc);
+}
 
 test('merged custom root fields imports', async () => {
   const expectedSDL = normalizeDocumentString(`\
@@ -999,7 +1033,7 @@ test('merged custom root fields imports', async () => {
           }
           `);
   const actualSDL = await importSchema('./fixtures/merged-root-fields/a.graphql')
-  expect(normalizeDocumentString(actualSDL)).toBe(normalizeDocumentString(expectedSDL))
+  expect(normalizeDocumentString(actualSDL)).toBe(expectedSDL)
 })
 
 test('respect schema definition', async () => {
@@ -1018,7 +1052,7 @@ test('respect schema definition', async () => {
     }
   `);
   const actualSDL = await importSchema('./fixtures/schema-definition/a.graphql')
-  expect(normalizeDocumentString(actualSDL)).toBe(normalizeDocumentString(expectedSDL));
+  expect(normalizeDocumentString(actualSDL)).toBe(expectedSDL);
 });
 
 test('import schema with shadowed type', async () => {

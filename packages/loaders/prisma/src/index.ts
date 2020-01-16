@@ -1,26 +1,41 @@
 import { UrlLoader, LoadFromUrlOptions } from '@graphql-toolkit/url-loader';
-import { join } from 'path';
-import { homedir } from 'os';
 import { PrismaDefinitionClass, Environment } from 'prisma-yml';
 
 interface PrismaLoaderOptions extends LoadFromUrlOptions {
   envVars?: { [key: string]: string };
   graceful?: boolean;
+  fs?: typeof import('fs');
+  path?: typeof import('path');
+  os?: typeof import('os');
+  cwd?: string;
 }
 
 export class PrismaLoader extends UrlLoader {
   loaderId() {
     return 'prisma';
   }
-  async canLoad(prismaConfigFilePath: string) {
-    return typeof prismaConfigFilePath === 'string' && prismaConfigFilePath.endsWith('prisma.yml');
+  async canLoad(prismaConfigFilePath: string, options: PrismaLoaderOptions) {
+    if (
+      typeof prismaConfigFilePath === 'string' && 
+      prismaConfigFilePath.endsWith('prisma.yml') && 
+      options.fs &&
+      options.path &&
+      options.os) {
+      const path = options.path || (await import('path'));
+      const joinedYmlPath = path.join(options.cwd || process.cwd(), prismaConfigFilePath);
+      const fs = options.fs;
+      if (await new Promise(resolve => fs.exists(joinedYmlPath, resolve))) {
+        return true;
+      }
+    }
+    return false;
   }
   async load(prismaConfigFilePath: string, options: PrismaLoaderOptions) {
-    const { graceful, envVars = {} } = options || {};
-    const home = homedir();
+    const { graceful, envVars = {}, os = await import('os'), path = await import('path') } = options;
+    const home = os.homedir();
     const env = new Environment(home);
     await env.load();
-    const joinedYmlPath = join(process.cwd(), prismaConfigFilePath);
+    const joinedYmlPath = path.join(process.cwd(), prismaConfigFilePath);
     const definition = new PrismaDefinitionClass(env, joinedYmlPath, envVars);
     await definition.load({}, undefined, graceful);
     const serviceName = definition.service!;

@@ -1,5 +1,5 @@
 import { GraphQLSchema, DocumentNode, buildASTSchema, BuildSchemaOptions, buildSchema } from 'graphql';
-import { IResolvers, SchemaDirectiveVisitor, IResolverValidationOptions, ILogger, addResolveFunctionsToSchema, addErrorLoggingToSchema } from '@kamilkisiela/graphql-tools';
+import { IResolvers, SchemaDirectiveVisitor, IResolverValidationOptions, ILogger, addResolveFunctionsToSchema, addErrorLoggingToSchema } from '@ardatan/graphql-tools';
 import { mergeTypeDefs, Config } from './typedefs-mergers/merge-typedefs';
 import { mergeResolvers } from './merge-resolvers';
 import { extractResolversFromSchema, ResolversComposerMapping, composeResolvers, asArray } from '@graphql-toolkit/common';
@@ -18,16 +18,7 @@ export function mergeSchemas({ schemas, typeDefs, resolvers, resolversCompositio
   const typeDefsOutput = mergeTypeDefs([...schemas, ...(typeDefs ? asArray(typeDefs) : [])], config);
   const resolversOutput = composeResolvers(mergeResolvers([...schemas.map(schema => extractResolversFromSchema(schema)), ...(resolvers ? asArray<IResolvers>(resolvers) : [])], config), resolversComposition || {});
 
-  let schema =
-    typeof typeDefsOutput === 'string'
-      ? buildSchema(typeDefsOutput, {
-          commentDescriptions: true,
-          ...config,
-        })
-      : buildASTSchema(typeDefsOutput, {
-          commentDescriptions: true,
-          ...config,
-        });
+  let schema = typeof typeDefsOutput === 'string' ? buildSchema(typeDefsOutput, config) : buildASTSchema(typeDefsOutput, config);
 
   if (resolversOutput) {
     schema = addResolveFunctionsToSchema({
@@ -63,16 +54,7 @@ export async function mergeSchemasAsync({ schemas, typeDefs, resolvers, resolver
     ),
   ]);
 
-  let schema =
-    typeof typeDefsOutput === 'string'
-      ? buildSchema(typeDefsOutput, {
-          commentDescriptions: true,
-          ...config,
-        })
-      : buildASTSchema(typeDefsOutput, {
-          commentDescriptions: true,
-          ...config,
-        });
+  let schema = typeof typeDefsOutput === 'string' ? buildSchema(typeDefsOutput, config) : buildASTSchema(typeDefsOutput, config);
 
   if (resolversOutput) {
     schema = addResolveFunctionsToSchema({

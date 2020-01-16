@@ -1,8 +1,6 @@
 import { GraphQLSchema, parse, Kind, Source as GraphQLSource, DefinitionNode } from 'graphql';
-import { Source, asArray, isDocumentString, debugLog, printSchemaWithDirectives, parseGraphQLSDL, fixSchemaAst, SingleFileOptions, Loader } from '@graphql-toolkit/common';
-import { join } from 'path';
+import { Source, asArray, isDocumentString, debugLog, printSchemaWithDirectives, parseGraphQLSDL, fixSchemaAst, SingleFileOptions, Loader, resolveBuiltinModule } from '@graphql-toolkit/common';
 import isGlob from 'is-glob';
-import globby from 'globby';
 import { filterKind } from './filter-document-kind';
 import { RawModule, processImportSyntax, isEmptySDL } from './import-parser';
 import { printWithComments } from '@graphql-toolkit/schema-merging';
@@ -19,6 +17,9 @@ export type LoadTypedefsOptions<ExtraConfig = { [key: string]: any }> = SingleFi
     sort?: boolean;
     skipGraphQLImport?: boolean;
     forceGraphQLImport?: boolean;
+    fs?: typeof import('fs');
+    path?: typeof import('path');
+    os?: typeof import('os');
   };
 
 export type UnnormalizedTypeDefPointer = { [key: string]: any } | string;
@@ -38,7 +39,8 @@ export function normalizePointers(unnormalizedPointerOrPointers: UnnormalizedTyp
 
 async function getCustomLoaderByPath(path: string, cwd: string): Promise<any> {
   try {
-    const requiredModule = await import(join(cwd, path));
+    const { default: importFrom } = await import('import-from');
+    const requiredModule: any = importFrom(cwd, path);
 
     if (requiredModule) {
       if (requiredModule.default && typeof requiredModule.default === 'function') {
@@ -83,8 +85,11 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
   options.processedFiles = options.processedFiles || new Map();
   options.allDefinitions = options.allDefinitions || [];
   options.typeDefinitions = options.typeDefinitions || [];
+  options.fs = await resolveBuiltinModule('fs', options.fs);
+  options.path = await resolveBuiltinModule('path', options.path);
+  options.os = await resolveBuiltinModule('os', options.os);
 
-  const unixify = require('unixify');
+  const unixify = await import('unixify').then(m => m.default || m);
 
   for (const pointer in normalizedPointerOptionsMap) {
     const pointerOptions = normalizedPointerOptionsMap[pointer];
@@ -162,6 +167,7 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
 
     loadPromises$.push(
       Promise.resolve().then(async () => {
+        const { default: globby } = await import('globby');
         const paths = await globby(foundGlobs, { absolute: true, ...options, ignore: [] });
         await Promise.all(
           paths.map(async path => {

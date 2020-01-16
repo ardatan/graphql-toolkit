@@ -1,5 +1,5 @@
 import { GraphQLSchema, GraphQLScalarType, GraphQLObjectType, GraphQLInterfaceType, DocumentNode, buildASTSchema, GraphQLEnumType, GraphQLUnionType } from 'graphql';
-import { IResolvers } from '@kamilkisiela/graphql-tools';
+import { IResolvers } from '@ardatan/graphql-tools';
 import { extractFieldResolversFromObjectType } from './extract-field-resolvers-from-object-type';
 
 export interface ExtractResolversFromSchemaOptions {

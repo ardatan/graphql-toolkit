@@ -1,7 +1,7 @@
 import { loadDocuments } from "@graphql-toolkit/core"
 import { join } from "path"
 import { GraphQLFileLoader } from "@graphql-toolkit/graphql-file-loader"
-import { parse, print, Kind, DocumentNode } from "graphql";
+import { parse, print } from "graphql";
 
 function normalizeDocumentString(doc: any): string {
     if (typeof doc === 'string') {

@@ -1,9 +1,9 @@
-import { buildClientSchema, parse, IntrospectionQuery, print, getIntrospectionQuery, IntrospectionOptions } from 'graphql';
-import { SchemaPointerSingle, Source, DocumentLoader, SingleFileOptions } from '@graphql-toolkit/common';
+import { buildClientSchema, parse, IntrospectionQuery, print, getIntrospectionQuery, IntrospectionOptions, introspectionFromSchema } from 'graphql';
+import { SchemaPointerSingle, Source, DocumentLoader, SingleFileOptions, parseGraphQLJSON, printSchemaWithDirectives } from '@graphql-toolkit/common';
 import { isWebUri } from 'valid-url';
 import { fetch as crossFetch } from 'cross-fetch';
-import { makeRemoteExecutableSchema } from '@kamilkisiela/graphql-tools';
-import { Fetcher } from '@kamilkisiela/graphql-tools/dist/stitching/makeRemoteExecutableSchema';
+import { makeRemoteExecutableSchema } from '@ardatan/graphql-tools';
+import { Fetcher } from 'graphql-tools/dist/stitching/makeRemoteExecutableSchema';
 
 export type FetchFn = typeof import('cross-fetch').fetch;
 
@@ -20,7 +20,7 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
     return 'url';
   }
 
-  async canLoad(pointer: SchemaPointerSingle): Promise<boolean> {
+  async canLoad(pointer: SchemaPointerSingle, _: LoadFromUrlOptions): Promise<boolean> {
     return !!isWebUri(pointer);
   }
 
@@ -79,7 +79,7 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
     if (body.errors && body.errors.length > 0) {
       errorMessage = body.errors.map((item: Error) => item.message).join(', ');
     } else if (!body.data) {
-      errorMessage = body;
+      errorMessage = JSON.stringify(body, null, 2);
     }
 
     if (errorMessage) {
@@ -92,7 +92,7 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
 
     const clientSchema = buildClientSchema(body.data as IntrospectionQuery, options);
     const remoteExecutableSchema = makeRemoteExecutableSchema({
-      schema: clientSchema,
+      schema: printSchemaWithDirectives(clientSchema, options), // Keep descriptions
       fetcher,
     });
 

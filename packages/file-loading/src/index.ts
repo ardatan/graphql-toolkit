@@ -1,7 +1,3 @@
-import { existsSync, statSync, readFileSync, readFile } from 'fs';
-import { extname } from 'path';
-import globby from 'globby';
-
 const DEFAULT_IGNORED_EXTENSIONS = ['spec', 'test', 'd', 'map'];
 const DEFAULT_EXTENSIONS = ['gql', 'graphql', 'graphqls', 'ts', 'js'];
 const DEFAULT_EXPORT_NAMES = ['typeDefs', 'schema'];
@@ -15,10 +11,12 @@ function asArray<T>(obj: T | T[]): T[] {
 }
 
 function isDirectory(path: string) {
+  const { existsSync, statSync } = require('fs');
   return existsSync(path) && statSync(path).isDirectory();
 }
 
 function scanForFiles(globStr: string | string[], globOptions: import('globby').GlobbyOptions = {}): string[] {
+  const globby = require('globby');
   return globby.sync(globStr, { absolute: true, ...globOptions });
 }
 
@@ -74,7 +72,7 @@ const LoadFilesDefaultOptions: LoadFilesOptions = {
   ignoreIndex: false,
 };
 
-export function loadFiles(pattern: string | string[], options: LoadFilesOptions = LoadFilesDefaultOptions): any[] {
+export function loadFiles<T = any>(pattern: string | string[], options: LoadFilesOptions = LoadFilesDefaultOptions): T[] {
   const execOptions = { ...LoadFilesDefaultOptions, ...options };
   const unixify = require('unixify');
   const relevantPaths = scanForFiles(
@@ -92,11 +90,28 @@ export function loadFiles(pattern: string | string[], options: LoadFilesOptions 
         return false;
       }
 
+      const { extname } = require('path');
       const extension = extname(path);
 
       if (extension.endsWith('.js') || extension.endsWith('.ts') || execOptions.useRequire) {
         const fileExports = (execOptions.requireMethod ? execOptions.requireMethod : require)(path);
         const extractedExport = extractExports(fileExports, execOptions.exportNames);
+
+        if (extractedExport.typeDefs && extractedExport.resolvers) {
+          return extractedExport;
+        }
+
+        if (extractedExport.schema) {
+          return extractedExport.schema;
+        }
+
+        if (extractedExport.typeDef) {
+          return extractedExport.typeDef;
+        }
+
+        if (extractedExport.typeDefs) {
+          return extractedExport.typeDefs;
+        }
 
         if (extractedExport.resolver) {
           return extractedExport.resolver;
@@ -108,13 +123,15 @@ export function loadFiles(pattern: string | string[], options: LoadFilesOptions 
 
         return extractedExport;
       } else {
+        const { readFileSync } = require('fs');
         return readFileSync(path, { encoding: 'utf-8' });
       }
     })
     .filter(v => v);
 }
 
-function scanForFilesAsync(globStr: string | string[], globOptions: import('globby').GlobbyOptions = {}): Promise<string[]> {
+async function scanForFilesAsync(globStr: string | string[], globOptions: import('globby').GlobbyOptions = {}): Promise<string[]> {
+  const { default: globby } = await import('globby');
   return globby(globStr, { absolute: true, ...globOptions });
 }
 
@@ -142,7 +159,7 @@ const checkExtension = (path: string, { extensions, ignoredExtensions }: { exten
 
 export async function loadFilesAsync(pattern: string | string[], options: LoadFilesOptions = LoadFilesDefaultOptions): Promise<any[]> {
   const execOptions = { ...LoadFilesDefaultOptions, ...options };
-  const unixify = require('unixify');
+  const unixify = await import('unixify').then(m => m.default || m);
   const relevantPaths = await scanForFilesAsync(
     asArray(pattern).map(path => (isDirectory(path) ? buildGlob(unixify(path), execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive) : unixify(path))),
     options.globOptions
@@ -160,6 +177,7 @@ export async function loadFilesAsync(pattern: string | string[], options: LoadFi
         if (isIndex(path, execOptions.extensions) && options.ignoreIndex) {
           return false;
         }
+        const { extname } = await import('path');
         const extension = extname(path);
 
         if (extension.endsWith('.js') || extension.endsWith('.ts') || execOptions.useRequire) {
@@ -176,7 +194,8 @@ export async function loadFilesAsync(pattern: string | string[], options: LoadFi
 
           return extractedExport;
         } else {
-          return new Promise((resolve, reject) => {
+          return new Promise(async (resolve, reject) => {
+            const { readFile } = await import('fs');
             readFile(path, { encoding: 'utf-8' }, (err, data) => {
               if (err) {
                 reject(err);

@@ -1,16 +1,10 @@
-import gqlPluck from '../src';
-import { createTmpFile } from './utils/tmp'
+import { gqlPluckFromCodeString } from '../src';
 import { freeText } from '../src/utils'
-import { writeFileSync } from 'fs';
 
 describe('graphql-tag-pluck', () => {
   it('should pluck graphql-tag template literals from .js file', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.js',
-    })
 
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
       import gql from 'graphql-tag'
 
       const fragment = gql(\`
@@ -28,10 +22,7 @@ describe('graphql-tag-pluck', () => {
 
         \${fragment}
       \`
-    `))
-
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
+    `));
 
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
@@ -47,12 +38,8 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck graphql-tag template literals from .js file and remove replacements', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.js',
-    })
 
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
       import gql from 'graphql-tag'
 
       const fragment = gql(\`
@@ -79,9 +66,6 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
-
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
         id
@@ -101,12 +85,8 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck graphql-tag template literals from .ts file', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.ts',
-    })
 
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.ts', freeText(`
       import gql from 'graphql-tag'
       import { Document } from 'graphql'
 
@@ -133,9 +113,6 @@ describe('graphql-tag-pluck', () => {
       }
     `))
 
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
-
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
         id
@@ -150,12 +127,8 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck graphql-tag template literals from .tsx file', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.tsx',
-    })
 
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.tsx', freeText(`
       import * as React from 'react';
       import gql from 'graphql-tag';
 
@@ -186,9 +159,6 @@ describe('graphql-tag-pluck', () => {
       // \`;
     `))
 
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
-
     expect(gqlString).toEqual(freeText(`
       query IndexQuery {
         site {
@@ -201,12 +171,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck graphql-tag template literals from .vue JavaScript file', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.vue',
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.vue', freeText(`
       <template>
         <div>test</div>
       </template>
@@ -245,9 +210,6 @@ describe('graphql-tag-pluck', () => {
       </style>
     `))
 
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
-
     expect(gqlString).toEqual(freeText(`
       query IndexQuery {
         site {
@@ -260,12 +222,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck graphql-tag template literals from .vue TS/Pug/SCSS file', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.vue',
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.vue', freeText(`
       <template lang="pug">
         <div>test</div>
       </template>
@@ -304,9 +261,6 @@ describe('graphql-tag-pluck', () => {
       </style>
     `))
 
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
-
     expect(gqlString).toEqual(freeText(`
       query IndexQuery {
         site {
@@ -319,12 +273,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck graphql-tag template literals from .tsx file with generic jsx elements', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.tsx',
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.tsx', freeText(`
       import * as React from 'react';
       import gql from 'graphql-tag';
       import Generic from './Generic'
@@ -352,9 +301,6 @@ describe('graphql-tag-pluck', () => {
       \`;
     `))
 
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
-
     expect(gqlString).toEqual(freeText(`
       query IndexQuery {
         site {
@@ -367,12 +313,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck graphql-tag template literals from .ts file with the same const inside namespace and outside namespace', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.ts',
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.ts', freeText(`
       import gql from 'graphql-tag';
 
       namespace Foo {
@@ -405,9 +346,6 @@ describe('graphql-tag-pluck', () => {
       \`;
     `))
 
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
-
     expect(gqlString).toEqual(freeText(`
       query myQueryInNamespace {
         fieldA
@@ -420,12 +358,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck graphql-tag template literals from .flow file', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.flow',
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.flow', freeText(`
       import gql from 'graphql-tag'
       import { Document } from 'graphql'
 
@@ -446,9 +379,6 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
-
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
         id
@@ -463,12 +393,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck graphql-tag template literals from .js file with @flow header', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.js',
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
       // @flow
 
       import gql from 'graphql-tag'
@@ -491,9 +416,6 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
-
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
         id
@@ -508,53 +430,40 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should NOT pluck graphql-tag template literals from .js file without a @flow header', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.js',
-    })
-
-    writeFileSync(file.name, freeText(`
-      import gql from 'graphql-tag'
-      import { Document } from 'graphql'
-
-      const fragment: Document = gql\`
-        fragment Foo on FooType {
-          id
-        }
-      \`
-
-      const doc: Document = gql\`
-        query foo {
-          foo {
-            ...Foo
-          }
-        }
-
-        \${fragment}
-      \`
-    `))
 
     const fail = Error('Function did not throw')
 
     try {
-      await gqlPluck.fromFile(file.name);
-      file.cleanupCallback();
+      await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
+        import gql from 'graphql-tag'
+        import { Document } from 'graphql'
+  
+        const fragment: Document = gql\`
+          fragment Foo on FooType {
+            id
+          }
+        \`
+  
+        const doc: Document = gql\`
+          query foo {
+            foo {
+              ...Foo
+            }
+          }
+  
+          \${fragment}
+        \`
+      `))
 
       throw fail
     }
     catch (e) {
-      file.cleanupCallback();
       expect(e).not.toEqual(fail)
     }
   })
 
   it('should pluck graphql-tag template literals from .flow.jsx file', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.flow.jsx',
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.flow.jsx', freeText(`
       import gql from 'graphql-tag'
       import { Document } from 'graphql'
 
@@ -574,9 +483,6 @@ describe('graphql-tag-pluck', () => {
         \${fragment}
       \`
     `))
-
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
 
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
@@ -592,12 +498,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck graphql-tag template literals from .*.jsx file', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.mutation.jsx',
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.mutation.jsx', freeText(`
       import gql from 'graphql-tag'
 
       const fragment = gql\`
@@ -617,9 +518,6 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
-
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
         id
@@ -634,12 +532,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck graphql-tag template literals leaded by a magic comment from .js file', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.js',
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
       const Message = /* GraphQL */ \`
         enum MessageTypes {
           text
@@ -647,9 +540,6 @@ describe('graphql-tag-pluck', () => {
           draftjs
         }\`
     `))
-
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
 
     expect(gqlString).toEqual(freeText(`
       enum MessageTypes {
@@ -661,12 +551,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck graphql-tag expression statements leaded by a magic comment from .js file', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.js',
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
       /* GraphQL */ \`
         enum MessageTypes {
           text
@@ -674,9 +559,6 @@ describe('graphql-tag-pluck', () => {
           draftjs
         }\`
     `))
-
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
 
     expect(gqlString).toEqual(freeText(`
       enum MessageTypes {
@@ -688,12 +570,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it(`should NOT pluck other template literals from a .js file`, async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: `tmp-XXXXXX.js`,
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString(`tmp-XXXXXX.js`, freeText(`
       test(
         \`test1\`
       )
@@ -708,19 +585,11 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
-
     expect(gqlString).toEqual('')
   })
 
   it('should pluck template literals when graphql-tag is imported differently', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.js',
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
       import graphqltag from 'graphql-tag'
 
       const fragment = graphqltag(\`
@@ -740,9 +609,6 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
-
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
         id
@@ -757,12 +623,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck template literals from gql by default even if not imported from graphql-tag', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.js',
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
       const fragment = gql(\`
         fragment Foo on FooType {
           id
@@ -780,43 +641,6 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
-
-    expect(gqlString).toEqual(freeText(`
-      fragment Foo on FooType {
-        id
-      }
-
-      query foo {
-        foo {
-          ...Foo
-        }
-      }
-    `))
-  })
-
-  it('should pluck graphql-tag template literals from .graphql file', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.graphql',
-    })
-
-    writeFileSync(file.name, freeText(`
-      fragment Foo on FooType {
-        id
-      }
-
-      query foo {
-        foo {
-          ...Foo
-        }
-      }
-    `))
-
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
-
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
         id
@@ -831,7 +655,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck graphql-tag template literals from code string', async () => {
-    const gqlString = await gqlPluck.fromCodeString(freeText(`
+    const gqlString = await gqlPluckFromCodeString('test.js', freeText(`
       import gql from 'graphql-tag'
 
       const fragment = gql(\`
@@ -865,12 +689,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck graphql-tag template literals from a .js file', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.js',
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
       import gql from 'graphql-tag'
 
       const fragment = gql(\`
@@ -890,9 +709,6 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
-
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
         id
@@ -907,12 +723,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should be able to specify the global GraphQL identifier name', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.js',
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
       const fragment = graphql(\`
         fragment Foo on FooType {
           id
@@ -928,13 +739,9 @@ describe('graphql-tag-pluck', () => {
 
         \${fragment}
       \`
-    `))
-
-    const gqlString = await gqlPluck.fromFile(file.name, {
+    `), {
       globalGqlIdentifierName: 'graphql'
     })
-
-    file.cleanupCallback();
 
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
@@ -950,25 +757,17 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should be able to specify the GraphQL magic comment to look for', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.js',
-    })
 
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
       const Message = /* GQL */ \`
         enum MessageTypes {
           text
           media
           draftjs
         }\`
-    `))
-
-    const gqlString = await gqlPluck.fromFile(file.name, {
+    `), {
       gqlMagicComment: 'GQL'
-    })
-
-    file.cleanupCallback();
+    });
 
     expect(gqlString).toEqual(freeText(`
       enum MessageTypes {
@@ -980,12 +779,8 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should be able to specify the package name of which the GraphQL identifier should be imported from', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.js',
-    })
-
-    writeFileSync(file.name, freeText(`
+  
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
       import mygql from 'my-graphql-tag'
 
       const fragment = mygql(\`
@@ -1003,15 +798,11 @@ describe('graphql-tag-pluck', () => {
 
         \${fragment}
       \`
-    `))
-
-    const gqlString = await gqlPluck.fromFile(file.name, {
+    `), {
       modules: [
         { name: 'my-graphql-tag' }
       ]
-    })
-
-    file.cleanupCallback();
+    });
 
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
@@ -1027,12 +818,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck graphql template literal from gatsby package', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.js',
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
       import {graphql} from 'gatsby'
 
       const fragment = graphql(\`
@@ -1052,9 +838,6 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
-
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
         id
@@ -1069,12 +852,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck gql template literal from apollo-server-express package', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.js',
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
       import { gql } from 'apollo-server-express'
 
       const fragment = gql(\`
@@ -1094,9 +872,6 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
-
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
         id
@@ -1111,12 +886,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck gql template literal from @apollo/client package', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.js',
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
       import { gql } from '@apollo/client'
 
       const fragment = gql(\`
@@ -1136,9 +906,6 @@ describe('graphql-tag-pluck', () => {
       \`
     `))
 
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
-
     expect(gqlString).toEqual(freeText(`
       fragment Foo on FooType {
         id
@@ -1153,17 +920,12 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should pluck magic comment template literals with a trailing semicolon', async () => {
-    const gqlString = await gqlPluck.fromCodeString("/* GraphQL */ `{}`;")
+    const gqlString = await gqlPluckFromCodeString('test.js', "/* GraphQL */ `{}`;")
     expect(gqlString).toEqual("{}")
   })
 
   it('should pluck with comments having escaped backticks', async () => {
-    const file = await createTmpFile({
-      unsafeCleanup: true,
-      template: 'tmp-XXXXXX.js',
-    })
-
-    writeFileSync(file.name, freeText(`
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
     import gql from 'graphql-tag';
 
     export default gql\`
@@ -1175,9 +937,6 @@ describe('graphql-tag-pluck', () => {
       }
     \`
     `))
-
-    const gqlString = await gqlPluck.fromFile(file.name);
-    file.cleanupCallback();
 
     expect(gqlString).toEqual(freeText(`
         type User {

@@ -1,11 +1,8 @@
 import { DefinitionNode, parse, ObjectTypeDefinitionNode, DocumentNode, Kind } from 'graphql';
 import { groupBy, keyBy, isEqual, uniqBy, flatten } from 'lodash';
-import resolveFrom from 'resolve-from';
 import { loadSingleFile, LoadTypedefsOptions } from '../load-typedefs';
 
 import { completeDefinitionPool } from './definition';
-import { realpathSync } from 'fs';
-import { join, dirname, resolve } from 'path';
 import { Source } from '@graphql-toolkit/common';
 
 /**
@@ -109,6 +106,9 @@ export async function processImportSyntax(documentSource: Source, options: LoadT
 
         if ('fields' in existingType) {
           (existingType as any).fields = uniqBy((existingType.fields as any).concat((type as ObjectTypeDefinitionNode).fields), 'name.value');
+          if (options.sort) {
+            (existingType as any).fields = (existingType.fields as any).sort((a: any, b: any) => a.name.value.localeCompare(b.name.value));
+          }
         }
       }
     }
@@ -158,14 +158,20 @@ export function isEmptySDL(sdl: string): boolean {
  * @param importFrom Path given for the import
  * @returns Full resolved path to a file
  */
-export function resolveModuleFilePath(filePath: string, importFrom: string): string {
-  const dirName = dirname(filePath);
-  if (isGraphQLFile(filePath) && isGraphQLFile(importFrom)) {
-    try {
-      return realpathSync(join(dirName, importFrom));
-    } catch (e) {
-      if (e.code === 'ENOENT') {
-        return resolveFrom(dirName, importFrom);
+export async function resolveModuleFilePath(filePath: string, importFrom: string, options: LoadTypedefsOptions): Promise<string> {
+  const { fs, path } = options;
+
+  if (fs && path) {
+    const fullPath = path.resolve(options.cwd, filePath);
+    const dirName = path.dirname(fullPath);
+    if (isGraphQLFile(fullPath) && isGraphQLFile(importFrom)) {
+      try {
+        return await new Promise((resolve, reject) => fs.realpath(path.join(dirName, importFrom), (err, data) => (err ? reject(err) : resolve(data))));
+      } catch (e) {
+        if (e.code === 'ENOENT') {
+          const resolveFrom = await import('resolve-from').then(m => m.default);
+          return resolveFrom(dirName, importFrom);
+        }
       }
     }
   }
@@ -194,7 +200,7 @@ export async function collectDefinitions(imports: string[], documentSource: Sour
   options.allDefinitions.push(document.definitions as DefinitionNode[]);
 
   // Filter TypeDefinitionNodes by type and defined imports
-  const currentTypeDefinitions = filterImportedDefinitions(imports, document.definitions as DefinitionNode[], options.allDefinitions);
+  const currentTypeDefinitions = filterImportedDefinitions(imports, document.definitions as DefinitionNode[], options.allDefinitions, options.sort);
 
   // Add typedefinitions to running total
   options.typeDefinitions.push(currentTypeDefinitions);
@@ -206,7 +212,7 @@ export async function collectDefinitions(imports: string[], documentSource: Sour
   await Promise.all(
     rawModules.map(async m => {
       // If it was not yet processed (in case of circular dependencies)
-      const moduleFilePath = resolveModuleFilePath(resolve(options.cwd, documentSource.location), m.from);
+      const moduleFilePath = await resolveModuleFilePath(documentSource.location, m.from, options);
 
       const processedFile = options.processedFiles.get(moduleFilePath);
       if (!processedFile || !processedFile.find(rModule => isEqual(rModule, m))) {
@@ -227,7 +233,7 @@ export async function collectDefinitions(imports: string[], documentSource: Sour
  * @param typeDefinitions All definitions from a schema
  * @returns Filtered collection of type definitions
  */
-function filterImportedDefinitions(imports: string[], typeDefinitions: DefinitionNode[], allDefinitions: DefinitionNode[][] = []): DefinitionNode[] {
+function filterImportedDefinitions(imports: string[], typeDefinitions: DefinitionNode[], allDefinitions: DefinitionNode[][], sort: boolean): DefinitionNode[] {
   // This should do something smart with fields
 
   const filteredDefinitions = typeDefinitions;
@@ -253,6 +259,9 @@ function filterImportedDefinitions(imports: string[], typeDefinitions: Definitio
 
       if (objectTypeDefinition && 'fields' in objectTypeDefinition && !fields.includes('*')) {
         objectTypeDefinition.fields = objectTypeDefinition.fields.filter((f: any) => fields.includes(f.name.value) || fields.includes('*'));
+        if (sort) {
+          objectTypeDefinition.fields.sort((a: any, b: any) => a.name.value.localeCompare(b.name.value));
+        }
       }
     }
 

@@ -1,4 +1,4 @@
-const { makeExecutableSchema } = require('@kamilkisiela/graphql-tools');
+const { makeExecutableSchema } = require('@ardatan/graphql-tools');
 const { doc } = require('./type-defs');
 
 const schema = makeExecutableSchema({

@@ -1,7 +1,8 @@
 import { GraphQLTagPluckOptions } from '.';
 import { ParserOptions } from '@babel/parser';
+import { getExtNameFromFilePath } from './libs/extname';
 
-export default function generateConfig(code: string, options: GraphQLTagPluckOptions): ParserOptions {
+export default function generateConfig(filePath: string, code: string, options: GraphQLTagPluckOptions): ParserOptions {
   const plugins: any[] = [
     'asyncGenerators',
     'bigInt',
@@ -33,7 +34,8 @@ export default function generateConfig(code: string, options: GraphQLTagPluckOpt
   // If line has @flow header, include flow plug-ins
   const dynamicFlowPlugins = /^\/\/ *@flow *\n/.test(code) || /^\/\* *@flow *\*\/ *\n/.test(code) ? flowPlugins : [];
 
-  switch (options.fileExt) {
+  const fileExt = getExtNameFromFilePath(filePath);
+  switch (fileExt) {
     case '.ts':
       plugins.push('typescript');
       break;

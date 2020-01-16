@@ -1,4 +1,4 @@
-import { loadResolversFiles, loadSchemaFiles } from '../src';
+import { loadResolversFiles, loadSchemaFiles } from '@graphql-toolkit/file-loading';
 import { print } from 'graphql';
 
 function testSchemaDir({ path, expected, note, extensions, ignoreIndex }: { path: string; expected: any; note: string; extensions?: string[] | null; ignoreIndex?: boolean }) {

@@ -1,5 +1,6 @@
 import { UniversalLoader, parseGraphQLSDL, parseGraphQLJSON, SingleFileOptions } from '@graphql-toolkit/common';
 import { fetch } from 'cross-fetch';
+import { GraphQLTagPluckOptions, gqlPluckFromCodeString } from '@graphql-toolkit/graphql-tag-pluck';
 
 // github:owner/name#ref:path/to/file
 function extractData(
@@ -24,6 +25,7 @@ function extractData(
 
 export interface GithubLoaderOptions extends SingleFileOptions {
   token: string;
+  pluckConfig: GraphQLTagPluckOptions;
 }
 
 export class GithubLoader implements UniversalLoader<GithubLoaderOptions> {
@@ -83,6 +85,14 @@ export class GithubLoader implements UniversalLoader<GithubLoaderOptions> {
 
     if (/\.json$/i.test(path)) {
       return parseGraphQLJSON(pointer, content, options);
+    }
+
+    const rawSDL = await gqlPluckFromCodeString(pointer, content, options.pluckConfig);
+    if (rawSDL) {
+      return {
+        location: pointer,
+        rawSDL,
+      };
     }
 
     throw new Error(`Invalid file extension: ${path}`);

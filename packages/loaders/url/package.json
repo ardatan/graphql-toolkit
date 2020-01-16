@@ -26,11 +26,16 @@
     "input": "./src/index.ts"
   },
   "devDependencies": {
-    "@kamilkisiela/graphql-tools": "4.0.6",
-    "@types/jest": "24.9.0",
-    "bob-the-bundler": "0.2.2",
+    "@ardatan/bob": "0.2.6",
+    "@types/express": "^4.17.2",
+    "@types/jest": "24.0.25",
+    "@types/supertest": "^2.0.8",
+    "apollo-server-express": "^2.9.16",
+    "express": "^4.17.1",
     "graphql": "14.5.8",
+    "graphql-tools": "4.0.6",
     "jest": "24.9.0",
+    "supertest": "4.0.2",
     "ts-jest": "24.3.0",
     "typescript": "3.7.4"
   },

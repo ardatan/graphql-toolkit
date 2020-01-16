@@ -1,7 +1,8 @@
-import { makeExecutableSchema } from "@kamilkisiela/graphql-tools";
+import { makeExecutableSchema } from "graphql-tools";
 import gql from "graphql-tag";
 import { graphql, buildSchema, GraphQLScalarType, Kind, buildASTSchema, GraphQLSchema, ListValueNode } from "graphql";
 import { mergeSchemas, mergeSchemasAsync } from "../src/merge-schemas";
+import { printSchemaWithDirectives } from "@graphql-toolkit/common";
 
 describe('Merge Schemas', () => {
     it('should merge two valid executable schemas', async () => {

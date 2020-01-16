@@ -24,7 +24,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
       - name: Install Dependencies using Yarn
-        run: yarn install --frozen-lockfile
+        run: yarn install
       - name: Build
         run: yarn build
       - name: Publish Canary
@@ -40,12 +40,13 @@ jobs:
                 echo "Skipping canary publish due to a fork/PR..."
             fi
   test:
-    name: Testing on ${{matrix.os}} and Node ${{matrix.node_version}}
+    name: Testing on ${{matrix.os}} and Node ${{matrix.node_version}} w/ GraphQL ${{matrix.graphql_version}}
     runs-on: ${{matrix.os}}
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
         node_version: [10, 12, 13]
+        graphql_version: [latest, rc]
     steps:
       - name: Checkout Master
         uses: actions/checkout@v1
@@ -62,8 +63,10 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
+      - name: Install GraphQL ${{matrix.graphql_version}}
+        run: node scripts/resolve-graphql.js ${{matrix.graphql_version}}
       - name: Install Dependencies using Yarn
-        run: yarn install --frozen-lockfile
+        run: yarn install
       - name: Build
         run: yarn build
       - name: Test

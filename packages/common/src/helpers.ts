@@ -52,3 +52,23 @@ const invalidPathRegex = /[‘“!#$%&+^<=>`]/;
 export function isValidPath(str: string): boolean {
   return typeof str === 'string' && !invalidPathRegex.test(str);
 }
+
+export async function resolveBuiltinModule<Module>(moduleName: string, option?: Module | string): Promise<Module> {
+  if (typeof option === 'object') {
+    return option;
+  } else {
+    try {
+      if (typeof option === 'string') {
+        return await import(option);
+      } else {
+        return await import(moduleName);
+      }
+    } catch (e) {
+      console.warn(`
+        ${option || moduleName} module couldn't be found for built-in ${moduleName}.
+        Please provide a working module in your loader options!
+      `);
+      return null;
+    }
+  }
+}

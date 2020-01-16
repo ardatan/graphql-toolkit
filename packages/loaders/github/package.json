@@ -26,13 +26,14 @@
     "input": "./src/index.ts"
   },
   "devDependencies": {
-    "@kamilkisiela/graphql-tools": "4.0.6",
-    "bob-the-bundler": "0.2.2",
+    "graphql-tools": "4.0.6",
+    "@ardatan/bob": "0.2.6",
     "graphql": "14.5.8",
     "typescript": "3.7.4"
   },
   "dependencies": {
     "@graphql-toolkit/common": "0.9.0",
+    "@graphql-toolkit/graphql-tag-pluck": "0.9.0",
     "cross-fetch": "3.0.4"
   },
   "publishConfig": {

@@ -9,8 +9,8 @@ module.exports = {
     mocks = {};
     calls = {};
   },
-  __registerUrlRequestMock: (url, content) => {
-    mocks[url] = content;
+  __registerUrlRequestMock: (url, handler) => {
+    mocks[url] = handler;
   },
   __getCalls: url => {
     return calls[url] || [];
@@ -20,17 +20,11 @@ module.exports = {
       calls[url] = [];
     }
 
-    calls[url].push(options);
-
     if (mocks[url]) {
-      return {
-        async json() {
-          return JSON.parse(mocks[url]);
-        },
-        async text() {
-          return mocks[url];
-        }
-      };
+      const handler = mocks[url];
+      const response = handler(options);
+      calls[url].push(response); 
+      return response;
     } else {
       throw new Error('Invalid request');
     }

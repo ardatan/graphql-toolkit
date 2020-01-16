@@ -1,4 +1,4 @@
-import { DirectiveResolverFn, SchemaDirectiveVisitor } from '@kamilkisiela/graphql-tools';
+import { DirectiveResolverFn, SchemaDirectiveVisitor } from '@ardatan/graphql-tools';
 import { GraphQLField, defaultFieldResolver } from 'graphql';
 
 export function getSchemaDirectiveFromDirectiveResolver<TSource, TContext, TArgs>(directiveResolver: DirectiveResolverFn<TSource, TContext>) {

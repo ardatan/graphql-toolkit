@@ -1,4 +1,4 @@
-import { makeExecutableSchema } from '@kamilkisiela/graphql-tools';
+import { makeExecutableSchema } from '@ardatan/graphql-tools';
 import { buildSchema, printSchema } from 'graphql';
 import { printSchemaWithDirectives } from '../src';
 import GraphQLJSON from 'graphql-type-json';
@@ -65,4 +65,25 @@ describe('printSchemaWithDirectives', () => {
     expect(output).toContain('type TestType');
     expect(output).toContain('type Query');
   });
+
+  it('should print comments', () => {
+    const schema = makeExecutableSchema({
+      typeDefs: /* GraphQL */`
+        """
+          Test Query Comment
+        """
+        type Query {
+          """
+            Test Field Comment
+          """
+          foo: String
+        }
+      `
+    });
+    const output = printSchemaWithDirectives(schema);
+
+    expect(output).toContain('Test Query Comment');
+    expect(output).toContain('Test Field Comment');
+
+  })
 });
