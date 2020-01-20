@@ -96,7 +96,7 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
     if (isDocumentString(pointer)) {
       loadPromises$.push(
         Promise.resolve().then(async () => {
-          const result = parseGraphQLSDL(`${stringToHash(pointer)}.graphql`, pointer, options);
+          const result = parseGraphQLSDL(`${stringToHash(pointer)}.graphql`, pointer, { ...options, ...pointerOptions });
           found.push(result);
           options.cache[pointer] = result;
         })
@@ -222,11 +222,16 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
 
   await Promise.all(
     found.map(async partialSource => {
+      const specificOptions = {
+        ...options,
+        ...(partialSource.location in normalizedPointerOptionsMap ? globOptions : normalizedPointerOptionsMap[partialSource.location]),
+      };
+
       if (partialSource) {
         const resultSource: Source = { ...partialSource };
         if (resultSource.schema) {
-          resultSource.schema = fixSchemaAst(resultSource.schema, options);
-          resultSource.rawSDL = printSchemaWithDirectives(resultSource.schema);
+          resultSource.schema = fixSchemaAst(resultSource.schema, specificOptions);
+          resultSource.rawSDL = printSchemaWithDirectives(resultSource.schema, specificOptions);
         }
         if (resultSource.rawSDL) {
           if (isEmptySDL(resultSource.rawSDL)) {
@@ -235,18 +240,18 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
               definitions: [],
             };
           } else {
-            resultSource.document = parse(new GraphQLSource(resultSource.rawSDL, resultSource.location), options);
+            resultSource.document = parse(new GraphQLSource(resultSource.rawSDL, resultSource.location), specificOptions);
           }
         }
         if (resultSource.document) {
           if (options.filterKinds) {
-            resultSource.document = filterKind(resultSource.document, options.filterKinds);
+            resultSource.document = filterKind(resultSource.document, specificOptions.filterKinds);
           }
           if (!resultSource.rawSDL) {
             resultSource.rawSDL = printWithComments(resultSource.document);
           }
-          if (options.forceGraphQLImport || (!options.skipGraphQLImport && /^\#.*import /i.test(resultSource.rawSDL.trimLeft()))) {
-            await processImportSyntax(resultSource, options);
+          if (specificOptions.forceGraphQLImport || (!specificOptions.skipGraphQLImport && /^\#.*import /i.test(resultSource.rawSDL.trimLeft()))) {
+            await processImportSyntax(resultSource, specificOptions);
           }
           if (resultSource.document.definitions && resultSource.document.definitions.length > 0) {
             foundValid.push(resultSource);
@@ -258,7 +263,13 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
 
   const pointerList = Object.keys(normalizedPointerOptionsMap);
   if (pointerList.length > 0 && foundValid.length === 0) {
-    throw new Error(`Unable to find any GraphQL type definitions for the following pointers: ${pointerList.join(', ')}`);
+    throw new Error(`
+      Unable to find any GraphQL type definitions for the following pointers: 
+        ${pointerList.map(
+          p => `
+          - ${p}
+          `
+        )}`);
   }
 
   return options.sort ? foundValid.sort((left, right) => left.location.localeCompare(right.location)) : foundValid;

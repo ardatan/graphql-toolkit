@@ -16,3 +16,4 @@ export * from './resolvers-composition';
 export * from './fix-schema-ast';
 export * from './parse-graphql-json';
 export * from './parse-graphql-sdl';
+export * from './get-user-types-from-schema';

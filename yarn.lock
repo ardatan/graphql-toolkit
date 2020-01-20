@@ -2310,15 +2310,6 @@ bluebird@^3.5.1, bluebird@^3.5.3, bluebird@^3.5.5:
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.7.2.tgz#9f229c15be272454ffa973ace0dbee79a1b0c36f"
   integrity sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==
 
-bob-the-bundler@0.2.2:
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/bob-the-bundler/-/bob-the-bundler-0.2.2.tgz#243f5dd06d6649122565ef3f344f101dd29d1abd"
-  integrity sha512-KJiN5CrlrVe2e4hciP8HUieTRHBEH+44F115xmuHybC7qabtKZhQOwKRhifutvXKqq4jdj9UUJaDw+eF2zBGjA==
-  dependencies:
-    rollup "1.27.13"
-    rollup-plugin-generate-package-json "3.1.4"
-    rollup-plugin-typescript2 "0.25.3"
-
 body-parser@1.19.0, body-parser@^1.18.3:
   version "1.19.0"
   resolved "https://registry.yarnpkg.com/body-parser/-/body-parser-1.19.0.tgz#96b2709e57c9c4e09a6fd66a8fd979844f69f08a"
@@ -7003,7 +6994,7 @@ read-pkg@^3.0.0:
     normalize-package-data "^2.3.2"
     path-type "^3.0.0"
 
-read-pkg@^5.1.1, read-pkg@^5.2.0:
+read-pkg@^5.2.0:
   version "5.2.0"
   resolved "https://registry.yarnpkg.com/read-pkg/-/read-pkg-5.2.0.tgz#7bf295438ca5a33e56cd30e053b34ee7250c93cc"
   integrity sha512-Ug69mNOpfvKDAc2Q8DRpMjjzdtrnv9HcSMX+4VsZxD1aZ6ZzrIE7rlzXBtWTyhULSMKg076AW6WR5iZpD0JiOg==
@@ -7264,14 +7255,6 @@ rollup-plugin-auto-external@2.0.0:
     read-pkg "^3.0.0"
     safe-resolve "^1.0.0"
     semver "^5.5.0"
-
-rollup-plugin-generate-package-json@3.1.4:
-  version "3.1.4"
-  resolved "https://registry.yarnpkg.com/rollup-plugin-generate-package-json/-/rollup-plugin-generate-package-json-3.1.4.tgz#3a89ac8da1aeefda59fca12a0d5e5e85f0de2e20"
-  integrity sha512-Qbb9osMybQdhskm/XRCv6z7X5SDME5bVsXJUeifPOC3M2mcaDM6yldbmd3oMTwZTlNQ6+86G3KY6uGbpbI5I8A==
-  dependencies:
-    read-pkg "^5.1.1"
-    write-pkg "^4.0.0"
 
 rollup-plugin-generate-package-json@3.2.0:
   version "3.2.0"

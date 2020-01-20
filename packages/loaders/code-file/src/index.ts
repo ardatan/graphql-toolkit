@@ -1,4 +1,4 @@
-import { DocumentNode, GraphQLSchema, parse, IntrospectionQuery, buildClientSchema } from 'graphql';
+import { DocumentNode, GraphQLSchema, parse, IntrospectionQuery, buildClientSchema, Kind } from 'graphql';
 import { SchemaPointerSingle, DocumentPointerSingle, debugLog, SingleFileOptions, Source, UniversalLoader, asArray, isValidPath, parseGraphQLSDL, parseGraphQLJSON } from '@graphql-toolkit/common';
 import { GraphQLTagPluckOptions, gqlPluckFromCodeString } from '@graphql-toolkit/graphql-tag-pluck';
 
@@ -42,7 +42,7 @@ function resolveExport(fileExport: GraphQLSchema | DocumentNode | string | { dat
   return null;
 }
 
-async function tryToLoadFromExport(rawFilePath: string): Promise<GraphQLSchema | DocumentNode | Object | string> {
+async function tryToLoadFromExport(rawFilePath: string): Promise<GraphQLSchema | DocumentNode> {
   let filePath = rawFilePath;
 
   try {
@@ -57,11 +57,11 @@ async function tryToLoadFromExport(rawFilePath: string): Promise<GraphQLSchema |
     const rawExports = await import(filePath);
 
     if (rawExports) {
-      let rawExport = rawExports.default || rawExports.schema || rawExports.typeDefs || rawExports;
+      let rawExport = rawExports.default || rawExports.schema || rawExports.typeDefs || rawExports.data || rawExports;
 
       if (rawExport) {
         let exportValue = await rawExport;
-        exportValue = await (exportValue.default || exportValue.schema || exportValue.typeDefs || exportValue);
+        exportValue = await (exportValue.default || exportValue.schema || exportValue.typeDefs || exportValue.data || exportValue);
         try {
           return resolveExport(exportValue);
         } catch (e) {
@@ -130,26 +130,15 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
         await Promise.all(asArray(options.require).map(m => import(m)));
       }
       let loaded = await tryToLoadFromExport(normalizedFilePath);
-      loaded = loaded['data'] || loaded;
       if (loaded instanceof GraphQLSchema) {
         return {
-          location: normalizedFilePath,
+          location: pointer,
           schema: loaded,
         };
-      } else if (typeof loaded === 'string') {
+      } else if (loaded && loaded.kind === Kind.DOCUMENT) {
         return {
-          location: normalizedFilePath,
-          rawSDL: loaded,
-        };
-      } else if ('kind' in loaded && loaded.kind === 'Document') {
-        return {
-          location: normalizedFilePath,
+          location: pointer,
           document: loaded,
-        };
-      } else if ('__schema' in loaded) {
-        return {
-          schema: buildClientSchema(loaded, options),
-          location: normalizedFilePath,
         };
       }
     }
