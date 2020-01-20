@@ -81,6 +81,16 @@
     rollup-plugin-generate-package-json "3.2.0"
     rollup-plugin-typescript2 "0.25.3"
 
+"@ardatan/bob@0.2.7":
+  version "0.2.7"
+  resolved "https://registry.yarnpkg.com/@ardatan/bob/-/bob-0.2.7.tgz#ce93a2da622e551587afdb4f1f0dfe8d119e42e7"
+  integrity sha512-cDtYTnXwDclUj/3qofLlufY0wE0eFYNotx4aFJdHWAgHwNtHbrcpCuZtc7qJ6B/Luuw7QWYT+QulQPZ0xg5fgw==
+  dependencies:
+    rollup "1.27.13"
+    rollup-plugin-auto-external "2.0.0"
+    rollup-plugin-generate-package-json "3.2.0"
+    rollup-plugin-typescript2 "0.25.3"
+
 "@ardatan/graphql-tools@4.1.0":
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/@ardatan/graphql-tools/-/graphql-tools-4.1.0.tgz#183508ef4e3d4966f763cb1634a81be1c1255f8d"
