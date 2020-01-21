@@ -83,10 +83,6 @@ export function isGraphQLDirective(definition: DefinitionNode): definition is Di
   return definition.kind === 'DirectiveDefinition';
 }
 
-export function isGraphQLSchema(obj: any): obj is GraphQLSchema {
-  return obj instanceof GraphQLSchema;
-}
-
 export function extractType(type: TypeNode): NamedTypeNode {
   let visitedType = type;
   while (visitedType.kind === 'ListType' || visitedType.kind === 'NonNullType') {

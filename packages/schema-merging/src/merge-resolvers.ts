@@ -1,6 +1,6 @@
 import { IResolvers } from '@ardatan/graphql-tools';
 import * as deepMerge from 'deepmerge';
-import { GraphQLScalarType } from 'graphql';
+import { GraphQLScalarType, isScalarType } from 'graphql';
 
 export type ResolversFactory<TContext> = (...args: any[]) => IResolvers<any, TContext>;
 export type ResolversDefinition<TContext> = IResolvers<any, TContext> | ResolversFactory<TContext>;
@@ -19,7 +19,7 @@ const isMergeableObject = (target: any): target is object => {
   if (stringValue === '[object Date]') {
     return false;
   }
-  if (target instanceof GraphQLScalarType) {
+  if (isScalarType(target)) {
     return false;
   }
   return true;

@@ -1,49 +1,49 @@
-import { GraphQLSchema } from 'graphql';
+import { isSchema } from 'graphql';
 import { loadSchema } from '@graphql-toolkit/core';
 import { CodeFileLoader } from '@graphql-toolkit/code-file-loader';
 
 describe('Schema From Export', () => {
   it('should load the schema correctly from module.exports', async () => {
-    const result: any = await loadSchema('./tests/loaders/schema/test-files/loaders/module-exports.js', {
+    const result = await loadSchema('./tests/loaders/schema/test-files/loaders/module-exports.js', {
       loaders: [new CodeFileLoader()]
     });
-    expect(result instanceof GraphQLSchema).toBeTruthy();
+    expect(isSchema(result)).toBeTruthy();
   });
 
   it('should load the schema (with extend) correctly from module.exports', async () => {
-    const result: GraphQLSchema = await loadSchema('./tests/loaders/schema/test-files/schema-dir/with-extend.js', {
+    const result = await loadSchema('./tests/loaders/schema/test-files/schema-dir/with-extend.js', {
       loaders: [new CodeFileLoader()]
     });
-    expect(result instanceof GraphQLSchema).toBeTruthy();
+    expect(isSchema(result)).toBeTruthy();
     expect(result.getQueryType().getFields()['hello']).toBeDefined();
   });
 
   it('should load the schema correctly from variable export', async () => {
-    const result: any = await loadSchema('./tests/loaders/schema/test-files/loaders/schema-export.js', {
+    const result = await loadSchema('./tests/loaders/schema/test-files/loaders/schema-export.js', {
       loaders: [new CodeFileLoader()]
     });
-    expect(result instanceof GraphQLSchema).toBeTruthy();
+    expect(isSchema(result)).toBeTruthy();
   });
 
   it('should load the schema correctly from default export', async () => {
-    const result: any = await loadSchema('./tests/loaders/schema/test-files/loaders/default-export.js', {
+    const result = await loadSchema('./tests/loaders/schema/test-files/loaders/default-export.js', {
       loaders: [new CodeFileLoader()]
     });
-    expect(result instanceof GraphQLSchema).toBeTruthy();
+    expect(isSchema(result)).toBeTruthy();
   });
 
   it('should load the schema correctly from promise export', async () => {
-    const result: any = await loadSchema('./tests/loaders/schema/test-files/loaders/promise-export.js', {
+    const result = await loadSchema('./tests/loaders/schema/test-files/loaders/promise-export.js', {
       loaders: [new CodeFileLoader()]
     });
-    expect(result instanceof GraphQLSchema).toBeTruthy();
+    expect(isSchema(result)).toBeTruthy();
   });
 
   it('should load the schema correctly from promise export', async () => {
-    const result: any = await loadSchema('./tests/loaders/schema/test-files/loaders/promise-export.js', {
+    const result = await loadSchema('./tests/loaders/schema/test-files/loaders/promise-export.js', {
       loaders: [new CodeFileLoader()]
     });
-    expect(result instanceof GraphQLSchema).toBeTruthy();
+    expect(isSchema(result)).toBeTruthy();
   });
 
   it.only('should work with extensions (without schema definition)', async () => {

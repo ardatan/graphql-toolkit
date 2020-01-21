@@ -1,4 +1,4 @@
-import { DocumentNode, GraphQLSchema, parse, IntrospectionQuery, buildClientSchema, Kind } from 'graphql';
+import { DocumentNode, GraphQLSchema, parse, IntrospectionQuery, buildClientSchema, Kind, isSchema } from 'graphql';
 import { SchemaPointerSingle, DocumentPointerSingle, debugLog, SingleFileOptions, Source, UniversalLoader, asArray, isValidPath, parseGraphQLSDL, parseGraphQLJSON } from '@graphql-toolkit/common';
 import { GraphQLTagPluckOptions, gqlPluckFromCodeString } from '@graphql-toolkit/graphql-tag-pluck';
 
@@ -18,16 +18,12 @@ function isSchemaJson(obj: any): obj is IntrospectionQuery {
   return json !== undefined && json.__schema !== undefined;
 }
 
-function isSchemaObject(obj: any): obj is GraphQLSchema {
-  return obj instanceof GraphQLSchema;
-}
-
 function isSchemaAst(obj: any): obj is DocumentNode {
   return (obj as DocumentNode).kind !== undefined;
 }
 
 function resolveExport(fileExport: GraphQLSchema | DocumentNode | string | { data: IntrospectionQuery } | IntrospectionQuery): GraphQLSchema | DocumentNode | null {
-  if (isSchemaObject(fileExport)) {
+  if (isSchema(fileExport)) {
     return fileExport;
   } else if (isSchemaText(fileExport)) {
     return parse(fileExport);
@@ -130,7 +126,7 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
         await Promise.all(asArray(options.require).map(m => import(m)));
       }
       let loaded = await tryToLoadFromExport(normalizedFilePath);
-      if (loaded instanceof GraphQLSchema) {
+      if (isSchema(loaded)) {
         return {
           location: pointer,
           schema: loaded,

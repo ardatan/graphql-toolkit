@@ -1,14 +1,9 @@
 import { loadTypedefs, LoadTypedefsOptions, UnnormalizedTypeDefPointer } from './load-typedefs';
 import { GraphQLSchema, BuildSchemaOptions, DocumentNode } from 'graphql';
 import { OPERATION_KINDS } from './documents';
-import { mergeSchemasAsync, MergeSchemasConfig, mergeResolvers } from '@graphql-toolkit/schema-merging';
-import { loadFilesAsync } from '@graphql-toolkit/file-loading';
+import { mergeSchemasAsync, MergeSchemasConfig } from '@graphql-toolkit/schema-merging';
 
-export type LoadSchemaOptions = BuildSchemaOptions &
-  LoadTypedefsOptions &
-  Omit<MergeSchemasConfig, 'schemas' | 'typeDefs' | 'resolvers'> & {
-    resolvers?: any;
-  };
+export type LoadSchemaOptions = BuildSchemaOptions & LoadTypedefsOptions & MergeSchemasConfig;
 
 export async function loadSchema(schemaPointers: UnnormalizedTypeDefPointer | UnnormalizedTypeDefPointer[], options: LoadSchemaOptions): Promise<GraphQLSchema> {
   const sources = await loadTypedefs(schemaPointers, {
@@ -29,24 +24,9 @@ export async function loadSchema(schemaPointers: UnnormalizedTypeDefPointer | Un
     })
   );
 
-  let resolvers: any = {};
-
-  if (options.resolvers) {
-    if (typeof options.resolvers === 'string') {
-      resolvers = await loadFilesAsync(options.resolvers);
-    } else if (options.resolvers instanceof Array) {
-      resolvers = mergeResolvers(
-        await Promise.all(
-          options.resolvers.map<any>(async r => (typeof options.resolvers === 'string' ? loadFilesAsync(r) : r))
-        )
-      );
-    }
-  }
-
   const mergeSchemasOptions: MergeSchemasConfig = {
     schemas,
     typeDefs,
-    resolvers,
     ...options,
   };
 

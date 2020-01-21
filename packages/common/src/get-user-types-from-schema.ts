@@ -1,4 +1,4 @@
-import { GraphQLSchema, GraphQLObjectType } from 'graphql';
+import { GraphQLSchema, GraphQLObjectType, isObjectType } from 'graphql';
 
 /**
  * Get all GraphQL types from schema without:
@@ -13,7 +13,7 @@ export function getUserTypesFromSchema(schema: GraphQLSchema): GraphQLObjectType
 
   // tslint:disable-next-line: no-unnecessary-local-variable
   const modelTypes = Object.values(allTypesMap).filter((graphqlType: GraphQLObjectType) => {
-    if (graphqlType instanceof GraphQLObjectType) {
+    if (isObjectType(graphqlType)) {
       // Filter out private types
       if (graphqlType.name.startsWith('__')) {
         return false;

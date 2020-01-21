@@ -1,4 +1,4 @@
-import { GraphQLSchema, GraphQLScalarType, GraphQLObjectType, GraphQLInterfaceType, DocumentNode, buildASTSchema, GraphQLEnumType, GraphQLUnionType } from 'graphql';
+import { GraphQLSchema, GraphQLScalarType, GraphQLObjectType, GraphQLInterfaceType, DocumentNode, buildASTSchema, GraphQLEnumType, GraphQLUnionType, isScalarType, isInterfaceType, isObjectType, isEnumType, isUnionType } from 'graphql';
 import { IResolvers } from '@ardatan/graphql-tools';
 import { extractFieldResolversFromObjectType } from './extract-field-resolvers-from-object-type';
 
@@ -20,19 +20,19 @@ export function extractResolversFromSchema(schema: GraphQLSchema, options?: Extr
       if (selectedTypeNames && !selectedTypeNames.includes(typeName)) {
         continue;
       }
-      if (typeDef instanceof GraphQLScalarType) {
+      if (isScalarType(typeDef)) {
         resolvers[typeName] = typeDef as GraphQLScalarType;
-      } else if (typeDef instanceof GraphQLObjectType || typeDef instanceof GraphQLInterfaceType) {
+      } else if (isObjectType(typeDef) || isInterfaceType(typeDef)) {
         resolvers[typeName] = extractFieldResolversFromObjectType(typeDef, {
           selectedTypeDefs: options && options.selectedTypeDefs,
         });
-      } else if (typeDef instanceof GraphQLEnumType) {
+      } else if (isEnumType(typeDef)) {
         const enumValues = typeDef.getValues();
         resolvers[typeName] = {};
         for (const { name, value } of enumValues) {
           resolvers[typeName][name] = value;
         }
-      } else if (typeDef instanceof GraphQLUnionType) {
+      } else if (isUnionType(typeDef)) {
         resolvers[typeName] = {
           __resolveType: typeDef.resolveType,
         };

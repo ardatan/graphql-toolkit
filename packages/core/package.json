@@ -41,7 +41,6 @@
   },
   "dependencies": {
     "@graphql-toolkit/common": "0.9.1",
-    "@graphql-toolkit/file-loading": "0.9.1",
     "@graphql-toolkit/schema-merging": "0.9.1",
     "aggregate-error": "3.0.1",
     "globby": "11.0.0",

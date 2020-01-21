@@ -1,8 +1,8 @@
-import { DefinitionNode, DocumentNode, GraphQLSchema, parse, print, Source, GraphQLObjectType, isSpecifiedScalarType, isIntrospectionType, GraphQLScalarType, printType, ObjectTypeExtensionNode, GraphQLNamedType, Kind } from 'graphql';
-import { isGraphQLSchema, isSourceTypes, isStringTypes, isSchemaDefinition } from './utils';
+import { DefinitionNode, DocumentNode, GraphQLSchema, parse, print, Source, GraphQLObjectType, isSpecifiedScalarType, isIntrospectionType, printType, ObjectTypeExtensionNode, GraphQLNamedType, Kind, isScalarType, isSchema } from 'graphql';
+import { isSourceTypes, isStringTypes, isSchemaDefinition } from './utils';
 import { MergedResultMap, mergeGraphQLNodes } from './merge-nodes';
 import { resetComments, printWithComments } from './comments';
-import { fixSchemaAst } from '@graphql-toolkit/common';
+import { createSchemaDefinition, printSchemaWithDirectives } from '@graphql-toolkit/common';
 
 type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;
 type CompareFn<T> = (a: T, b: T) => number;
@@ -99,85 +99,13 @@ export function mergeTypeDefs(types: Array<string | Source | DocumentNode | Grap
   return result;
 }
 
-function createSchemaDefinition(
-  def: { query: string | GraphQLObjectType | null; mutation: string | GraphQLObjectType | null; subscription: string | GraphQLObjectType | null },
-  config?: {
-    force?: boolean;
-  }
-): string {
-  const schemaRoot: {
-    query?: string;
-    mutation?: string;
-    subscription?: string;
-  } = {};
-
-  if (def.query) {
-    schemaRoot.query = def.query.toString();
-  }
-  if (def.mutation) {
-    schemaRoot.mutation = def.mutation.toString();
-  }
-  if (def.subscription) {
-    schemaRoot.subscription = def.subscription.toString();
-  }
-
-  const fields = Object.keys(schemaRoot)
-    .map(rootType => (schemaRoot[rootType] ? `${rootType}: ${schemaRoot[rootType]}` : null))
-    .filter(a => a);
-
-  if (fields.length) {
-    return `schema { ${fields.join('\n')} }`;
-  } else if (config && config.force) {
-    return ` schema { query: Query } `;
-  }
-
-  return undefined;
-}
-
 export function mergeGraphQLTypes(types: Array<string | Source | DocumentNode | GraphQLSchema>, config: Config): DefinitionNode[] {
   resetComments();
 
   const allNodes: ReadonlyArray<DefinitionNode> = types
     .map<DocumentNode>(type => {
-      if (isGraphQLSchema(type)) {
-        let schema: GraphQLSchema = type;
-        let typesMap = type.getTypeMap();
-        const validAstNodes = Object.keys(typesMap).filter(key => typesMap[key].astNode);
-
-        if (validAstNodes.length === 0 && Object.keys(typesMap).length > 0) {
-          schema = fixSchemaAst(schema, config);
-          typesMap = schema.getTypeMap();
-        }
-
-        const schemaDefinition = createSchemaDefinition({
-          query: schema.getQueryType(),
-          mutation: schema.getMutationType(),
-          subscription: schema.getSubscriptionType(),
-        });
-        const allTypesPrinted = Object.keys(typesMap)
-          .map(typeName => {
-            const type = typesMap[typeName];
-            const isPredefinedScalar = type instanceof GraphQLScalarType && isSpecifiedScalarType(type);
-            const isIntrospection = isIntrospectionType(type);
-
-            if (isPredefinedScalar || isIntrospection) {
-              return null;
-            }
-            if (type.astNode) {
-              return print(type.extensionASTNodes ? extendDefinition(type) : type.astNode);
-            } else {
-              // KAMIL: we might want to turn on descriptions in future
-              return printType(correctType(typeName, typesMap), { commentDescriptions: config.commentDescriptions });
-            }
-          })
-          .filter(e => e);
-        const directivesDeclaration = schema
-          .getDirectives()
-          .map(directive => (directive.astNode ? print(directive.astNode) : null))
-          .filter(e => e);
-        const printedSchema = [...directivesDeclaration, ...allTypesPrinted, schemaDefinition].join('\n');
-
-        return parse(printedSchema);
+      if (isSchema(type)) {
+        return parse(printSchemaWithDirectives(type));
       } else if (isStringTypes(type) || isSourceTypes(type)) {
         return parse(type);
       }
@@ -236,29 +164,4 @@ export function mergeGraphQLTypes(types: Array<string | Source | DocumentNode | 
   }
 
   return [...Object.values(mergedNodes), parse(schemaDefinition).definitions[0]];
-}
-
-function extendDefinition(type: GraphQLNamedType): GraphQLNamedType['astNode'] {
-  switch (type.astNode.kind) {
-    case Kind.OBJECT_TYPE_DEFINITION:
-      return {
-        ...type.astNode,
-        fields: type.astNode.fields.concat((type.extensionASTNodes as ReadonlyArray<ObjectTypeExtensionNode>).reduce((fields, node) => fields.concat(node.fields), [])),
-      };
-    case Kind.INPUT_OBJECT_TYPE_DEFINITION:
-      return {
-        ...type.astNode,
-        fields: type.astNode.fields.concat((type.extensionASTNodes as ReadonlyArray<ObjectTypeExtensionNode>).reduce((fields, node) => fields.concat(node.fields), [])),
-      };
-    default:
-      return type.astNode;
-  }
-}
-
-function correctType<TMap extends { [key: string]: GraphQLNamedType }, TName extends keyof TMap>(typeName: TName, typesMap: TMap): TMap[TName] {
-  const type = typesMap[typeName];
-
-  type.name = typeName.toString();
-
-  return type;
 }

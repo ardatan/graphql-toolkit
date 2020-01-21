@@ -1,9 +1,9 @@
-import { GraphQLSchema, parse, Kind, Source as GraphQLSource, DefinitionNode } from 'graphql';
+import { parse, Kind, Source as GraphQLSource, DefinitionNode, isSchema } from 'graphql';
 import { Source, asArray, isDocumentString, debugLog, printSchemaWithDirectives, parseGraphQLSDL, fixSchemaAst, SingleFileOptions, Loader, resolveBuiltinModule } from '@graphql-toolkit/common';
 import isGlob from 'is-glob';
 import { filterKind } from './filter-document-kind';
 import { RawModule, processImportSyntax, isEmptySDL } from './import-parser';
-import { printWithComments } from '@graphql-toolkit/schema-merging';
+import { printWithComments, resetComments } from '@graphql-toolkit/schema-merging';
 
 export type LoadTypedefsOptions<ExtraConfig = { [key: string]: any }> = SingleFileOptions &
   ExtraConfig & {
@@ -117,7 +117,7 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
             throw new Error(`Failed to load custom loader: ${pointerOptions.loader}`);
           }
           const customLoaderResult = await loader(pointer, { ...options, ...pointerOptions }, normalizedPointerOptionsMap);
-          if (customLoaderResult && customLoaderResult instanceof GraphQLSchema) {
+          if (isSchema(customLoaderResult && customLoaderResult)) {
             found.push({
               location: pointer,
               schema: customLoaderResult,
@@ -182,7 +182,7 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
                 throw new Error(`Failed to load custom loader: ${globOptions.loader}`);
               }
               const customLoaderResult = await loader(path, { ...options, ...globOptions }, normalizedPointerOptionsMap);
-              if (customLoaderResult instanceof GraphQLSchema) {
+              if (isSchema(customLoaderResult)) {
                 const result = {
                   schema: customLoaderResult,
                   document: parse(printSchemaWithDirectives(customLoaderResult)),
@@ -249,6 +249,7 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
           }
           if (!resultSource.rawSDL) {
             resultSource.rawSDL = printWithComments(resultSource.document);
+            resetComments();
           }
           if (specificOptions.forceGraphQLImport || (!specificOptions.skipGraphQLImport && /^\#.*import /i.test(resultSource.rawSDL.trimLeft()))) {
             await processImportSyntax(resultSource, specificOptions);

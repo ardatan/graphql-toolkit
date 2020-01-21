@@ -1,31 +1,66 @@
-import { GraphQLSchema, print, printSchema, printType, GraphQLBoolean, GraphQLInt, GraphQLString, GraphQLFloat, GraphQLID } from 'graphql';
+import { GraphQLSchema, print, printType, GraphQLNamedType, Kind, ObjectTypeExtensionNode, isSpecifiedScalarType, isIntrospectionType, isScalarType } from 'graphql';
 import { Options } from 'graphql/utilities/schemaPrinter';
+import { createSchemaDefinition } from './create-schema-definition';
 
-const IGNORED_SCALARS = [GraphQLBoolean.name, GraphQLInt.name, GraphQLString.name, GraphQLFloat.name, GraphQLID.name];
+export function printSchemaWithDirectives(schema: GraphQLSchema, options: Options = {}): string {
+  const typesMap = schema.getTypeMap();
 
-export function printSchemaWithDirectives(schema: GraphQLSchema, options?: Options): string {
-  const allTypes = schema.getTypeMap();
-  const allTypesAst = Object.keys(allTypes)
-    .map(key => allTypes[key].astNode)
-    .filter(a => a);
-  const allTypesExtensionAst = Object.keys(allTypes)
-    .map(key => allTypes[key].extensionASTNodes)
-    .filter(a => a)
-    .reduce((prev, curr) => [...prev, ...curr], [] as any[]);
-  const noAstTypes = Object.keys(allTypes)
-    .map(key => (IGNORED_SCALARS.includes(key) || key.startsWith('__') || allTypes[key].astNode ? null : allTypes[key]))
-    .filter(a => a);
-  const directivesAst = schema
-    .getDirectives()
-    .map(def => def.astNode)
-    .filter(a => a);
+  const result: string[] = [
+    createSchemaDefinition({
+      query: schema.getQueryType(),
+      mutation: schema.getMutationType(),
+      subscription: schema.getSubscriptionType(),
+    }),
+  ];
 
-  if (allTypesAst.length === 0 && directivesAst.length === 0 && allTypesExtensionAst.length === 0) {
-    return printSchema(schema, options);
-  } else {
-    const astTypesPrinted = [...allTypesAst, ...directivesAst, ...allTypesExtensionAst].map(ast => print(ast));
-    const nonAstPrinted = noAstTypes.map(p => printType(p, options));
+  for (const typeName in typesMap) {
+    const type = typesMap[typeName];
+    const isPredefinedScalar = isScalarType(type) && isSpecifiedScalarType(type);
+    const isIntrospection = isIntrospectionType(type);
 
-    return [...astTypesPrinted, ...nonAstPrinted].join('\n');
+    if (isPredefinedScalar || isIntrospection) {
+      continue;
+    }
+
+    if (type.astNode) {
+      result.push(print(type.extensionASTNodes ? extendDefinition(type) : type.astNode));
+    } else {
+      // KAMIL: we might want to turn on descriptions in future
+      result.push(printType(correctType(typeName, typesMap), { commentDescriptions: options.commentDescriptions }));
+    }
   }
+
+  const directives = schema.getDirectives();
+  for (const directive of directives) {
+    if (directive.astNode) {
+      result.push(print(directive.astNode));
+    }
+  }
+
+  return result.join('\n');
+}
+
+function extendDefinition(type: GraphQLNamedType): GraphQLNamedType['astNode'] {
+  switch (type.astNode.kind) {
+    case Kind.OBJECT_TYPE_DEFINITION:
+      return {
+        ...type.astNode,
+        fields: type.astNode.fields.concat((type.extensionASTNodes as ReadonlyArray<ObjectTypeExtensionNode>).reduce((fields, node) => fields.concat(node.fields), [])),
+      };
+    case Kind.INPUT_OBJECT_TYPE_DEFINITION:
+      return {
+        ...type.astNode,
+        fields: type.astNode.fields.concat((type.extensionASTNodes as ReadonlyArray<ObjectTypeExtensionNode>).reduce((fields, node) => fields.concat(node.fields), [])),
+      };
+    default:
+      return type.astNode;
+  }
+}
+
+function correctType<TMap extends { [key: string]: GraphQLNamedType }, TName extends keyof TMap>(typeName: TName, typesMap: TMap): TMap[TName] {
+  const type = typesMap[typeName];
+
+  type.name = typeName.toString();
+
+  return type;
 }
