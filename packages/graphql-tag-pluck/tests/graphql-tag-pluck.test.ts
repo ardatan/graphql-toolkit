@@ -724,13 +724,13 @@ describe('graphql-tag-pluck', () => {
 
   it('should be able to specify the global GraphQL identifier name', async () => {
     const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
-      const fragment = graphql(\`
+      const fragment = anothergql(\`
         fragment Foo on FooType {
           id
         }
       \`)
 
-      const doc = graphql\`
+      const doc = anothergql\`
         query foo {
           foo {
             ...Foo
@@ -740,7 +740,7 @@ describe('graphql-tag-pluck', () => {
         \${fragment}
       \`
     `), {
-      globalGqlIdentifierName: 'graphql'
+      globalGqlIdentifierName: 'anothergql'
     })
 
     expect(gqlString).toEqual(freeText(`
@@ -779,7 +779,7 @@ describe('graphql-tag-pluck', () => {
   })
 
   it('should be able to specify the package name of which the GraphQL identifier should be imported from', async () => {
-  
+
     const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
       import mygql from 'my-graphql-tag'
 
@@ -947,4 +947,30 @@ describe('graphql-tag-pluck', () => {
         }
     `))
   })
+
+  it('should pluck graphql template literal imported lazily', async () => {
+    const gqlString = await gqlPluckFromCodeString('tmp-XXXXXX.js', freeText(`
+      async function getUserType() {
+        const graphql = await import('graphql-tag');
+    
+        return graphql\`
+          type User {
+            id: ID!
+            "Choose a nice username, so users can \\\`@mention\\\` you."
+            username: String!
+            email: String!
+          }
+        \`
+      }
+    `))
+
+    expect(gqlString).toEqual(freeText(`
+        type User {
+          id: ID!
+          "Choose a nice username, so users can \`@mention\` you."
+          username: String!
+          email: String!
+        }
+    `))
+  });
 })

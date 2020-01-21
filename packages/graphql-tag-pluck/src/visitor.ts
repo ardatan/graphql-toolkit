@@ -1,6 +1,7 @@
 import { freeText } from './utils';
 import { GraphQLTagPluckOptions } from '.';
 import { isVariableDeclarator, isIdentifier, isTemplateLiteral, isImportDefaultSpecifier, isImportSpecifier } from '@babel/types';
+import { asArray } from '@graphql-toolkit/common';
 
 const defaults: GraphQLTagPluckOptions = {
   modules: [
@@ -72,7 +73,7 @@ const defaults: GraphQLTagPluckOptions = {
     },
   ],
   gqlMagicComment: 'graphql',
-  globalGqlIdentifierName: 'gql',
+  globalGqlIdentifierName: ['gql', 'graphql'],
 };
 
 export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
@@ -91,7 +92,7 @@ export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
       identifier: mod.identifier && mod.identifier.toLowerCase(),
     };
   });
-  globalGqlIdentifierName = globalGqlIdentifierName && globalGqlIdentifierName.toLowerCase();
+  globalGqlIdentifierName = asArray(globalGqlIdentifierName).map(s => s.toLowerCase());
 
   // Keep imported identifiers
   // import gql from 'graphql-tag' -> gql
@@ -109,7 +110,7 @@ export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
 
   // Check if identifier is defined and imported from registered packages
   function isValidIdentifier(name) {
-    return definedIdentifierNames.some(id => id === name) || (globalGqlIdentifierName && name === globalGqlIdentifierName);
+    return definedIdentifierNames.some(id => id === name) || globalGqlIdentifierName.includes(name);
   }
 
   const pluckStringFromFile = ({ start, end }) => {

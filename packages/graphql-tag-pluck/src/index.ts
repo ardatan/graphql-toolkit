@@ -4,12 +4,11 @@ import { getExtNameFromFilePath } from './libs/extname';
 import createVisitor from './visitor';
 import traverse from '@babel/traverse';
 import { freeText } from './utils';
-import { File } from '@babel/types';
 
 export interface GraphQLTagPluckOptions {
   modules?: Array<{ name: string; identifier?: string }>;
   gqlMagicComment?: string;
-  globalGqlIdentifierName?: string;
+  globalGqlIdentifierName?: string | string[];
 }
 
 const supportedExtensions = ['.js', '.jsx', '.ts', '.tsx', '.flow', '.flow.js', '.flow.jsx', '.vue'];

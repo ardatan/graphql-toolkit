@@ -27,7 +27,8 @@
   "dependencies": {
     "@babel/parser": "7.8.3",
     "@babel/traverse": "7.8.3",
-    "@babel/types": "7.8.3"
+    "@babel/types": "7.8.3",
+    "@graphql-toolkit/common": "0.9.1"
   },
   "devDependencies": {
     "@ardatan/bob": "0.2.7",

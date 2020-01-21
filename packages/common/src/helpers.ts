@@ -1,5 +1,5 @@
 import { parse } from 'graphql';
-export const asArray = <T>(fns: T | T[]) => (Array.isArray(fns) ? fns : [fns]);
+export const asArray = <T>(fns: T | T[]) => (Array.isArray(fns) ? fns : fns ? [fns] : []);
 
 export function chainFunctions(funcs: any[]) {
   if (funcs.length === 1) {
