@@ -83,15 +83,15 @@ export async function processImportSyntax(documentSource: Source, options: LoadT
   let document = documentSource.document;
 
   // Recursively process the imports, starting by importing all types from the initial schema
-  await collectDefinitions(['*'], documentSource, options);
+  const { allDefinitions, typeDefinitions } = await collectDefinitions(['*'], documentSource, options);
 
   // Post processing of the final schema (missing types, unused types, etc.)
   // Query, Mutation and Subscription should be merged
   // And should always be in the first set, to make sure they
   // are not filtered out.
-  const firstTypes = flatten(options.typeDefinitions);
-  const secondFirstTypes = options.typeDefinitions[0];
-  const otherFirstTypes = flatten(options.typeDefinitions.slice(1));
+  const firstTypes = flatten(typeDefinitions);
+  const secondFirstTypes = typeDefinitions[0];
+  const otherFirstTypes = flatten(typeDefinitions.slice(1));
 
   const firstSet = firstTypes.concat(secondFirstTypes, otherFirstTypes);
   const processedTypeNames: string[] = [];
@@ -114,7 +114,7 @@ export async function processImportSyntax(documentSource: Source, options: LoadT
     }
   }
 
-  (document as any).definitions = completeDefinitionPool(flatten(options.allDefinitions), firstSet, flatten(options.typeDefinitions));
+  (document as any).definitions = completeDefinitionPool(flatten(allDefinitions), firstSet, flatten(typeDefinitions));
 }
 
 /**
@@ -192,18 +192,24 @@ export async function resolveModuleFilePath(filePath: string, importFrom: string
  * @param Tracking of all type definitions per schema
  * @returns Both the collection of all type definitions, and the collection of imported type definitions
  */
-export async function collectDefinitions(imports: string[], documentSource: Source, options: LoadTypedefsOptions): Promise<void> {
+export async function collectDefinitions(
+  imports: string[],
+  documentSource: Source,
+  options: LoadTypedefsOptions,
+  typeDefinitions: DefinitionNode[][] = [],
+  allDefinitions: DefinitionNode[][] = []
+): Promise<{ typeDefinitions: DefinitionNode[][]; allDefinitions: DefinitionNode[][] }> {
   // Get TypeDefinitionNodes from current schema
   const document = documentSource.document;
 
   // Add all definitions to running total
-  options.allDefinitions.push(document.definitions as DefinitionNode[]);
+  allDefinitions.push(document.definitions as DefinitionNode[]);
 
   // Filter TypeDefinitionNodes by type and defined imports
-  const currentTypeDefinitions = filterImportedDefinitions(imports, document.definitions as DefinitionNode[], options.allDefinitions, options.sort);
+  const currentTypeDefinitions = filterImportedDefinitions(imports, document.definitions as DefinitionNode[], allDefinitions, options.sort);
 
   // Add typedefinitions to running total
-  options.typeDefinitions.push(currentTypeDefinitions);
+  typeDefinitions.push(currentTypeDefinitions);
 
   // Read imports from current file
   const rawModules = parseSDL(documentSource.rawSDL);
@@ -219,10 +225,12 @@ export async function collectDefinitions(imports: string[], documentSource: Sour
         // Mark this specific import line as processed for this file (for cicular dependency cases)
         options.processedFiles.set(moduleFilePath, processedFile ? processedFile.concat(m) : [m]);
         const result = await loadSingleFile(moduleFilePath, options);
-        await collectDefinitions(m.imports, result, options);
+        await collectDefinitions(m.imports, result, options, typeDefinitions, allDefinitions);
       }
     })
   );
+
+  return { allDefinitions, typeDefinitions };
 }
 
 /**

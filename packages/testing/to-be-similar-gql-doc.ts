@@ -1,0 +1,69 @@
+import { ASTNode, parse, DocumentNode, DefinitionNode, print } from 'graphql';
+
+declare global {
+  namespace jest {
+    interface Matchers<R, T> {
+      /**
+       * Normalizes whitespace and performs string comparisons
+       */
+      toBeSimilarGqlDoc(expected: string): R;
+    }
+  }
+}
+
+function nodeToString(a: ASTNode) {
+  if ('alias' in a) {
+    return a.alias.value;
+  } else if ('name' in a) {
+    return a.name.value;
+  } else {
+    return a.kind;
+  }
+}
+function sortRecursive(a: ASTNode) {
+  for (const attr in a) {
+    if (a[attr] instanceof Array) {
+      if (a[attr].length === 1) {
+        sortRecursive(a[attr][0]);
+      }
+      a[attr].sort((b: ASTNode, c: ASTNode) => {
+        sortRecursive(b);
+        sortRecursive(c);
+        return nodeToString(b).localeCompare(nodeToString(c));
+      });
+    }
+  }
+}
+
+function normalizeDocumentString(docStr: string) {
+  let doc = parse(docStr, { noLocation: true }) as DocumentNode & { definitions: DefinitionNode[] };
+  sortRecursive(doc);
+  return print(doc);
+}
+
+expect.extend({
+  toBeSimilarGqlDoc(received: string, expected: string) {
+    const strippedReceived = normalizeDocumentString(received);
+    const strippedExpected = normalizeDocumentString(expected);
+
+    if (strippedReceived.trim() === strippedExpected.trim()) {
+      return {
+        message: () =>
+          `expected 
+       ${received}
+       not to be a string containing (ignoring indents)
+       ${expected}`,
+        pass: true,
+      };
+    } else {
+      return {
+        message: () =>
+          `expected 
+       ${received}
+       to be a string containing (ignoring indents)
+       ${expected}`,
+        pass: false,
+      };
+    }
+  },
+});

@@ -3,7 +3,7 @@ import { NamedTypeNode, DirectiveNode, DirectiveDefinitionNode, InputValueDefini
 
 const builtinTypes = ['String', 'Float', 'Int', 'Boolean', 'ID', 'Upload'];
 
-const builtinDirectives = ['deprecated', 'skip', 'include', 'cacheControl', 'key', 'external', 'requires', 'provides'];
+const builtinDirectives = ['deprecated', 'skip', 'include', 'cacheControl', 'key', 'external', 'requires', 'provides', 'connection', 'client'];
 
 export interface DefinitionMap {
   [key: string]: DefinitionNode;

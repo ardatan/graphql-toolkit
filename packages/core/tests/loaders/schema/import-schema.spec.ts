@@ -8,6 +8,7 @@ import { CodeFileLoader } from '@graphql-toolkit/code-file-loader';
 import { parse } from 'graphql';
 import { parseGraphQLSDL } from '@graphql-toolkit/common';
 import { mergeTypeDefs } from '@graphql-toolkit/schema-merging';
+import '../../../../testing/to-be-similar-gql-doc';
 
 const importSchema = (
   schema: string, schemas?: { [name: string]: string }, options?: LoadTypedefsOptions & Parameters<typeof mergeTypeDefs>[1]
@@ -161,7 +162,7 @@ test('Module in node_modules', async () => {
 
   fs.writeFileSync(moduleDir + '/b.graphql', b)
   fs.writeFileSync(moduleDir + '/lower.graphql', lower)
-  expect(normalizeDocumentString(await importSchema('./fixtures/import-module/a.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/import-module/a.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: imports only', async () => {
@@ -172,7 +173,7 @@ test('importSchema: imports only', async () => {
           third: String
         }
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/imports-only/all.graphql'))).toBe(normalizeDocumentString(expectedSDL));
+  expect(await importSchema('./fixtures/imports-only/all.graphql')).toBeSimilarGqlDoc(expectedSDL);
 })
 
 test('importSchema: import .gql extension', async () => {
@@ -181,7 +182,7 @@ test('importSchema: import .gql extension', async () => {
           id: ID!
         }
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/import-gql/a.gql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/import-gql/a.gql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: import duplicate', async () => {
@@ -192,7 +193,7 @@ test('importSchema: import duplicate', async () => {
           third: String
         }
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/import-duplicate/all.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/import-duplicate/all.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: import nested', async () => {
@@ -203,7 +204,7 @@ test('importSchema: import nested', async () => {
           third: String
         }
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/import-nested/all.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/import-nested/all.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: field types', async () => {
@@ -223,7 +224,7 @@ test('importSchema: field types', async () => {
           id: ID!
         }
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/field-types/a.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/field-types/a.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: enums', async () => {
@@ -240,7 +241,7 @@ test('importSchema: enums', async () => {
           B3
         }
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/enums/a.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/enums/a.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: import all', async () => {
@@ -265,7 +266,7 @@ test('importSchema: import all', async () => {
           id: ID!
         }
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/import-all/a.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/import-all/a.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: import all from objects', async () => {
@@ -329,7 +330,7 @@ test('importSchema: import all from objects', async () => {
           id: ID!
         }
         `
-  expect(normalizeDocumentString(await importSchema(schemaA, schemas))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema(schemaA, schemas)).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test(`importSchema: single object schema`, async () => {
@@ -345,7 +346,7 @@ test(`importSchema: single object schema`, async () => {
         }
         `
 
-  expect(normalizeDocumentString(await importSchema(schemaA))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema(schemaA)).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test(`importSchema: import all mix 'n match`, async () => {
@@ -394,7 +395,7 @@ test(`importSchema: import all mix 'n match`, async () => {
         }
         `
 
-  expect(normalizeDocumentString(await importSchema(schemaA, schemas))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema(schemaA, schemas)).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test(`importSchema: import all mix 'n match 2`, async () => {
@@ -429,7 +430,7 @@ test(`importSchema: import all mix 'n match 2`, async () => {
           id: ID!
         }
         `
-  expect(normalizeDocumentString(await importSchema(schemaA))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema(schemaA)).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test(`importSchema: import all - exclude Query/Mutation/Subscription type`, async () => {
@@ -514,7 +515,7 @@ test(`importSchema: import all - exclude Query/Mutation/Subscription type`, asyn
           id: ID!
         }
         `
-  expect(normalizeDocumentString(await importSchema(schemaA, schemas))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema(schemaA, schemas)).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: scalar', async () => {
@@ -525,7 +526,7 @@ test('importSchema: scalar', async () => {
         
         scalar B
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/scalar/a.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/scalar/a.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: directive', async () => {
@@ -541,7 +542,7 @@ test('importSchema: directive', async () => {
         
         directive @withB(argB: B) on FIELD_DEFINITION
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/directive/a.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/directive/a.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: key directive', async () => {
@@ -553,7 +554,7 @@ test('importSchema: key directive', async () => {
           name: String
         }
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/directive/c.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/directive/c.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: multiple key directive', async () => {
@@ -568,7 +569,7 @@ test('importSchema: multiple key directive', async () => {
           name: String
         }
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/directive/e.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/directive/e.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: external directive', async () => {
@@ -582,7 +583,7 @@ test('importSchema: external directive', async () => {
           name: String @external
         }
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/directive/f.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/directive/f.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: requires directive', async () => {
@@ -597,7 +598,7 @@ test('importSchema: requires directive', async () => {
           reviews: [Review] @requires(fields: "email")
         }
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/directive/g.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/directive/g.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: interfaces', async () => {
@@ -616,7 +617,7 @@ test('importSchema: interfaces', async () => {
           c: ID!
         }
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/interfaces/a.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/interfaces/a.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: interfaces-many', async () => {
@@ -643,7 +644,7 @@ test('importSchema: interfaces-many', async () => {
           d2: ID!
         }
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/interfaces-many/a.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/interfaces-many/a.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: interfaces-implements', async () => {
@@ -660,7 +661,7 @@ test('importSchema: interfaces-implements', async () => {
           id: ID!
         }
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/interfaces-implements/a.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/interfaces-implements/a.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: interfaces-implements-many', async () => {
@@ -681,8 +682,7 @@ test('importSchema: interfaces-implements-many', async () => {
           id: ID!
         }
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/interfaces-implements-many/a.graphql'))
-  ).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/interfaces-implements-many/a.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: input types', async () => {
@@ -700,7 +700,7 @@ test('importSchema: input types', async () => {
           id: ID!
         }
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/input-types/a.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/input-types/a.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('importSchema: complex test', async () => {
@@ -736,7 +736,7 @@ test('circular imports', async () => {
         }
         `
   const actualSDL = await importSchema('./fixtures/circular/a.graphql')
-  expect(normalizeDocumentString(actualSDL)).toBe(normalizeDocumentString(expectedSDL))
+  expect(actualSDL).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('related types', async () => {
@@ -757,7 +757,7 @@ test('related types', async () => {
         }
         `
   const actualSDL = await importSchema('./fixtures/related-types/a.graphql')
-  expect(normalizeDocumentString(actualSDL)).toBe(normalizeDocumentString(expectedSDL))
+  expect(actualSDL).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('relative paths', async () => {
@@ -783,7 +783,7 @@ test('relative paths', async () => {
         }
         `
   const actualSDL = await importSchema('./fixtures/relative-paths/src/schema.graphql')
-  expect(normalizeDocumentString(actualSDL)).toBe(normalizeDocumentString(expectedSDL))
+  expect(actualSDL).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('root field imports', async () => {
@@ -805,7 +805,7 @@ test('root field imports', async () => {
         }
         `
   const actualSDL = await importSchema('./fixtures/root-fields/a.graphql')
-  expect(normalizeDocumentString(actualSDL)).toBe(normalizeDocumentString(expectedSDL))
+  expect(actualSDL).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('extend root field', async () => {
@@ -820,7 +820,7 @@ test('extend root field', async () => {
         }
         `
   const actualSDL = await importSchema('./fixtures/root-fields/c.graphql')
-  expect(normalizeDocumentString(actualSDL)).toBe(normalizeDocumentString(expectedSDL))
+  expect(actualSDL).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('extend root field imports', async () => {
@@ -840,7 +840,7 @@ test('extend root field imports', async () => {
         }
         `
   const actualSDL = await importSchema('./fixtures/root-fields/d.graphql')
-  expect(normalizeDocumentString(actualSDL)).toBe(normalizeDocumentString(expectedSDL))
+  expect(actualSDL).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('merged root field imports', async () => {
@@ -865,7 +865,7 @@ test('merged root field imports', async () => {
         }
         `
   const actualSDL = await importSchema('./fixtures/merged-root-fields/a.graphql')
-  expect(normalizeDocumentString(actualSDL)).toBe(normalizeDocumentString(expectedSDL))
+  expect(actualSDL).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('global schema modules', async () => {
@@ -885,7 +885,7 @@ test('global schema modules', async () => {
           first: String
         }
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/global/a.graphql', { shared }))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/global/a.graphql', { shared })).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('missing type on type', async () => {
@@ -971,51 +971,11 @@ test('import with collision', async () => {
           intro: String
         }
         `
-  expect(normalizeDocumentString(await importSchema('./fixtures/collision/a.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/collision/a.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
-function nodeToString(a: ASTNode, debug: boolean) {
-  if ('alias' in a) {
-    if (debug) {
-      console.log('alias:', a.alias.value);
-    }
-    return a.alias.value;
-  } else if ('name' in a) {
-    if (debug) {
-      console.log('name:', a.name.value);
-    }
-    return a.name.value;
-  } else {
-    if (debug) {
-      console.log('kind:', a.kind);
-    }
-    return a.kind;
-  }
-}
-
-function sortRecursive(a: ASTNode, debug: boolean) {
-  for (const attr in a) {
-    if (a[attr] instanceof Array) {
-      if(a[attr].length === 1) {
-        sortRecursive(a[attr][0], debug);
-      }
-      a[attr].sort((b: ASTNode, c: ASTNode) => {
-        sortRecursive(b, debug);
-        sortRecursive(c, debug);
-        return nodeToString(b, debug).localeCompare(nodeToString(c, debug));
-      })
-    }
-  }
-}
-
-function normalizeDocumentString(docStr: string, debug?: boolean) {
-  let doc = parse(docStr, { noLocation: true }) as DocumentNode & { definitions: DefinitionNode[] };
-  sortRecursive(doc, debug);
-  return print(doc);
-}
-
 test('merged custom root fields imports', async () => {
-  const expectedSDL = normalizeDocumentString(`\
+  const expectedSDL = /* GraphQL */`\
           type Query {
             helloA: String
             posts(filter: PostFilter): [Post]
@@ -1031,13 +991,13 @@ test('merged custom root fields imports', async () => {
           input PostFilter {
             field3: Int
           }
-          `);
+          `;
   const actualSDL = await importSchema('./fixtures/merged-root-fields/a.graphql')
-  expect(normalizeDocumentString(actualSDL)).toBe(expectedSDL)
+  expect(actualSDL).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('respect schema definition', async () => {
-  const expectedSDL = normalizeDocumentString(`\
+  const expectedSDL = /* GraphQL */`\
     schema {
       query: MyQuery
       mutation: MyMutation
@@ -1050,9 +1010,9 @@ test('respect schema definition', async () => {
     type MyMutation {
       c: String
     }
-  `);
+  `;
   const actualSDL = await importSchema('./fixtures/schema-definition/a.graphql')
-  expect(normalizeDocumentString(actualSDL)).toBe(expectedSDL);
+  expect(actualSDL).toBeSimilarGqlDoc(expectedSDL);
 });
 
 test('import schema with shadowed type', async () => {
@@ -1065,7 +1025,7 @@ test('import schema with shadowed type', async () => {
     }
     scalar X
 `
-  expect(normalizeDocumentString(await importSchema('./fixtures/import-shadowed/a.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/import-shadowed/a.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('import specific types', async () => {
@@ -1081,7 +1041,7 @@ type C {
   c: String
 }
 `
-  expect(normalizeDocumentString(await importSchema('./fixtures/specific/a.graphql'))).toBe(normalizeDocumentString(expectedSDL))
+  expect(await importSchema('./fixtures/specific/a.graphql')).toBeSimilarGqlDoc(expectedSDL)
 })
 
 test('imports missing named imports for file imported multiple time without duplicates', async () => {
@@ -1100,5 +1060,5 @@ type B {
   x: String
 }
 `
-  expect(normalizeDocumentString(await importSchema('fixtures/multiple-imports/schema.graphql'))).toBe(normalizeDocumentString(expectedSDL));
+  expect(await importSchema('fixtures/multiple-imports/schema.graphql')).toBeSimilarGqlDoc(expectedSDL);
 })

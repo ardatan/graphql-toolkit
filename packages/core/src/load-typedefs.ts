@@ -1,4 +1,4 @@
-import { parse, Kind, Source as GraphQLSource, DefinitionNode, isSchema } from 'graphql';
+import { parse, Kind, Source as GraphQLSource, isSchema } from 'graphql';
 import { Source, asArray, isDocumentString, debugLog, printSchemaWithDirectives, parseGraphQLSDL, fixSchemaAst, SingleFileOptions, Loader, resolveBuiltinModule } from '@graphql-toolkit/common';
 import isGlob from 'is-glob';
 import { filterKind } from './filter-document-kind';
@@ -8,8 +8,6 @@ import { printWithComments, resetComments } from '@graphql-toolkit/schema-mergin
 export type LoadTypedefsOptions<ExtraConfig = { [key: string]: any }> = SingleFileOptions &
   ExtraConfig & {
     processedFiles?: Map<string, RawModule[]>;
-    typeDefinitions?: DefinitionNode[][];
-    allDefinitions?: DefinitionNode[][];
     cache?: { [key: string]: Source };
     loaders: Loader[];
     filterKinds?: string[];
@@ -83,8 +81,6 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
   options.cwd = options.cwd || process.cwd();
   options.sort = 'sort' in options ? options.sort : true;
   options.processedFiles = options.processedFiles || new Map();
-  options.allDefinitions = options.allDefinitions || [];
-  options.typeDefinitions = options.typeDefinitions || [];
   options.fs = await resolveBuiltinModule('fs', options.fs);
   options.path = await resolveBuiltinModule('path', options.path);
   options.os = await resolveBuiltinModule('os', options.os);
