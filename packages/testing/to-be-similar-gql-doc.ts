@@ -1,4 +1,5 @@
 import { ASTNode, parse, DocumentNode, DefinitionNode, print } from 'graphql';
+import { compareNodes } from '../common/src/helpers';
 
 declare global {
   namespace jest {
@@ -11,15 +12,6 @@ declare global {
   }
 }
 
-function nodeToString(a: ASTNode) {
-  if ('alias' in a) {
-    return a.alias.value;
-  } else if ('name' in a) {
-    return a.name.value;
-  } else {
-    return a.kind;
-  }
-}
 function sortRecursive(a: ASTNode) {
   for (const attr in a) {
     if (a[attr] instanceof Array) {
@@ -29,7 +21,7 @@ function sortRecursive(a: ASTNode) {
       a[attr].sort((b: ASTNode, c: ASTNode) => {
         sortRecursive(b);
         sortRecursive(c);
-        return nodeToString(b).localeCompare(nodeToString(c));
+        return compareNodes(b, c);
       });
     }
   }

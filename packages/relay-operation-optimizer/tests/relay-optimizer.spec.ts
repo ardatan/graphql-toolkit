@@ -1,5 +1,5 @@
 import { buildSchema, parse, print } from 'graphql';
-import { optimizeDocuments } from '../src/index';
+import { optimizeDocuments } from '@graphql-toolkit/relay-operation-optimizer';
 import '../../testing/to-be-similar-gql-doc';
 
 const testSchema = buildSchema(/* GraphQL */ `

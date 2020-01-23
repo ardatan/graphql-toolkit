@@ -1,4 +1,4 @@
-import { parse } from 'graphql';
+import { parse, ASTNode } from 'graphql';
 export const asArray = <T>(fns: T | T[]) => (Array.isArray(fns) ? fns : fns ? [fns] : []);
 
 export function chainFunctions(funcs: any[]) {
@@ -70,5 +70,31 @@ export async function resolveBuiltinModule<Module>(moduleName: string, option?: 
       `);
       return null;
     }
+  }
+}
+
+export function compareStrings<A, B>(a: A, b: B) {
+  if (a.toString() < b.toString()) return -1;
+  if (a.toString() > b.toString()) return 1;
+  return 0;
+}
+
+export function nodeToString(a: ASTNode) {
+  if ('alias' in a) {
+    return a.alias.value;
+  } else if ('name' in a) {
+    return a.name.value;
+  } else {
+    return a.kind;
+  }
+}
+
+export function compareNodes(a: ASTNode, b: ASTNode, customFn?: (a: any, b: any) => number) {
+  const aStr = nodeToString(a);
+  const bStr = nodeToString(b);
+  if (typeof customFn === 'function') {
+    return customFn(aStr, bStr);
+  } else {
+    return compareStrings(aStr, bStr);
   }
 }

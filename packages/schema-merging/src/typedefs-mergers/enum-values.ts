@@ -1,5 +1,6 @@
 import { EnumValueDefinitionNode } from 'graphql/language/ast';
 import { mergeDirectives, Config } from '.';
+import { compareNodes } from '@graphql-toolkit/common';
 
 export function mergeEnumValues(first: ReadonlyArray<EnumValueDefinitionNode>, second: ReadonlyArray<EnumValueDefinitionNode>, config: Config): EnumValueDefinitionNode[] {
   const enumValueMap = new Map<string, EnumValueDefinitionNode>();
@@ -18,13 +19,7 @@ export function mergeEnumValues(first: ReadonlyArray<EnumValueDefinitionNode>, s
   }
   const result = [...enumValueMap.values()];
   if (config && config.sort) {
-    result.sort((a, b) => {
-      if (typeof config.sort === 'function') {
-        return config.sort(a.name.value, b.name.value);
-      } else {
-        return a.name.value.localeCompare(b.name.value);
-      }
-    });
+    result.sort(compareNodes);
   }
   return result;
 }

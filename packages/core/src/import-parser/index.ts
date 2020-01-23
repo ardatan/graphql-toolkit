@@ -3,7 +3,7 @@ import { groupBy, keyBy, isEqual, uniqBy, flatten } from 'lodash';
 import { loadSingleFile, LoadTypedefsOptions } from '../load-typedefs';
 
 import { completeDefinitionPool } from './definition';
-import { Source } from '@graphql-toolkit/common';
+import { Source, compareNodes } from '@graphql-toolkit/common';
 
 /**
  * Describes the information from a single import line
@@ -107,7 +107,7 @@ export async function processImportSyntax(documentSource: Source, options: LoadT
         if ('fields' in existingType) {
           (existingType as any).fields = uniqBy((existingType.fields as any).concat((type as ObjectTypeDefinitionNode).fields), 'name.value');
           if (options.sort) {
-            (existingType as any).fields = (existingType.fields as any).sort((a: any, b: any) => a.name.value.localeCompare(b.name.value));
+            (existingType as any).fields = (existingType.fields as any).sort(compareNodes);
           }
         }
       }
@@ -268,7 +268,7 @@ function filterImportedDefinitions(imports: string[], typeDefinitions: Definitio
       if (objectTypeDefinition && 'fields' in objectTypeDefinition && !fields.includes('*')) {
         objectTypeDefinition.fields = objectTypeDefinition.fields.filter((f: any) => fields.includes(f.name.value) || fields.includes('*'));
         if (sort) {
-          objectTypeDefinition.fields.sort((a: any, b: any) => a.name.value.localeCompare(b.name.value));
+          objectTypeDefinition.fields.sort(compareNodes);
         }
       }
     }

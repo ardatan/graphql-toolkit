@@ -2,7 +2,7 @@ import { Config } from './merge-typedefs';
 import { FieldDefinitionNode, InputValueDefinitionNode, TypeNode, NameNode } from 'graphql';
 import { extractType, isWrappingTypeNode, isListTypeNode, isNonNullTypeNode, printTypeNode } from './utils';
 import { mergeDirectives } from './directives';
-import { isNotEqual } from '@graphql-toolkit/common';
+import { isNotEqual, compareNodes } from '@graphql-toolkit/common';
 import { mergeArguments } from './arguments';
 
 function fieldAlreadyExists(fieldsArr: ReadonlyArray<any>, otherField: any): boolean {
@@ -45,13 +45,7 @@ export function mergeFields<T extends FieldDefinitionNode | InputValueDefinition
     }
   }
   if (config && config.sort) {
-    result.sort((a, b) => {
-      if (typeof config.sort === 'function') {
-        return config.sort(a.name.value, b.name.value);
-      } else {
-        return a.name.value.localeCompare(b.name.value);
-      }
-    });
+    result.sort(compareNodes);
   }
   if (config && config.exclusions) {
     return result.filter(field => !config.exclusions.includes(`${type.name.value}.${field.name.value}`));

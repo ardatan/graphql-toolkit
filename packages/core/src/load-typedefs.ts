@@ -1,5 +1,5 @@
 import { parse, Kind, Source as GraphQLSource, isSchema } from 'graphql';
-import { Source, asArray, isDocumentString, debugLog, printSchemaWithDirectives, parseGraphQLSDL, fixSchemaAst, SingleFileOptions, Loader, resolveBuiltinModule } from '@graphql-toolkit/common';
+import { Source, asArray, isDocumentString, debugLog, printSchemaWithDirectives, parseGraphQLSDL, fixSchemaAst, SingleFileOptions, Loader, resolveBuiltinModule, compareStrings } from '@graphql-toolkit/common';
 import isGlob from 'is-glob';
 import { filterKind } from './filter-document-kind';
 import { RawModule, processImportSyntax, isEmptySDL } from './import-parser';
@@ -269,7 +269,7 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
         )}`);
   }
 
-  return options.sort ? foundValid.sort((left, right) => left.location.localeCompare(right.location)) : foundValid;
+  return options.sort ? foundValid.sort((left, right) => compareStrings(left.location, right.location)) : foundValid;
 }
 
 export async function loadSingleFile(pointer: string, options: LoadTypedefsOptions): Promise<Source> {
