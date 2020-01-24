@@ -3,7 +3,7 @@ import { GraphQLSchema, BuildSchemaOptions, DocumentNode } from 'graphql';
 import { OPERATION_KINDS } from './documents';
 import { mergeSchemasAsync, MergeSchemasConfig } from '@graphql-toolkit/schema-merging';
 
-export type LoadSchemaOptions = BuildSchemaOptions & LoadTypedefsOptions & MergeSchemasConfig;
+export type LoadSchemaOptions = BuildSchemaOptions & LoadTypedefsOptions & Partial<MergeSchemasConfig>;
 
 export async function loadSchema(schemaPointers: UnnormalizedTypeDefPointer | UnnormalizedTypeDefPointer[], options: LoadSchemaOptions): Promise<GraphQLSchema> {
   const sources = await loadTypedefs(schemaPointers, {
