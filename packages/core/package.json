@@ -1,6 +1,6 @@
 {
   "name": "@graphql-toolkit/core",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": "git@github.com:ardatan/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
@@ -40,8 +40,8 @@
     "typescript": "3.7.5"
   },
   "dependencies": {
-    "@graphql-toolkit/common": "0.9.3",
-    "@graphql-toolkit/schema-merging": "0.9.3",
+    "@graphql-toolkit/common": "0.9.4",
+    "@graphql-toolkit/schema-merging": "0.9.4",
     "aggregate-error": "3.0.1",
     "globby": "11.0.0",
     "import-from": "^3.0.0",
