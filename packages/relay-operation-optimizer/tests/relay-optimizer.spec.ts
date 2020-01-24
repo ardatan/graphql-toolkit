@@ -18,6 +18,9 @@ const testSchema = buildSchema(/* GraphQL */ `
     user: User!
     users: [User!]!
   }
+
+  directive @connection(key: String!) on FIELD
+  directive @client on FIELD
 `);
 
 it('can be called', async () => {
