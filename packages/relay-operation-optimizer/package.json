@@ -10,6 +10,7 @@
   "license": "MIT",
   "repository": "git@github.com:ardatan/graphql-toolkit.git",
   "scripts": {
+    "lint": "tslint src/**/*.ts",
     "clean": "rimraf dist",
     "prebuild": "yarn clean",
     "build": "bob",

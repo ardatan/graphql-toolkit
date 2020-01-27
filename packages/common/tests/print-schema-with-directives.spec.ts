@@ -85,5 +85,5 @@ describe('printSchemaWithDirectives', () => {
     expect(output).toContain('Test Query Comment');
     expect(output).toContain('Test Field Comment');
 
-  })
+  });
 });

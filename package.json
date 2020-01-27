@@ -21,7 +21,7 @@
 		"node": ">=10"
 	},
   "lint-staged": {
-    "packages/**/*.{ts,tsx}": [
+    "packages/**/src/**/*.{ts,tsx}": [
       "tslint --fix",
       "git add"
     ],
@@ -36,6 +36,7 @@
     "lerna": "3.20.2",
     "lint-staged": "10.0.2",
     "prettier": "1.19.1",
+    "typescript": "3.7.5",
     "tslint": "5.20.1"
   },
   "workspaces": [

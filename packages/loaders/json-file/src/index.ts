@@ -28,9 +28,7 @@ export class JsonFileLoader implements DocumentLoader {
   }
 
   async load(pointer: SchemaPointerSingle, options: JsonFileLoaderOptions): Promise<Source> {
-
     if (options.path) {
-      
     }
     const { resolve: resolvePath, isAbsolute } = options.path;
     const normalizedFilepath = isAbsolute(pointer) ? pointer : resolvePath(options.cwd || process.cwd(), pointer);

@@ -28,7 +28,6 @@ export class GraphQLFileLoader implements UniversalLoader<GraphQLFileLoaderOptio
   }
 
   async load(pointer: SchemaPointerSingle | DocumentPointerSingle, options: GraphQLFileLoaderOptions): Promise<Source> {
-    
     const { resolve, isAbsolute } = options.path;
     const normalizedFilePath = isAbsolute(pointer) ? pointer : resolve(options.cwd || process.cwd(), pointer);
     const { readFileSync } = options.fs;

@@ -1,7 +1,7 @@
-import { loadDocuments } from "@graphql-toolkit/core"
-import { join } from "path"
-import { GraphQLFileLoader } from "@graphql-toolkit/graphql-file-loader"
-import { parse, print } from "graphql";
+import { loadDocuments } from '@graphql-toolkit/core';
+import { join } from 'path';
+import { GraphQLFileLoader } from '@graphql-toolkit/graphql-file-loader';
+import { parse, print } from 'graphql';
 import '../../../../testing/to-be-similar-gql-doc';
 
 describe('import in documents', () => {
@@ -28,7 +28,7 @@ describe('import in documents', () => {
                 baz
             }
     `);
-    })
+    });
     it('should get documents with specific imports properly', async () => {
         const [{ document }] = await loadDocuments(join(__dirname, './import-test/specific/a.graphql'), {
             loaders: [new GraphQLFileLoader()]
@@ -50,5 +50,5 @@ describe('import in documents', () => {
                     baz
                 }
         `);
-    })
-})
+    });
+});

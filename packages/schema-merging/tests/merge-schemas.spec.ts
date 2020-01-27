@@ -1,13 +1,11 @@
-import { makeExecutableSchema } from "graphql-tools";
-import gql from "graphql-tag";
-import { graphql, buildSchema, GraphQLScalarType, Kind, buildASTSchema, GraphQLSchema, ListValueNode } from "graphql";
-import { mergeSchemas, mergeSchemasAsync } from "../src/merge-schemas";
-import { printSchemaWithDirectives } from "@graphql-toolkit/common";
+import { makeExecutableSchema } from '@ardatan/graphql-tools';
+import { graphql, buildSchema, GraphQLScalarType, Kind, buildASTSchema, GraphQLSchema, ListValueNode } from 'graphql';
+import { mergeSchemas, mergeSchemasAsync } from '../src/merge-schemas';
 
 describe('Merge Schemas', () => {
     it('should merge two valid executable schemas', async () => {
         const fooSchema = makeExecutableSchema({
-            typeDefs: gql`
+            typeDefs: /* GraphQL */`
                 type Query {
                     foo: String
                 }
@@ -19,7 +17,7 @@ describe('Merge Schemas', () => {
             }
         });
         const barSchema = makeExecutableSchema({
-            typeDefs: gql`
+            typeDefs: /* GraphQL */`
                 type Query {
                     bar: String
                 }
@@ -47,7 +45,7 @@ describe('Merge Schemas', () => {
     });
     it('should merge two valid executable schemas async', async () => {
         const fooSchema = makeExecutableSchema({
-            typeDefs: gql`
+            typeDefs: /* GraphQL */`
                 type Query {
                     foo: String
                 }
@@ -59,7 +57,7 @@ describe('Merge Schemas', () => {
             }
         });
         const barSchema = makeExecutableSchema({
-            typeDefs: gql`
+            typeDefs: /* GraphQL */`
                 type Query {
                     bar: String
                 }
@@ -87,7 +85,7 @@ describe('Merge Schemas', () => {
     });
     it('should merge two valid executable schemas with extra resolvers', async () => {
         const fooSchema = makeExecutableSchema({
-            typeDefs: gql`
+            typeDefs: /* GraphQL */`
                 type Query {
                     foo: String
                 }
@@ -99,7 +97,7 @@ describe('Merge Schemas', () => {
             }
         });
         const barSchema = makeExecutableSchema({
-            typeDefs: gql`
+            typeDefs: /* GraphQL */`
                 type Query {
                     bar: String
                     qux: String
@@ -135,7 +133,7 @@ describe('Merge Schemas', () => {
     });
     it('should merge two valid executable schemas with extra typeDefs and resolvers', async () => {
         const fooSchema = makeExecutableSchema({
-            typeDefs: gql`
+            typeDefs: /* GraphQL */`
                 type Query {
                     foo: String
                 }
@@ -147,7 +145,7 @@ describe('Merge Schemas', () => {
             }
         });
         const barSchema = makeExecutableSchema({
-            typeDefs: gql`
+            typeDefs: /* GraphQL */`
                 type Query {
                     bar: String
                 }
@@ -161,7 +159,7 @@ describe('Merge Schemas', () => {
         const { errors, data } = await graphql({
             schema: mergeSchemas({
                 schemas: [fooSchema, barSchema],
-                typeDefs: gql`
+                typeDefs: /* GraphQL */`
                     type Query {
                         qux: String
                     }
@@ -187,7 +185,7 @@ describe('Merge Schemas', () => {
     });
     it('should merge two valid schemas by keeping their directives to be used in extra typeDefs', async () => {
         const fooSchema = makeExecutableSchema({
-            typeDefs: gql`
+            typeDefs: /* GraphQL */`
                 directive @fooDirective on FIELD_DEFINITION
                 type Query {
                     foo: String
@@ -200,7 +198,7 @@ describe('Merge Schemas', () => {
             }
         });
         const barSchema = makeExecutableSchema({
-            typeDefs: gql`
+            typeDefs: /* GraphQL */`
                 type Query {
                     bar: String
                 }
@@ -214,7 +212,7 @@ describe('Merge Schemas', () => {
         const { errors, data } = await graphql({
             schema: mergeSchemas({
                 schemas: [fooSchema, barSchema],
-                typeDefs: gql`
+                typeDefs: /* GraphQL */`
                     type Query {
                         qux: String @fooDirective
                     }
@@ -240,7 +238,7 @@ describe('Merge Schemas', () => {
     });
     it('should merge valid schemas with interfaces correctly', async () => {
         const fooSchema = makeExecutableSchema({
-            typeDefs: gql`
+            typeDefs: /* GraphQL */`
                 interface Foo {
                     foo: String
                 }
@@ -253,9 +251,9 @@ describe('Merge Schemas', () => {
                     qux: String
                 }
             `
-        })
+        });
         const barSchema = makeExecutableSchema({
-            typeDefs: gql`
+            typeDefs: /* GraphQL */`
                 interface Foo {
                     foo: String
                 }
@@ -308,7 +306,7 @@ describe('Merge Schemas', () => {
         expect(data.bar.bar).toBe('bar');
         expect(data.qux.foo).toBe('foo');
         expect(data.qux.qux).toBe('qux');
-    })
+    });
 
     it('should merge scalars (part of resolvers)', async () => {
         const now = new Date();
@@ -321,7 +319,7 @@ describe('Merge Schemas', () => {
                 Date: new GraphQLScalarType({
                     name: 'DateTime',
                     serialize(value) {
-                        return new Date(value).toISOString()
+                        return new Date(value).toISOString();
                     },
                     parseValue(value) {
                         return new Date(value);
@@ -356,11 +354,11 @@ describe('Merge Schemas', () => {
         });
 
         expect(data.a).toEqual(now.toISOString());
-    })
+    });
 
     it('should merge when directive uses enum', () => {
         const merged = mergeSchemas({
-            schemas: [buildASTSchema(gql`
+            schemas: [buildSchema(/* GraphQL */`
                 directive @date(format: DateFormat) on FIELD_DEFINITION
                 
                 enum DateFormat {
@@ -368,7 +366,7 @@ describe('Merge Schemas', () => {
                     ISO
                 }
             `)],
-            typeDefs: gql`
+            typeDefs: /* GraphQL */`
                 scalar Date
                 type Query {
                     today: Date @date
@@ -390,10 +388,10 @@ describe('Merge Schemas', () => {
 
           let prev: GraphQLSchema = base;
 
-          while(num--) {
-              prev = mergeSchemas({schemas: [prev, base]})
+          while (num--) {
+              prev = mergeSchemas({schemas: [prev, base]});
           }
 
         expect((prev.getQueryType().getFields().test.astNode.directives[0].arguments[0].value as ListValueNode).values).toHaveLength(1);
       });
-})
+});

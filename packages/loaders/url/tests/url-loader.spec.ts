@@ -43,7 +43,7 @@ describe('Schema URL Loader', () => {
               data: {}
             };
           }
-        } as any
+        } as any;
       });
 
       try {
@@ -99,8 +99,8 @@ describe('Schema URL Loader', () => {
       const calls = getMockedCalls(testUrl);
       expect(calls.length).toBe(1);
       const call = await calls[0];
-      expect(call.req._header).toContain(`Accept: application/json`)
-      expect(call.req._header).toContain(`Content-Type: application/json`)
+      expect(call.req._header).toContain(`Accept: application/json`);
+      expect(call.req._header).toContain(`Content-Type: application/json`);
     });
 
     it('Should pass extra headers when they are specified as object', async () => {
@@ -112,9 +112,9 @@ describe('Schema URL Loader', () => {
       const calls = getMockedCalls(testUrl);
       expect(calls.length).toBe(1);
       const call = await calls[0];
-      expect(call.req._header).toContain(`Accept: application/json`)
-      expect(call.req._header).toContain(`Content-Type: application/json`)
-      expect(call.req._header).toContain(`Auth: 1`)
+      expect(call.req._header).toContain(`Accept: application/json`);
+      expect(call.req._header).toContain(`Content-Type: application/json`);
+      expect(call.req._header).toContain(`Auth: 1`);
     });
 
     it('Should pass extra headers when they are specified as array', async () => {
@@ -126,13 +126,13 @@ describe('Schema URL Loader', () => {
       const calls = getMockedCalls(testUrl);
       expect(calls.length).toBe(1);
       const call = await calls[0];
-      expect(call.req._header).toContain(`Accept: application/json`)
-      expect(call.req._header).toContain(`Content-Type: application/json`)
-      expect(call.req._header).toContain(`A: 1`)
-      expect(call.req._header).toContain(`B: 2`)
-      expect(call.req._header).toContain(`C: 3`)
+      expect(call.req._header).toContain(`Accept: application/json`);
+      expect(call.req._header).toContain(`Content-Type: application/json`);
+      expect(call.req._header).toContain(`A: 1`);
+      expect(call.req._header).toContain(`B: 2`);
+      expect(call.req._header).toContain(`C: 3`);
     });
-    
+
     it('Absolute file path should not be accepted as URL', async () => {
       expect(await loader.canLoad(process.cwd(), {})).toBeFalsy();
     });

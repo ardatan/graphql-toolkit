@@ -58,12 +58,17 @@ async function getCustomLoaderByPath(path: string, cwd: string): Promise<any> {
 function stringToHash(str: string) {
   let hash = 0;
 
-  if (str.length == 0) return hash;
+  // tslint:disable-next-line: triple-equals
+  if (str.length == 0) {
+    return hash;
+  }
 
   let char;
   for (let i = 0; i < str.length; i++) {
     char = str.charCodeAt(i);
+    // tslint:disable-next-line: no-bitwise
     hash = (hash << 5) - hash + char;
+    // tslint:disable-next-line: no-bitwise
     hash = hash & hash;
   }
 

@@ -14,8 +14,10 @@ export interface GraphQLTagPluckOptions {
 const supportedExtensions = ['.js', '.jsx', '.ts', '.tsx', '.flow', '.flow.js', '.flow.jsx', '.vue'];
 
 async function pluckVueFileScript(fileData: string) {
+  // tslint:disable-next-line: no-implicit-dependencies
   let vueTemplateCompiler: typeof import('vue-template-compiler');
   try {
+    // tslint:disable-next-line: no-implicit-dependencies
     vueTemplateCompiler = await import('vue-template-compiler');
   } catch (e) {
     throw Error(
@@ -38,7 +40,7 @@ async function pluckVueFileScript(fileData: string) {
 }
 
 export const gqlPluckFromCodeString = async (filePath: string, code: string, options: GraphQLTagPluckOptions = {}): Promise<string> => {
-  if (typeof code != 'string') {
+  if (typeof code !== 'string') {
     throw TypeError('Provided code must be a string');
   }
 

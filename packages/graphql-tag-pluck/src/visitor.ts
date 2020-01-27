@@ -131,13 +131,19 @@ export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
   const pluckMagicTemplateLiteral = (node, takeExpression = false) => {
     const leadingComments = node.leadingComments;
 
-    if (!leadingComments) return;
-    if (!leadingComments.length) return;
+    if (!leadingComments) {
+      return;
+    }
+    if (!leadingComments.length) {
+      return;
+    }
 
     const leadingComment = leadingComments[leadingComments.length - 1];
     const leadingCommentValue = leadingComment.value.trim().toLowerCase();
 
-    if (leadingCommentValue != gqlMagicComment) return;
+    if (leadingCommentValue !== gqlMagicComment) {
+      return;
+    }
 
     const gqlTemplateLiteral = pluckStringFromFile(takeExpression ? node.expression : node);
 
@@ -151,9 +157,13 @@ export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
       enter(path) {
         // Find the identifier name used from graphql-tag, commonJS
         // e.g. import gql from 'graphql-tag' -> gql
-        if (path.node.callee.name == 'require' && isValidPackage(path.node.arguments[0].value)) {
-          if (!isVariableDeclarator(path.parent)) return;
-          if (!isIdentifier(path.parent.id)) return;
+        if (path.node.callee.name === 'require' && isValidPackage(path.node.arguments[0].value)) {
+          if (!isVariableDeclarator(path.parent)) {
+            return;
+          }
+          if (!isIdentifier(path.parent.id)) {
+            return;
+          }
 
           definedIdentifierNames.push(path.parent.id.name);
 
@@ -180,7 +190,9 @@ export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
       enter(path) {
         // Find the identifier name used from graphql-tag, es6
         // e.g. import gql from 'graphql-tag' -> gql
-        if (!isValidPackage(path.node.source.value)) return;
+        if (!isValidPackage(path.node.source.value)) {
+          return;
+        }
 
         const moduleNode = modules.find(pkg => pkg.name.toLowerCase() === path.node.source.value.toLowerCase());
 
@@ -198,7 +210,9 @@ export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
           return false;
         });
 
-        if (!gqlImportSpecifier) return;
+        if (!gqlImportSpecifier) {
+          return;
+        }
 
         definedIdentifierNames.push(gqlImportSpecifier.local.name);
       },
@@ -209,7 +223,9 @@ export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
         // Push all template literals leaded by graphql magic comment
         // e.g. /* GraphQL */ `query myQuery {}` -> query myQuery {}
 
-        if (!isTemplateLiteral(path.node.expression)) return;
+        if (!isTemplateLiteral(path.node.expression)) {
+          return;
+        }
 
         pluckMagicTemplateLiteral(path.node, true);
       },

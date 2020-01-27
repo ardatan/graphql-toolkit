@@ -60,6 +60,7 @@ export interface Config {
 }
 
 export function mergeGraphQLSchemas(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Omit<Partial<Config>, 'commentDescriptions'>) {
+  // tslint:disable-next-line: no-console
   console.info(`
     GraphQL Toolkit/Epoxy 
     Deprecation Notice;

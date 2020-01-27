@@ -53,7 +53,7 @@ export function mergeFields<T extends FieldDefinitionNode | InputValueDefinition
   return result;
 }
 
-function preventConflicts(type: { name: NameNode }, a: FieldDefinitionNode | InputValueDefinitionNode, b: FieldDefinitionNode | InputValueDefinitionNode, ignoreNullability: boolean = false) {
+function preventConflicts(type: { name: NameNode }, a: FieldDefinitionNode | InputValueDefinitionNode, b: FieldDefinitionNode | InputValueDefinitionNode, ignoreNullability = false) {
   const aType = printTypeNode(a.type);
   const bType = printTypeNode(b.type);
 
@@ -64,7 +64,7 @@ function preventConflicts(type: { name: NameNode }, a: FieldDefinitionNode | Inp
   }
 }
 
-function safeChangeForFieldType(oldType: TypeNode, newType: TypeNode, ignoreNullability: boolean = false): boolean {
+function safeChangeForFieldType(oldType: TypeNode, newType: TypeNode, ignoreNullability = false): boolean {
   // both are named
   if (!isWrappingTypeNode(oldType) && !isWrappingTypeNode(newType)) {
     return oldType.toString() === newType.toString();

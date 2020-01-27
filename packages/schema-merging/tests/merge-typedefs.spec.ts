@@ -1068,7 +1068,7 @@ describe('Merge TypeDefs', () => {
           }
         `)
       ];
-      
+
       const mergedTypes = mergeTypeDefs(types);
 
       const expectedEnumType = stripWhitespaces(`
@@ -1089,8 +1089,8 @@ describe('Merge TypeDefs', () => {
       const separateTypes = stripWhitespaces(print(mergedTypes));
 
       expect(separateTypes).toContain(expectedEnumType);
-      
-    })
+
+    });
 
     it('preserves the field comments', () => {
       const types = [clientType, productType];

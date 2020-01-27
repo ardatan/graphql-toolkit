@@ -5,6 +5,7 @@
   "license": "MIT",
   "repository": "git@github.com:ardatan/graphql-toolkit.git",
   "scripts": {
+    "lint": "tslint src/**/*.ts",
     "clean": "rimraf dist",
     "prebuild": "yarn clean",
     "build": "bob",
@@ -29,6 +30,9 @@
     "@babel/traverse": "7.8.3",
     "@babel/types": "7.8.3",
     "@graphql-toolkit/common": "0.9.4"
+  },
+  "optionalDependencies": {
+    "vue-template-compiler": "^2.6.11"
   },
   "devDependencies": {
     "@ardatan/bob": "0.2.7",

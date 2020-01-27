@@ -11,7 +11,9 @@ export function chainFunctions(funcs: any[]) {
 
 export function isEqual<T>(a: T, b: T): boolean {
   if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
+    if (a.length !== b.length) {
+      return false;
+    }
 
     for (var index = 0; index < a.length; index++) {
       if (a[index] !== b[index]) {
@@ -64,6 +66,7 @@ export async function resolveBuiltinModule<Module>(moduleName: string, option?: 
         return await import(moduleName);
       }
     } catch (e) {
+      // tslint:disable-next-line: no-console
       console.warn(`
         ${option || moduleName} module couldn't be found for built-in ${moduleName}.
         Please provide a working module in your loader options!
@@ -74,8 +77,12 @@ export async function resolveBuiltinModule<Module>(moduleName: string, option?: 
 }
 
 export function compareStrings<A, B>(a: A, b: B) {
-  if (a.toString() < b.toString()) return -1;
-  if (a.toString() > b.toString()) return 1;
+  if (a.toString() < b.toString()) {
+    return -1;
+  }
+  if (a.toString() > b.toString()) {
+    return 1;
+  }
   return 0;
 }
 

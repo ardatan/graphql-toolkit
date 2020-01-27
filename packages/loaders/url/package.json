@@ -6,6 +6,7 @@
   "author": "Dotan Simha <dotansimha@gmail.com>",
   "license": "MIT",
   "scripts": {
+    "lint": "tslint src/**/*.ts",
     "clean": "rimraf dist",
     "prebuild": "yarn clean",
     "build": "bob",
@@ -33,13 +34,13 @@
     "apollo-server-express": "2.9.16",
     "express": "4.17.1",
     "graphql": "14.5.8",
-    "graphql-tools": "4.0.6",
     "jest": "25.1.0",
     "supertest": "4.0.2",
     "ts-jest": "25.0.0",
     "typescript": "3.7.5"
   },
   "dependencies": {
+    "@ardatan/graphql-tools": "4.1.0",
     "@graphql-toolkit/common": "0.9.4",
     "cross-fetch": "3.0.4",
     "tslib": "1.10.0",

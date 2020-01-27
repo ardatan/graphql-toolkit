@@ -3,7 +3,7 @@ import { SchemaPointerSingle, Source, DocumentLoader, SingleFileOptions, parseGr
 import { isWebUri } from 'valid-url';
 import { fetch as crossFetch } from 'cross-fetch';
 import { makeRemoteExecutableSchema } from '@ardatan/graphql-tools';
-import { Fetcher } from 'graphql-tools/dist/stitching/makeRemoteExecutableSchema';
+import { Fetcher } from '@ardatan/graphql-tools/dist/stitching/makeRemoteExecutableSchema';
 
 export type FetchFn = typeof import('cross-fetch').fetch;
 

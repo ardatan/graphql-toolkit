@@ -79,7 +79,7 @@ describe('documentsFromGlob', () => {
     } catch (e) {
       expect(e).toBeDefined();
     }
-  })
+  });
 
   it('Should ignore schema definitions', async () => {
     const glob = join(__dirname, './test-files/', '*.graphql');
@@ -92,9 +92,9 @@ describe('documentsFromGlob', () => {
   it('Should ignore files that is added to ignore glob (using options.ignore)', async () => {
     const glob = join(__dirname, './test-files/', '*.graphql');
     const ignoreGlob = join(__dirname, './test-files/', '*.query.graphql');
-    const result = await loadDocuments([glob], { 
-      ignore: ignoreGlob, 
-      loaders: [new GraphQLFileLoader()] 
+    const result = await loadDocuments([glob], {
+      ignore: ignoreGlob,
+      loaders: [new GraphQLFileLoader()]
     });
     expect(result.length).toBe(1);
   });
@@ -103,7 +103,7 @@ describe('documentsFromGlob', () => {
     const glob = join(__dirname, './test-files/', '*.graphql');
     const ignoreGlob = `!(${join(__dirname, './test-files/', '*.query.graphql')})`;
     const result = await loadDocuments([glob, ignoreGlob], {
-      loaders: [new GraphQLFileLoader()] 
+      loaders: [new GraphQLFileLoader()]
     });
     expect(result.length).toBe(1);
   });
@@ -112,7 +112,7 @@ describe('documentsFromGlob', () => {
     const glob = join(__dirname, './test-with-brackets/', '**/*.ts');
     const result = await loadDocuments(glob, {
       loaders: [new CodeFileLoader()],
-    })
+    });
     expect(result.length).toBe(1);
   });
 });

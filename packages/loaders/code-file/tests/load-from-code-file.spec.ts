@@ -33,11 +33,11 @@ describe('loadFromCodeFile', () => {
   });
 
   it('should consider options.cwd', async () => {
-    const loaded = await loader.load('valid-doc.js', { 
+    const loaded = await loader.load('valid-doc.js', {
       path,
       fs,
       cwd: path.resolve(__dirname, 'test-files'),
-      noRequire: true, 
+      noRequire: true,
     });
     const doc = parse(loaded.rawSDL);
 
