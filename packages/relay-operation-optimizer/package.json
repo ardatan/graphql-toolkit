@@ -44,7 +44,7 @@
   "devDependencies": {
     "@ardatan/bob": "0.2.7",
     "@types/jest": "24.9.1",
-    "@types/relay-compiler": "7.0.2",
+    "@types/relay-compiler": "8.0.0",
     "graphql": "14.6.0",
     "jest": "25.1.0",
     "ts-jest": "25.0.0",
