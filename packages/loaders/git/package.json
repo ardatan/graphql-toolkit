@@ -1,6 +1,6 @@
 {
   "name": "@graphql-toolkit/git-loader",
-  "version": "0.9.6",
+  "version": "0.9.7",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": "git@github.com:ardatan/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
@@ -33,8 +33,8 @@
     "typescript": "3.7.5"
   },
   "dependencies": {
-    "@graphql-toolkit/common": "0.9.6",
-    "@graphql-toolkit/graphql-tag-pluck": "0.9.6",
+    "@graphql-toolkit/common": "0.9.7",
+    "@graphql-toolkit/graphql-tag-pluck": "0.9.7",
     "simple-git": "1.131.0"
   },
   "publishConfig": {
