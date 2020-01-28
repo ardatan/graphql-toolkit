@@ -57,6 +57,10 @@ function collectNewTypeDefinitions(allDefinitions: DefinitionNode[], definitionP
     newDefinition.directives.forEach(collectDirective);
   }
 
+  if (newDefinition.kind === 'EnumTypeDefinition') {
+    newDefinition.values.forEach(value => value.directives.forEach(collectDirective));
+  }
+
   if (newDefinition.kind === 'InputObjectTypeDefinition') {
     newDefinition.fields.forEach(collectNode);
   }
