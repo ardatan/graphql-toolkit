@@ -79,11 +79,11 @@ export function parseSDL(sdl: string): RawModule[] {
  * @param filePath File path to the initial schema file
  * @returns Single bundled schema with all imported types
  */
-export async function processImportSyntax(documentSource: Source, options: LoadTypedefsOptions): Promise<void> {
-  let document = documentSource.document;
+export async function processImportSyntax(documentSource: Source, options: LoadTypedefsOptions, allDefinitions: DefinitionNode[][]): Promise<DefinitionNode[]> {
+  const typeDefinitions: DefinitionNode[][] = [];
 
   // Recursively process the imports, starting by importing all types from the initial schema
-  const { allDefinitions, typeDefinitions } = await collectDefinitions(['*'], documentSource, options);
+  await collectDefinitions(['*'], documentSource, options, typeDefinitions, allDefinitions);
 
   // Post processing of the final schema (missing types, unused types, etc.)
   // Query, Mutation and Subscription should be merged
@@ -114,7 +114,7 @@ export async function processImportSyntax(documentSource: Source, options: LoadT
     }
   }
 
-  (document as any).definitions = completeDefinitionPool(flatten(allDefinitions), firstSet, flatten(typeDefinitions));
+  return completeDefinitionPool(flatten(allDefinitions), firstSet, flatten(typeDefinitions));
 }
 
 /**
@@ -192,16 +192,7 @@ export async function resolveModuleFilePath(filePath: string, importFrom: string
  * @param Tracking of all type definitions per schema
  * @returns Both the collection of all type definitions, and the collection of imported type definitions
  */
-export async function collectDefinitions(
-  imports: string[],
-  documentSource: Source,
-  options: LoadTypedefsOptions,
-  typeDefinitions: DefinitionNode[][] = [],
-  allDefinitions: DefinitionNode[][] = []
-): Promise<{ typeDefinitions: DefinitionNode[][]; allDefinitions: DefinitionNode[][] }> {
-  // Get TypeDefinitionNodes from current schema
-  const document = documentSource.document;
-
+export async function collectDefinitions(imports: string[], { location, document, rawSDL }: Source, options: LoadTypedefsOptions, typeDefinitions: DefinitionNode[][], allDefinitions: DefinitionNode[][]): Promise<void> {
   // Add all definitions to running total
   allDefinitions.push(document.definitions as DefinitionNode[]);
 
@@ -212,13 +203,13 @@ export async function collectDefinitions(
   typeDefinitions.push(currentTypeDefinitions);
 
   // Read imports from current file
-  const rawModules = parseSDL(documentSource.rawSDL);
+  const rawModules = parseSDL(rawSDL);
 
   // Process each file (recursively)
   await Promise.all(
     rawModules.map(async m => {
       // If it was not yet processed (in case of circular dependencies)
-      const moduleFilePath = await resolveModuleFilePath(documentSource.location, m.from, options);
+      const moduleFilePath = await resolveModuleFilePath(location, m.from, options);
 
       const processedFile = options.processedFiles.get(moduleFilePath);
       if (!processedFile || !processedFile.find(rModule => isEqual(rModule, m))) {
@@ -229,8 +220,6 @@ export async function collectDefinitions(
       }
     })
   );
-
-  return { allDefinitions, typeDefinitions };
 }
 
 /**

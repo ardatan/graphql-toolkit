@@ -1,4 +1,4 @@
-import { parse, Kind, Source as GraphQLSource, isSchema } from 'graphql';
+import { parse, Kind, Source as GraphQLSource, isSchema, DefinitionNode } from 'graphql';
 import { Source, asArray, isDocumentString, debugLog, printSchemaWithDirectives, parseGraphQLSDL, fixSchemaAst, SingleFileOptions, Loader, resolveBuiltinModule, compareStrings } from '@graphql-toolkit/common';
 import isGlob from 'is-glob';
 import { filterKind } from './filter-document-kind';
@@ -221,6 +221,8 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
 
   const foundValid: Source[] = [];
 
+  const definitionsCacheForImport: DefinitionNode[][] = [];
+
   await Promise.all(
     found.map(async partialSource => {
       const specificOptions = {
@@ -253,7 +255,10 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
             resetComments();
           }
           if (specificOptions.forceGraphQLImport || (!specificOptions.skipGraphQLImport && /^\#.*import /i.test(resultSource.rawSDL.trimLeft()))) {
-            await processImportSyntax(resultSource, specificOptions);
+            resultSource.document = {
+              kind: Kind.DOCUMENT,
+              definitions: await processImportSyntax(resultSource, specificOptions, definitionsCacheForImport),
+            };
           }
           if (resultSource.document.definitions && resultSource.document.definitions.length > 0) {
             foundValid.push(resultSource);
