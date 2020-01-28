@@ -1,6 +1,5 @@
 jest.mock('cross-fetch');
 import { makeExecutableSchema } from '@ardatan/graphql-tools';
-import { introspectionFromSchema } from 'graphql';
 import { UrlLoader } from '../src';
 import { printSchemaWithDirectives } from '@graphql-toolkit/common';
 import { ApolloServer } from 'apollo-server-express';
@@ -20,23 +19,22 @@ describe('Schema URL Loader', () => {
     resetMocks();
   });
 
-  const testSchema = makeExecutableSchema({ typeDefs: /* GraphQL */`
-    """
-      Test type comment
-    """
-    type Query { 
-      """
-        Test field comment
-      """
-      a: String 
-    }
-  ` });
+  const testTypeDefs = /* GraphQL */`
+schema { query: CustomQuery }
+"""Test type comment"""
+type CustomQuery {
+  """Test field comment"""
+  a: String
+}
+`.trim();
+
+  const testSchema = makeExecutableSchema({ typeDefs: testTypeDefs });
 
   const testUrl = 'http://localhost:3000/graphql';
 
   describe('handle', () => {
     it('Should throw an error when introspection is not valid', async () => {
-      mockRequest(testUrl, async options => {
+      mockRequest(testUrl, async () => {
         return {
           async json() {
             return {
@@ -87,7 +85,7 @@ describe('Schema URL Loader', () => {
       setupFakedGraphQLServer();
       const schema = await loader.load(testUrl, {});
       expect(schema.schema).toBeDefined();
-      expect(printSchemaWithDirectives(schema.schema)).toBe(printSchemaWithDirectives(testSchema));
+      expect(printSchemaWithDirectives(schema.schema)).toBe(testTypeDefs);
     });
 
     it('Should pass default headers', async () => {
@@ -95,7 +93,7 @@ describe('Schema URL Loader', () => {
       const schema = await loader.load(testUrl, {});
       expect(schema).toBeDefined();
       expect(schema.schema).toBeDefined();
-      expect(printSchemaWithDirectives(schema.schema)).toBe(printSchemaWithDirectives(testSchema));
+      expect(printSchemaWithDirectives(schema.schema)).toBe(testTypeDefs);
       const calls = getMockedCalls(testUrl);
       expect(calls.length).toBe(1);
       const call = await calls[0];
@@ -108,7 +106,7 @@ describe('Schema URL Loader', () => {
       const schema = await loader.load(testUrl, { headers: { Auth: '1' } });
       expect(schema).toBeDefined();
       expect(schema.schema).toBeDefined();
-      expect(printSchemaWithDirectives(schema.schema)).toBe(printSchemaWithDirectives(testSchema));
+      expect(printSchemaWithDirectives(schema.schema)).toBe(testTypeDefs);
       const calls = getMockedCalls(testUrl);
       expect(calls.length).toBe(1);
       const call = await calls[0];
@@ -122,7 +120,7 @@ describe('Schema URL Loader', () => {
       const schema = await loader.load(testUrl, { headers: [{ A: '1' }, { B: '2', C: '3' }] });
       expect(schema).toBeDefined();
       expect(schema.schema).toBeDefined();
-      expect(printSchemaWithDirectives(schema.schema)).toBe(printSchemaWithDirectives(testSchema));
+      expect(printSchemaWithDirectives(schema.schema)).toBe(testTypeDefs);
       const calls = getMockedCalls(testUrl);
       expect(calls.length).toBe(1);
       const call = await calls[0];

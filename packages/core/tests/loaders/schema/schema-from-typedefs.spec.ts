@@ -34,7 +34,7 @@ describe('schema from typedefs', () => {
       const schema = await loadSchema(glob, {
         loaders: [new GraphQLFileLoader()]
       });
-      expect(true).toBeFalsy();
+      expect(schema).toBeFalsy();
     } catch (e) {
       expect(e.message).toContain(`Unable to find any GraphQL type definitions for the following pointers:`);
     }

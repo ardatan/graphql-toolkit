@@ -74,5 +74,10 @@
             "check-separator",
             "check-type"
         ]
+    },
+    "linterOptions": {
+        "exclude": [
+            "**/*.spec.ts"
+        ]
     }
 }
