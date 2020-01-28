@@ -148,8 +148,10 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
             ...pointerOptions,
           };
           const loaderResult = await loadSingleFile(pointer, combinedOptions);
-          options.cache[pointer] = loaderResult;
-          found.push(loaderResult);
+          if (loaderResult) {
+            options.cache[pointer] = loaderResult;
+            found.push(loaderResult);
+          }
         })
       );
     }
@@ -225,12 +227,11 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
 
   await Promise.all(
     found.map(async partialSource => {
-      const specificOptions = {
-        ...options,
-        ...(partialSource.location in normalizedPointerOptionsMap ? globOptions : normalizedPointerOptionsMap[partialSource.location]),
-      };
-
       if (partialSource) {
+        const specificOptions = {
+          ...options,
+          ...(partialSource.location in normalizedPointerOptionsMap ? globOptions : normalizedPointerOptionsMap[partialSource.location]),
+        };
         const resultSource: Source = { ...partialSource };
         if (resultSource.schema) {
           resultSource.schema = fixSchemaAst(resultSource.schema, specificOptions);
