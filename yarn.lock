@@ -2,12 +2,12 @@
 # yarn lockfile v1
 
 
-"@apollo/federation@0.11.2":
-  version "0.11.2"
-  resolved "https://registry.yarnpkg.com/@apollo/federation/-/federation-0.11.2.tgz#85f1bb87add88ee4d395b80402d09c59abd48a9c"
-  integrity sha512-MSMBGOS9lAE0K4VmV/3mkd2qfLQTGt2OcsryRNbGMXr9gUVZDtM9quD5JUQoENkz9YFwcOY9jI+i/X5J+Fcw6A==
+"@apollo/federation@0.11.3":
+  version "0.11.3"
+  resolved "https://registry.yarnpkg.com/@apollo/federation/-/federation-0.11.3.tgz#82252205c7f90fc69034f2a0073efa71aad52d0e"
+  integrity sha512-6KK9noDoWXujIgmp7RHcA9quQTByM8b4saxmujeO4RnZmMQq4bcpN8AJAykulE1x3DuHqeUbLNl3s7gGlEhOWw==
   dependencies:
-    apollo-graphql "^0.3.4"
+    apollo-graphql "^0.3.7"
     apollo-server-env "^2.4.3"
     core-js "^3.4.0"
     lodash.xorby "^4.7.0"
@@ -2274,7 +2274,7 @@ apollo-env@^0.6.1:
     node-fetch "^2.2.0"
     sha.js "^2.4.11"
 
-apollo-graphql@^0.3.4, apollo-graphql@^0.3.7:
+apollo-graphql@^0.3.7:
   version "0.3.7"
   resolved "https://registry.yarnpkg.com/apollo-graphql/-/apollo-graphql-0.3.7.tgz#533232ed48b0b6dbcf5635f65e66cf8677a5b768"
   integrity sha512-ghW16xx9tRcyL38Pw6G5OidMnYn+CNUGZWmvqQgEO2nRy4T0ONPZZBOvGrIMtJQ70oEykNMKGm0zm6PdHdxd8Q==
@@ -2282,18 +2282,26 @@ apollo-graphql@^0.3.4, apollo-graphql@^0.3.7:
     apollo-env "^0.6.1"
     lodash.sortby "^4.7.0"
 
-apollo-language-server@1.18.0:
-  version "1.18.0"
-  resolved "https://registry.yarnpkg.com/apollo-language-server/-/apollo-language-server-1.18.0.tgz#7e32ef47b0f520c63f02b1b1e5076330c642c001"
-  integrity sha512-4hWOaC7eVJnLgfssFQ+deLTssoHFL/bUnDBSf5UrxfouRpKExNjelWdsLgZulhKKUFdA4sEhhxR//opK95+9aQ==
+apollo-graphql@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/apollo-graphql/-/apollo-graphql-0.4.0.tgz#dd0afe31a6241b8e2ded20b906c9ee8dfbe03497"
+  integrity sha512-abCHcKln1EGbzSItW087EjBI5wnluikyUqEn4VsdeWHCtdENWpHCn/MnM0+jJa1prNasxN7tCukp4nMpJYYVqg==
   dependencies:
-    "@apollo/federation" "0.11.2"
+    apollo-env "^0.6.1"
+    lodash.sortby "^4.7.0"
+
+apollo-language-server@1.19.0:
+  version "1.19.0"
+  resolved "https://registry.yarnpkg.com/apollo-language-server/-/apollo-language-server-1.19.0.tgz#451ab7817a96b19cf7fffc59a00bef7fd7c94a9b"
+  integrity sha512-BkrfKs0k+Pr3GXnnS1pbuX9qKhFLBRbImFwO1fka2fmeQ8J2uZc8oSHR3TZ7jWEYA7DQsTPNu1SD4GFfE750UA==
+  dependencies:
+    "@apollo/federation" "0.11.3"
     "@apollographql/apollo-tools" "^0.4.3"
     "@apollographql/graphql-language-service-interface" "^2.0.2"
     "@endemolshinegroup/cosmiconfig-typescript-loader" "^1.0.0"
     apollo-datasource "^0.6.0"
     apollo-env "^0.6.1"
-    apollo-graphql "^0.3.7"
+    apollo-graphql "^0.4.0"
     apollo-link "^1.2.3"
     apollo-link-context "^1.0.9"
     apollo-link-error "^1.1.1"
