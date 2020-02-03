@@ -4,9 +4,17 @@
 
 A set of utils for faster development of GraphQL tools. Use these utils if you are creating a tool that loads schema/documents, merges schemas, scan for schema/documents/resolvers files.
 
-Included tools:
+# Features
+- [Schema Loading](#schema-loading)
+- [Documents Loading](#documents-loading)
+- [Schema Merging](#schema-merging)
+- - [`GraphQLSchema` Merging](#graphql-schema-merging)
+- - [Type Definitions (SDL) Merging](#typedefs-merging)
+- - [Resolvers Merging](#resolvers-merging)
+- [File Loading for Schema and Resolvers](#file-loading)
+- [Other Utils](#other-utils)
 
-### Schema Loading
+### <a name="schema-loading"></a> Schema Loading
 
 These utils are useful for scanning, loading and building a GraphQL schema from any input.
 
@@ -55,7 +63,7 @@ const schema5 = loadSchema('./src/**/*.graphql', { // load from multiple files u
 });
 ```
 
-### Documents Loading
+### <a name="documents-loading"></a> Documents Loading
 
 Similar to schema loading - but meant to use for GraphQL documents (query/mutation/subscription/fragment).
 
@@ -63,7 +71,7 @@ Any input provided as a source will be recognized by utils automatically.
 
 It also extracts usages of `gql` from code files using [`graphql-tag-pluck`](https://github.com/ardatan/graphql-toolkit/tree/master/packages/graphql-tag-pluck).
 
-Usage:
+#### Usage:
 
 ```ts
 import { loadDocuments } from '@graphql-toolkit/core';
@@ -93,13 +101,13 @@ const document4 = loadDocuments('./src/my-component.ts', {  // load from code fi
 
 ```
 
-### Schema Merging
+### <a name="schema-merging"></a> Schema Merging
 
 Originally implemented in [graphql-modules](https://github.com/Urigo/graphql-modules). This tools merged GraphQL type definitions and schema. It aims to merge all possible types, interfaces, enums and unions, without conflicts.
 
 Resolvers are merged using deep-merge. Resolver implementations can be separated across multiple objects and then merged into a single `resolvers` object.
 
-#### Merging different `GraphQLSchema`s
+#### <a name="graphql-schema-merging"></a> Merging different `GraphQLSchema`s
 You can use `mergeSchemas` to merge `GraphQLSchema` objects together with extra `typeDefs` and `resolvers`.
 
 ```ts
@@ -125,7 +133,7 @@ const mergedSchema = mergeSchemas({
 
 > There is also `mergeSchemasAsync` as a faster asynchronous alternative.
 
-### Merging GraphQL Type Definitions (SDL)
+#### <a name="typedefs-merging"></a> Merging GraphQL Type Definitions (SDL)
 
 ```ts
 import { mergeTypeDefs } from '@graphql-toolkit/schema-merging';
@@ -153,7 +161,30 @@ type A {
 }
 ```
 
-### File Loading for both schema and resolvers
+#### <a name="resolvers-merging"></a> Merging Resolvers
+
+```ts
+import { mergeResolvers } from '@graphql-toolkit/schema-merging';
+
+const QueryResolvers = {
+    Query: {
+        foo: () => 'FOO',
+    }
+};
+
+const MutationResolvers = {
+    Mutation: {
+      bar: () => 'BAR',
+    }
+};
+
+const mergedResolvers = mergeResolvers([
+  QueryResolvers,
+  MutationResolvers,
+]);
+```
+
+### <a name="file-loading"></a> File Loading for both schema and resolvers
 
 There is a small util in GraphQL Toolkit that scans you file-system and find GraphQL files (`.graphql`) and resolvers files (`.js`/`.ts`) and loads them (using `readFile` for GraphQL files and `require` for resolvers files).
 
@@ -171,7 +202,7 @@ const graphQLServer = new ApolloServer({
 
 > There is also `loadFilesAsync` as a faster asynchronous alternative.
 
-### Other Utils
+### <a name="other-utils"></a> Other Utils
 
 There are some more utils under `@graphql-toolkit/common` package:
 
@@ -280,4 +311,4 @@ This methods accepts `GraphQLSchema` object, and returns a map with field resolv
 
 #### `extractFieldResolversFromObjectType`
 
-This methods accepts `GraphQLObjectType` or `GraphQLInterfaceType` object, and returns a map with field resolvers of given type.![tool](https://user-images.githubusercontent.com/25294569/64810060-4d9c8680-d5a3-11e9-9a66-84ff20e1179f.gif)
+This methods accepts `GraphQLObjectType` or `GraphQLInterfaceType` object, and returns a map with field resolvers of given type.
