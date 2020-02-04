@@ -33,7 +33,7 @@
     "@types/lodash": "4.14.149",
     "@types/valid-url": "1.0.2",
     "graphql": "14.6.0",
-    "graphql-tag": "2.10.1",
+    "graphql-tag": "2.10.2",
     "graphql-type-json": "0.3.1",
     "jest": "25.1.0",
     "jest-junit": "10.0.0",
