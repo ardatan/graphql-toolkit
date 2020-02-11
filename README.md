@@ -190,6 +190,7 @@ There is a small util in GraphQL Toolkit that scans you file-system and find Gra
 
 ```ts
 import { loadFiles } from '@graphql-toolkit/file-loading';
+import { join } from 'path';
 
 const typeDefs = loadFiles(join(__dirname, 'typeDefs', '**/*.graphql'));
 const resolvers = loadFiles(join(__dirname, 'resolvers', '**/*.ts'));
