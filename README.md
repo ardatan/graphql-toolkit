@@ -94,7 +94,7 @@ const document3 = loadDocuments('./src/**/*.graphql', { // load from multiple fi
 
 const document4 = loadDocuments('./src/my-component.ts', {  // load from code file
     loaders: [
-        new CodeFileLoadder()
+        new CodeFileLoader()
     ]
 });
 
