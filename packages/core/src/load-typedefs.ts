@@ -300,6 +300,8 @@ export async function loadSingleFile(pointer: string, options: LoadTypedefsOptio
           found = await loader.load(pointer, options);
         }
       } catch (e) {
+        // Modify the error message to include what failed to load
+        e.message = `Failed to load "${pointer}". ${e?.message ?? ''}`;
         error = e;
       }
     })
