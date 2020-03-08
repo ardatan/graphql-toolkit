@@ -3,6 +3,41 @@ import { graphql, buildSchema, GraphQLScalarType, Kind, buildASTSchema, GraphQLS
 import { mergeSchemas, mergeSchemasAsync } from '../src/merge-schemas';
 
 describe('Merge Schemas', () => {
+    it('Should include extensions in merged schemas', () => {
+      const fooSchema = makeExecutableSchema({
+        typeDefs: /* GraphQL */`
+            type Query {
+                foo: String
+            }
+        `,
+        resolvers: {
+            Query: {
+                foo: () => 'FOO'
+            }
+        }
+      });
+      fooSchema.extensions = { schemaA: true };
+      const barSchema = makeExecutableSchema({
+          typeDefs: /* GraphQL */`
+              type Query {
+                  bar: String
+              }
+          `,
+          resolvers: {
+              Query: {
+                  bar: () => 'BAR'
+              }
+          }
+      });
+      barSchema.extensions = { schemaB: true };
+
+      const mergedSchema = mergeSchemas({
+        schemas: [fooSchema, barSchema]
+      });
+
+      expect(mergedSchema.extensions).toEqual({ schemaA: true, schemaB: true  })
+    });
+
     it('should merge two valid executable schemas', async () => {
         const fooSchema = makeExecutableSchema({
             typeDefs: /* GraphQL */`

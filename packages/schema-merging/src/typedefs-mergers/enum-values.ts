@@ -1,5 +1,6 @@
 import { EnumValueDefinitionNode } from 'graphql/language/ast';
-import { mergeDirectives, Config } from '.';
+import { mergeDirectives } from './directives';
+import { Config } from './merge-typedefs';
 import { compareNodes } from '@graphql-toolkit/common';
 
 export function mergeEnumValues(first: ReadonlyArray<EnumValueDefinitionNode>, second: ReadonlyArray<EnumValueDefinitionNode>, config: Config): EnumValueDefinitionNode[] {

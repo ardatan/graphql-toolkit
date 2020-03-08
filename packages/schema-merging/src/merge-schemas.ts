@@ -3,6 +3,7 @@ import { IResolvers, SchemaDirectiveVisitor, IResolverValidationOptions, ILogger
 import { mergeTypeDefs, Config } from './typedefs-mergers/merge-typedefs';
 import { mergeResolvers } from './merge-resolvers';
 import { extractResolversFromSchema, ResolversComposerMapping, composeResolvers, asArray } from '@graphql-toolkit/common';
+import { mergeExtensions, extractExtensionsFromSchema, applyExtensions } from './extensions';
 
 export interface MergeSchemasConfig<Resolvers extends IResolvers = IResolvers> extends Config, BuildSchemaOptions {
   schemas: GraphQLSchema[];
@@ -17,8 +18,9 @@ export interface MergeSchemasConfig<Resolvers extends IResolvers = IResolvers> e
 export function mergeSchemas({ schemas, typeDefs, resolvers, resolversComposition, schemaDirectives, resolverValidationOptions, logger, ...config }: MergeSchemasConfig) {
   const typeDefsOutput = mergeTypeDefs([...schemas, ...(typeDefs ? asArray(typeDefs) : [])], config);
   const resolversOutput = composeResolvers(mergeResolvers([...schemas.map(schema => extractResolversFromSchema(schema)), ...(resolvers ? asArray<IResolvers>(resolvers) : [])], config), resolversComposition || {});
-
+  const extensionsOutput = mergeExtensions(schemas.map(s => extractExtensionsFromSchema(s)));
   let schema = typeof typeDefsOutput === 'string' ? buildSchema(typeDefsOutput, config) : buildASTSchema(typeDefsOutput, config);
+  applyExtensions(schema, extensionsOutput);
 
   if (resolversOutput) {
     schema = addResolveFunctionsToSchema({
