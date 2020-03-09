@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "@graphql-toolkit/common": "0.9.7",
-    "relay-compiler": "8.0.0"
+    "relay-compiler": "9.0.0"
   },
   "devDependencies": {
     "@ardatan/bob": "0.2.7",
