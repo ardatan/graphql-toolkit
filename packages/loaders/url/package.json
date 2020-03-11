@@ -42,7 +42,7 @@
   "dependencies": {
     "@graphql-toolkit/common": "0.9.7",
     "cross-fetch": "3.0.4",
-    "graphql-tools-fork": "8.6.2",
+    "graphql-tools-fork": "8.9.4",
     "tslib": "1.11.1",
     "valid-url": "1.0.9"
   },
