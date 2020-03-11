@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 import { composeResolvers, ResolversComposerMapping } from '../src';
-import { makeExecutableSchema } from '@ardatan/graphql-tools';
+import { makeExecutableSchema } from 'graphql-tools-fork';
 import { execute } from 'graphql';
 import { $$asyncIterator, createAsyncIterator } from 'iterall';
 

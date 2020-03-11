@@ -1,5 +1,5 @@
 import { extractResolversFromSchema } from '../src';
-import { makeExecutableSchema } from '@ardatan/graphql-tools';
+import { makeExecutableSchema } from 'graphql-tools-fork';
 import gql from 'graphql-tag';
 
 describe('extractResolversFromSchema', () => {

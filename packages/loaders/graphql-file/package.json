@@ -28,8 +28,8 @@
   },
   "devDependencies": {
     "@ardatan/bob": "0.2.7",
-    "@ardatan/graphql-tools": "4.1.0",
     "graphql": "14.6.0",
+    "graphql-tools-fork": "8.6.2",
     "typescript": "3.8.3"
   },
   "dependencies": {

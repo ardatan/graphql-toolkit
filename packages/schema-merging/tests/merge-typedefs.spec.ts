@@ -1,5 +1,5 @@
 import { mergeTypeDefs, mergeGraphQLTypes } from '../src';
-import { makeExecutableSchema, mergeSchemas } from '@ardatan/graphql-tools';
+import { makeExecutableSchema, mergeSchemas } from 'graphql-tools-fork';
 import { buildSchema, buildClientSchema, print, parse } from 'graphql';
 import { stripWhitespaces } from './utils';
 import gql from 'graphql-tag';

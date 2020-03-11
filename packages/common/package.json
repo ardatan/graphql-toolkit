@@ -37,8 +37,8 @@
     "typescript": "3.8.3"
   },
   "dependencies": {
-    "@ardatan/graphql-tools": "4.1.0",
     "aggregate-error": "3.0.1",
+    "graphql-tools-fork": "8.6.2",
     "lodash": "4.17.15"
   },
   "publishConfig": {

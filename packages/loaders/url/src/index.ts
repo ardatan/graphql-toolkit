@@ -2,8 +2,7 @@ import { buildClientSchema, parse, IntrospectionQuery, print, getIntrospectionQu
 import { SchemaPointerSingle, Source, DocumentLoader, SingleFileOptions, parseGraphQLJSON, printSchemaWithDirectives } from '@graphql-toolkit/common';
 import { isWebUri } from 'valid-url';
 import { fetch as crossFetch } from 'cross-fetch';
-import { makeRemoteExecutableSchema } from '@ardatan/graphql-tools';
-import { Fetcher } from '@ardatan/graphql-tools/dist/stitching/makeRemoteExecutableSchema';
+import { makeRemoteExecutableSchema, Fetcher } from 'graphql-tools-fork';
 
 export type FetchFn = typeof import('cross-fetch').fetch;
 

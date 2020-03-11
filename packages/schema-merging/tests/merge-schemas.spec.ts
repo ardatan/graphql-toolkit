@@ -1,4 +1,4 @@
-import { makeExecutableSchema } from '@ardatan/graphql-tools';
+import { makeExecutableSchema } from 'graphql-tools-fork';
 import { graphql, buildSchema, GraphQLScalarType, Kind, buildASTSchema, GraphQLSchema, ListValueNode } from 'graphql';
 import { mergeSchemas, mergeSchemasAsync } from '../src/merge-schemas';
 
@@ -352,7 +352,7 @@ describe('Merge Schemas', () => {
                     a: () => now,
                 },
                 Date: new GraphQLScalarType({
-                    name: 'DateTime',
+                    name: 'Date',
                     serialize(value) {
                         return new Date(value).toISOString();
                     },
@@ -411,7 +411,7 @@ describe('Merge Schemas', () => {
 
         expect(merged.getDirective('date')).toBeDefined();
       });
-      it('should merge a lot of directives but without high memory usage', () => {
+      it.only('should merge a lot of directives but without high memory usage', () => {
           let num = 100;
           const base = buildSchema(/* GraphQL */`
               directive @access(roles: [String]) on FIELD_DEFINITION

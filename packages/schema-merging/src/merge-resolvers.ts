@@ -1,4 +1,4 @@
-import { IResolvers } from '@ardatan/graphql-tools';
+import { IResolvers } from 'graphql-tools-fork';
 import * as deepMerge from 'deepmerge';
 import { isScalarType } from 'graphql';
 

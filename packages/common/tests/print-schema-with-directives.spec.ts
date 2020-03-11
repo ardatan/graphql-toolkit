@@ -1,4 +1,4 @@
-import { makeExecutableSchema } from '@ardatan/graphql-tools';
+import { makeExecutableSchema } from 'graphql-tools-fork';
 import { buildSchema, printSchema } from 'graphql';
 import { printSchemaWithDirectives } from '../src';
 import GraphQLJSON from 'graphql-type-json';

@@ -1,5 +1,5 @@
 jest.mock('cross-fetch');
-import { makeExecutableSchema } from '@ardatan/graphql-tools';
+import { makeExecutableSchema } from 'graphql-tools-fork';
 import { UrlLoader } from '../src';
 import { printSchemaWithDirectives } from '@graphql-toolkit/common';
 import { ApolloServer } from 'apollo-server-express';

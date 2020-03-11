@@ -1,5 +1,5 @@
 import { GraphQLSchema, DocumentNode, buildASTSchema, BuildSchemaOptions, buildSchema } from 'graphql';
-import { IResolvers, SchemaDirectiveVisitor, IResolverValidationOptions, ILogger, addResolveFunctionsToSchema, addErrorLoggingToSchema } from '@ardatan/graphql-tools';
+import { IResolvers, SchemaDirectiveVisitor, IResolverValidationOptions, ILogger, addResolveFunctionsToSchema, addErrorLoggingToSchema } from 'graphql-tools-fork';
 import { mergeTypeDefs, Config } from './typedefs-mergers/merge-typedefs';
 import { mergeResolvers } from './merge-resolvers';
 import { extractResolversFromSchema, ResolversComposerMapping, composeResolvers, asArray } from '@graphql-toolkit/common';
