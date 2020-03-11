@@ -63,7 +63,7 @@ export const gqlPluckFromCodeString = async (filePath: string, code: string, opt
   const ast = parse(code, generateConfig(filePath, code, options));
   const visitor = createVisitor(code, out, options);
 
-  traverse(ast, visitor);
+  traverse(ast as any, visitor);
 
   return out.returnValue;
 };
