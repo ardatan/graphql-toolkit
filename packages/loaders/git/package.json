@@ -35,7 +35,7 @@
   "dependencies": {
     "@graphql-toolkit/common": "0.9.7",
     "@graphql-toolkit/graphql-tag-pluck": "0.9.7",
-    "simple-git": "1.131.0"
+    "simple-git": "1.132.0"
   },
   "publishConfig": {
     "access": "public",
