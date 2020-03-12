@@ -1,6 +1,7 @@
 import { DefinitionNode, parse, ObjectTypeDefinitionNode, DocumentNode, Kind } from 'graphql';
 import { groupBy, keyBy, isEqual, uniqBy, flatten } from 'lodash';
-import { loadSingleFile, LoadTypedefsOptions } from '../load-typedefs';
+import { LoadTypedefsOptions } from '../load-typedefs';
+import { loadFile } from '../load-typedefs/load-file';
 
 import { completeDefinitionPool } from './definition';
 import { Source, compareNodes } from '@graphql-toolkit/common';
@@ -239,7 +240,7 @@ export async function collectDefinitions(
       if (!processedFile || !processedFile.find(rModule => isEqual(rModule, m))) {
         // Mark this specific import line as processed for this file (for cicular dependency cases)
         options.processedFiles.set(moduleFilePath, processedFile ? processedFile.concat(m) : [m]);
-        const result = await loadSingleFile(moduleFilePath, options);
+        const result = await loadFile(moduleFilePath, options);
         await collectDefinitions(m.imports, result, options, typeDefinitions, allDefinitions);
       }
     })
