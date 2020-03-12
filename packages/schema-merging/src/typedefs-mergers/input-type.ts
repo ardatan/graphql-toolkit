@@ -14,7 +14,12 @@ export function mergeInputType(
       return {
         name: node.name,
         description: node['description'] || existingNode['description'],
-        kind: (config && config.convertExtensions) || node.kind === 'InputObjectTypeDefinition' || existingNode.kind === 'InputObjectTypeDefinition' ? 'InputObjectTypeDefinition' : 'InputObjectTypeExtension',
+        kind:
+          (config && config.convertExtensions) ||
+          node.kind === 'InputObjectTypeDefinition' ||
+          existingNode.kind === 'InputObjectTypeDefinition'
+            ? 'InputObjectTypeDefinition'
+            : 'InputObjectTypeExtension',
         loc: node.loc,
         fields: mergeFields<InputValueDefinitionNode>(node, node.fields, existingNode.fields, config),
         directives: mergeDirectives(node.directives, existingNode.directives, config),

@@ -5,7 +5,10 @@ import { mergeSchemasAsync, MergeSchemasConfig } from '@graphql-toolkit/schema-m
 
 export type LoadSchemaOptions = BuildSchemaOptions & LoadTypedefsOptions & Partial<MergeSchemasConfig>;
 
-export async function loadSchema(schemaPointers: UnnormalizedTypeDefPointer | UnnormalizedTypeDefPointer[], options: LoadSchemaOptions): Promise<GraphQLSchema> {
+export async function loadSchema(
+  schemaPointers: UnnormalizedTypeDefPointer | UnnormalizedTypeDefPointer[],
+  options: LoadSchemaOptions
+): Promise<GraphQLSchema> {
   const sources = await loadTypedefs(schemaPointers, {
     filterKinds: OPERATION_KINDS,
     ...options,
@@ -14,15 +17,13 @@ export async function loadSchema(schemaPointers: UnnormalizedTypeDefPointer | Un
   const schemas: GraphQLSchema[] = [];
   const typeDefs: DocumentNode[] = [];
 
-  await Promise.all(
-    sources.map(async source => {
-      if (source.schema) {
-        schemas.push(source.schema);
-      } else {
-        typeDefs.push(source.document);
-      }
-    })
-  );
+  sources.forEach(source => {
+    if (source.schema) {
+      schemas.push(source.schema);
+    } else {
+      typeDefs.push(source.document);
+    }
+  });
 
   const mergeSchemasOptions: MergeSchemasConfig = {
     schemas,

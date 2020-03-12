@@ -3,13 +3,17 @@ import { chainFunctions, asArray } from './helpers';
 import { flattenArray } from './flatten-array';
 import { get, set } from 'lodash';
 
-export type ResolversComposition<Resolver extends IFieldResolver<any, any> = IFieldResolver<any, any>> = (next: Resolver) => Resolver;
+export type ResolversComposition<Resolver extends IFieldResolver<any, any> = IFieldResolver<any, any>> = (
+  next: Resolver
+) => Resolver;
 
 export type ResolversComposerMapping<Resolvers extends IResolvers = IResolvers> =
   | {
       [TypeName in keyof Resolvers]?: {
         [FieldName in keyof Resolvers[TypeName]]: Resolvers[TypeName][FieldName] extends IFieldResolver<any, any>
-          ? ResolversComposition<Resolvers[TypeName][FieldName]> | Array<ResolversComposition<Resolvers[TypeName][FieldName]>>
+          ?
+              | ResolversComposition<Resolvers[TypeName][FieldName]>
+              | Array<ResolversComposition<Resolvers[TypeName][FieldName]>>
           : ResolversComposition | ResolversComposition[];
       };
     }
@@ -17,7 +21,11 @@ export type ResolversComposerMapping<Resolvers extends IResolvers = IResolvers> 
       [path: string]: ResolversComposition | ResolversComposition[];
     };
 
-function resolveRelevantMappings<Resolvers extends IResolvers>(resolvers: Resolvers, path: string, allMappings: ResolversComposerMapping<Resolvers>): string[] {
+function resolveRelevantMappings<Resolvers extends IResolvers>(
+  resolvers: Resolvers,
+  path: string,
+  allMappings: ResolversComposerMapping<Resolvers>
+): string[] {
   const splitted = path.split('.');
 
   if (splitted.length === 2) {
@@ -25,7 +33,11 @@ function resolveRelevantMappings<Resolvers extends IResolvers>(resolvers: Resolv
     const fieldName = splitted[1];
 
     if (fieldName === '*') {
-      return flattenArray(Object.keys(resolvers[typeName]).map(field => resolveRelevantMappings(resolvers, `${typeName}.${field}`, allMappings))).filter(mapItem => !allMappings[mapItem]);
+      return flattenArray(
+        Object.keys(resolvers[typeName]).map(field =>
+          resolveRelevantMappings(resolvers, `${typeName}.${field}`, allMappings)
+        )
+      ).filter(mapItem => !allMappings[mapItem]);
     } else {
       const paths = [];
 
@@ -33,9 +45,11 @@ function resolveRelevantMappings<Resolvers extends IResolvers>(resolvers: Resolv
         if (resolvers[typeName][fieldName]['subscribe']) {
           paths.push(path + '.subscribe');
         }
+
         if (resolvers[typeName][fieldName]['resolve']) {
           paths.push(path + '.resolve');
         }
+
         if (typeof resolvers[typeName][fieldName] === 'function') {
           paths.push(path);
         }
@@ -45,7 +59,12 @@ function resolveRelevantMappings<Resolvers extends IResolvers>(resolvers: Resolv
     }
   } else if (splitted.length === 1) {
     const typeName = splitted[0];
-    return flattenArray(Object.keys(resolvers[typeName]).map(fieldName => resolveRelevantMappings(resolvers, `${typeName}.${fieldName}`, allMappings)));
+
+    return flattenArray(
+      Object.keys(resolvers[typeName]).map(fieldName =>
+        resolveRelevantMappings(resolvers, `${typeName}.${fieldName}`, allMappings)
+      )
+    );
   }
 
   return [];
@@ -59,20 +78,25 @@ function resolveRelevantMappings<Resolvers extends IResolvers>(resolvers: Resolv
  * @param mapping - resolvers composition mapping
  * @hidden
  */
-export function composeResolvers<Resolvers extends IResolvers>(resolvers: Resolvers, mapping: ResolversComposerMapping<Resolvers> = {}): Resolvers {
+export function composeResolvers<Resolvers extends IResolvers>(
+  resolvers: Resolvers,
+  mapping: ResolversComposerMapping<Resolvers> = {}
+): Resolvers {
   const mappingResult: { [path: string]: Function[] } = {};
 
   Object.keys(mapping).map((resolverPath: string) => {
     if (mapping[resolverPath] instanceof Array || typeof mapping[resolverPath] === 'function') {
       const composeFns = mapping[resolverPath] as ResolversComposition | ResolversComposition[];
       const relevantFields = resolveRelevantMappings(resolvers, resolverPath, mapping);
+
       relevantFields.forEach((path: string) => {
         mappingResult[path] = asArray(composeFns);
       });
     } else {
-      Object.keys(mapping[resolverPath]).map(fieldName => {
+      Object.keys(mapping[resolverPath]).forEach(fieldName => {
         const composeFns = mapping[resolverPath][fieldName];
         const relevantFields = resolveRelevantMappings(resolvers, resolverPath + '.' + fieldName, mapping);
+
         relevantFields.forEach((path: string) => {
           mappingResult[path] = asArray(composeFns);
         });

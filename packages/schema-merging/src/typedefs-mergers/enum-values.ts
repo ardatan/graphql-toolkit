@@ -3,7 +3,11 @@ import { mergeDirectives } from './directives';
 import { Config } from './merge-typedefs';
 import { compareNodes } from '@graphql-toolkit/common';
 
-export function mergeEnumValues(first: ReadonlyArray<EnumValueDefinitionNode>, second: ReadonlyArray<EnumValueDefinitionNode>, config: Config): EnumValueDefinitionNode[] {
+export function mergeEnumValues(
+  first: ReadonlyArray<EnumValueDefinitionNode>,
+  second: ReadonlyArray<EnumValueDefinitionNode>,
+  config: Config
+): EnumValueDefinitionNode[] {
   const enumValueMap = new Map<string, EnumValueDefinitionNode>();
   for (const firstValue of first) {
     enumValueMap.set(firstValue.name.value, firstValue);

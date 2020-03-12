@@ -34,7 +34,9 @@ function parseDirectiveValue(value: ValueNode): any {
 
 export function getFieldsWithDirectives(documentNode: DocumentNode): TypeAndFieldToDirectives {
   const result: TypeAndFieldToDirectives = {};
-  const allTypes = documentNode.definitions.filter<ObjectTypeDefinitionNode | ObjectTypeExtensionNode>(isObjectTypeDefinitionOrExtension);
+  const allTypes = documentNode.definitions.filter<ObjectTypeDefinitionNode | ObjectTypeExtensionNode>(
+    isObjectTypeDefinitionOrExtension
+  );
 
   for (const type of allTypes) {
     const typeName = type.name.value;
@@ -45,7 +47,10 @@ export function getFieldsWithDirectives(documentNode: DocumentNode): TypeAndFiel
         const key = `${typeName}.${fieldName}`;
         const directives: DirectiveUsage[] = field.directives.map(d => ({
           name: d.name.value,
-          args: (d.arguments || []).reduce((prev, arg) => ({ ...prev, [arg.name.value]: parseDirectiveValue(arg.value) }), {}),
+          args: (d.arguments || []).reduce(
+            (prev, arg) => ({ ...prev, [arg.name.value]: parseDirectiveValue(arg.value) }),
+            {}
+          ),
         }));
 
         result[key] = directives;

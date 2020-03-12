@@ -1,4 +1,20 @@
-import { DefinitionNode, DocumentNode, GraphQLSchema, parse, print, Source, GraphQLObjectType, isSpecifiedScalarType, isIntrospectionType, printType, ObjectTypeExtensionNode, GraphQLNamedType, Kind, isScalarType, isSchema } from 'graphql';
+import {
+  DefinitionNode,
+  DocumentNode,
+  GraphQLSchema,
+  parse,
+  print,
+  Source,
+  GraphQLObjectType,
+  isSpecifiedScalarType,
+  isIntrospectionType,
+  printType,
+  ObjectTypeExtensionNode,
+  GraphQLNamedType,
+  Kind,
+  isScalarType,
+  isSchema,
+} from 'graphql';
 import { isSourceTypes, isStringTypes, isSchemaDefinition } from './utils';
 import { MergedResultMap, mergeGraphQLNodes } from './merge-nodes';
 import { resetComments, printWithComments } from './comments';
@@ -59,7 +75,10 @@ export interface Config {
   convertExtensions?: boolean;
 }
 
-export function mergeGraphQLSchemas(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Omit<Partial<Config>, 'commentDescriptions'>) {
+export function mergeGraphQLSchemas(
+  types: Array<string | Source | DocumentNode | GraphQLSchema>,
+  config?: Omit<Partial<Config>, 'commentDescriptions'>
+) {
   // tslint:disable-next-line: no-console
   console.info(`
     GraphQL Toolkit/Epoxy 
@@ -71,9 +90,18 @@ export function mergeGraphQLSchemas(types: Array<string | Source | DocumentNode 
 }
 
 export function mergeTypeDefs(types: Array<string | Source | DocumentNode | GraphQLSchema>): DocumentNode;
-export function mergeTypeDefs(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Partial<Config> & { commentDescriptions: true }): string;
-export function mergeTypeDefs(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Omit<Partial<Config>, 'commentDescriptions'>): DocumentNode;
-export function mergeTypeDefs(types: Array<string | Source | DocumentNode | GraphQLSchema>, config?: Partial<Config>): DocumentNode | string {
+export function mergeTypeDefs(
+  types: Array<string | Source | DocumentNode | GraphQLSchema>,
+  config?: Partial<Config> & { commentDescriptions: true }
+): string;
+export function mergeTypeDefs(
+  types: Array<string | Source | DocumentNode | GraphQLSchema>,
+  config?: Omit<Partial<Config>, 'commentDescriptions'>
+): DocumentNode;
+export function mergeTypeDefs(
+  types: Array<string | Source | DocumentNode | GraphQLSchema>,
+  config?: Partial<Config>
+): DocumentNode | string {
   resetComments();
 
   const doc = {
@@ -100,7 +128,10 @@ export function mergeTypeDefs(types: Array<string | Source | DocumentNode | Grap
   return result;
 }
 
-export function mergeGraphQLTypes(types: Array<string | Source | DocumentNode | GraphQLSchema>, config: Config): DefinitionNode[] {
+export function mergeGraphQLTypes(
+  types: Array<string | Source | DocumentNode | GraphQLSchema>,
+  config: Config
+): DefinitionNode[] {
   resetComments();
 
   const allNodes: ReadonlyArray<DefinitionNode> = types

@@ -1,4 +1,12 @@
-import { Source, UniversalLoader, DocumentPointerSingle, SchemaPointerSingle, isValidPath, parseGraphQLSDL, SingleFileOptions } from '@graphql-toolkit/common';
+import {
+  Source,
+  UniversalLoader,
+  DocumentPointerSingle,
+  SchemaPointerSingle,
+  isValidPath,
+  parseGraphQLSDL,
+  SingleFileOptions,
+} from '@graphql-toolkit/common';
 
 const FILE_EXTENSIONS = ['.gql', '.gqls', '.graphql', '.graphqls'];
 
@@ -12,7 +20,10 @@ export class GraphQLFileLoader implements UniversalLoader<GraphQLFileLoaderOptio
     return 'graphql-file';
   }
 
-  async canLoad(pointer: SchemaPointerSingle | DocumentPointerSingle, options: GraphQLFileLoaderOptions): Promise<boolean> {
+  async canLoad(
+    pointer: SchemaPointerSingle | DocumentPointerSingle,
+    options: GraphQLFileLoaderOptions
+  ): Promise<boolean> {
     if (isValidPath(pointer) && options.path && options.fs) {
       const { resolve, isAbsolute } = options.path;
       if (FILE_EXTENSIONS.find(extension => pointer.endsWith(extension))) {

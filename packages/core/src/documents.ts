@@ -7,6 +7,9 @@ export const NON_OPERATION_KINDS = Object.keys(Kind)
   .reduce((prev, v) => [...prev, Kind[v]], [])
   .filter(v => !OPERATION_KINDS.includes(v));
 
-export function loadDocuments(documentDef: UnnormalizedTypeDefPointer | UnnormalizedTypeDefPointer[], options: LoadTypedefsOptions): Promise<Source[]> {
+export function loadDocuments(
+  documentDef: UnnormalizedTypeDefPointer | UnnormalizedTypeDefPointer[],
+  options: LoadTypedefsOptions
+): Promise<Source[]> {
   return loadTypedefs(documentDef, { noRequire: true, filterKinds: NON_OPERATION_KINDS, ...options });
 }

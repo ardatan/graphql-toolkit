@@ -16,7 +16,11 @@ export type OptimizeDocumentsOptions = Options &
     includeFragments?: boolean;
   };
 
-export function optimizeDocuments(schema: GraphQLSchema, documents: DocumentNode[], options: OptimizeDocumentsOptions = {}) {
+export function optimizeDocuments(
+  schema: GraphQLSchema,
+  documents: DocumentNode[],
+  options: OptimizeDocumentsOptions = {}
+) {
   // @TODO way for users to define directives they use, otherwise relay will throw an unknown directive error
   // Maybe we can scan the queries and add them dynamically without users having to do some extra stuff
   // transformASTSchema creates a new schema instance instead of mutating the old one
@@ -29,7 +33,13 @@ export function optimizeDocuments(schema: GraphQLSchema, documents: DocumentNode
   const result: DocumentNode[] = [];
 
   if (options.includeFragments) {
-    const fragmentCompilerContext = new CompilerContext(adjustedSchema).addAll(relayDocuments).applyTransforms([applyFragmentArgumentTransform, flattenTransformWithOptions({ flattenAbstractTypes: false }), skipRedundantNodesTransform]);
+    const fragmentCompilerContext = new CompilerContext(adjustedSchema)
+      .addAll(relayDocuments)
+      .applyTransforms([
+        applyFragmentArgumentTransform,
+        flattenTransformWithOptions({ flattenAbstractTypes: false }),
+        skipRedundantNodesTransform,
+      ]);
 
     result.push(
       ...fragmentCompilerContext
@@ -41,7 +51,12 @@ export function optimizeDocuments(schema: GraphQLSchema, documents: DocumentNode
 
   const queryCompilerContext = new CompilerContext(adjustedSchema)
     .addAll(relayDocuments)
-    .applyTransforms([applyFragmentArgumentTransform, inlineFragmentsTransform, flattenTransformWithOptions({ flattenAbstractTypes: false }), skipRedundantNodesTransform]);
+    .applyTransforms([
+      applyFragmentArgumentTransform,
+      inlineFragmentsTransform,
+      flattenTransformWithOptions({ flattenAbstractTypes: false }),
+      skipRedundantNodesTransform,
+    ]);
 
   result.push(...queryCompilerContext.documents().map(doc => parse(relayPrint(adjustedSchema, doc), options)));
 

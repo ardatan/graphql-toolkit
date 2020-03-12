@@ -39,7 +39,11 @@ async function pluckVueFileScript(fileData: string) {
   return parsed.script ? parsed.script.content : '';
 }
 
-export const gqlPluckFromCodeString = async (filePath: string, code: string, options: GraphQLTagPluckOptions = {}): Promise<string> => {
+export const gqlPluckFromCodeString = async (
+  filePath: string,
+  code: string,
+  options: GraphQLTagPluckOptions = {}
+): Promise<string> => {
   if (typeof code !== 'string') {
     throw TypeError('Provided code must be a string');
   }

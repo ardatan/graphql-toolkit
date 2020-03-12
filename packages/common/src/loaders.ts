@@ -30,6 +30,17 @@ export interface Loader<TPointer = string, TOptions extends SingleFileOptions = 
   load(pointer: TPointer, options?: TOptions): Promise<Source | null>;
 }
 
-export type SchemaLoader<TOptions extends SingleFileOptions = SingleFileOptions> = Loader<SchemaPointerSingle, TOptions>;
-export type DocumentLoader<TOptions extends SingleFileOptions = SingleFileOptions> = Loader<DocumentPointerSingle, TOptions>;
-export type UniversalLoader<TOptions extends SingleFileOptions = SingleFileOptions> = Loader<SchemaPointerSingle | DocumentPointerSingle, TOptions>;
+export type SchemaLoader<TOptions extends SingleFileOptions = SingleFileOptions> = Loader<
+  SchemaPointerSingle,
+  TOptions
+>;
+
+export type DocumentLoader<TOptions extends SingleFileOptions = SingleFileOptions> = Loader<
+  DocumentPointerSingle,
+  TOptions
+>;
+
+export type UniversalLoader<TOptions extends SingleFileOptions = SingleFileOptions> = Loader<
+  SchemaPointerSingle | DocumentPointerSingle,
+  TOptions
+>;

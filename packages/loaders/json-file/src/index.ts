@@ -1,4 +1,11 @@
-import { Source, parseGraphQLJSON, SchemaPointerSingle, DocumentLoader, isValidPath, SingleFileOptions } from '@graphql-toolkit/common';
+import {
+  Source,
+  parseGraphQLJSON,
+  SchemaPointerSingle,
+  DocumentLoader,
+  isValidPath,
+  SingleFileOptions,
+} from '@graphql-toolkit/common';
 
 const FILE_EXTENSIONS = ['.json'];
 

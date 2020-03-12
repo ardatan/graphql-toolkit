@@ -1,9 +1,24 @@
 import { parse, Kind, Source as GraphQLSource, isSchema, DefinitionNode } from 'graphql';
-import { Source, asArray, isDocumentString, debugLog, printSchemaWithDirectives, parseGraphQLSDL, fixSchemaAst, SingleFileOptions, Loader, resolveBuiltinModule, compareStrings } from '@graphql-toolkit/common';
+import {
+  Source,
+  asArray,
+  isDocumentString,
+  debugLog,
+  printSchemaWithDirectives,
+  parseGraphQLSDL,
+  fixSchemaAst,
+  SingleFileOptions,
+  Loader,
+  resolveBuiltinModule,
+  compareStrings,
+} from '@graphql-toolkit/common';
 import isGlob from 'is-glob';
+import pLimit from 'p-limit';
 import { filterKind } from './filter-document-kind';
 import { RawModule, processImportSyntax, isEmptySDL } from './import-parser';
 import { printWithComments, resetComments } from '@graphql-toolkit/schema-merging';
+
+const CONCURRENCY_LIMIT = 100;
 
 export type LoadTypedefsOptions<ExtraConfig = { [key: string]: any }> = SingleFileOptions &
   ExtraConfig & {
@@ -22,17 +37,23 @@ export type LoadTypedefsOptions<ExtraConfig = { [key: string]: any }> = SingleFi
 
 export type UnnormalizedTypeDefPointer = { [key: string]: any } | string;
 
-export function normalizePointers(unnormalizedPointerOrPointers: UnnormalizedTypeDefPointer | UnnormalizedTypeDefPointer[]) {
-  return asArray(unnormalizedPointerOrPointers).reduce<{ [key: string]: any }>((normalizedPointers, unnormalizedPointer) => {
-    if (typeof unnormalizedPointer === 'string') {
-      normalizedPointers[unnormalizedPointer] = {};
-    } else if (typeof unnormalizedPointer === 'object') {
-      Object.assign(normalizedPointers, unnormalizedPointer);
-    } else {
-      throw new Error(`Invalid pointer ${unnormalizedPointer}`);
-    }
-    return normalizedPointers;
-  }, {});
+export function normalizePointers(
+  unnormalizedPointerOrPointers: UnnormalizedTypeDefPointer | UnnormalizedTypeDefPointer[]
+) {
+  return asArray(unnormalizedPointerOrPointers).reduce<{ [key: string]: any }>(
+    (normalizedPointers, unnormalizedPointer) => {
+      if (typeof unnormalizedPointer === 'string') {
+        normalizedPointers[unnormalizedPointer] = {};
+      } else if (typeof unnormalizedPointer === 'object') {
+        Object.assign(normalizedPointers, unnormalizedPointer);
+      } else {
+        throw new Error(`Invalid pointer ${unnormalizedPointer}`);
+      }
+
+      return normalizedPointers;
+    },
+    {}
+  );
 }
 
 async function getCustomLoaderByPath(path: string, cwd: string): Promise<any> {
@@ -43,15 +64,15 @@ async function getCustomLoaderByPath(path: string, cwd: string): Promise<any> {
     if (requiredModule) {
       if (requiredModule.default && typeof requiredModule.default === 'function') {
         return requiredModule.default;
-      } else if (typeof requiredModule === 'function') {
+      }
+
+      if (typeof requiredModule === 'function') {
         return requiredModule;
       }
     }
+  } catch (e) {}
 
-    return null;
-  } catch (e) {
-    return null;
-  }
+  return null;
 }
 
 // Convert to 32bit integer
@@ -75,12 +96,31 @@ function stringToHash(str: string) {
   return hash;
 }
 
-export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: UnnormalizedTypeDefPointer | UnnormalizedTypeDefPointer[], options: LoadTypedefsOptions<Partial<AdditionalConfig>>): Promise<Source[]> {
+function Queue<T>(options?: { concurrency?: number }) {
+  const queue: Array<() => Promise<T>> = [];
+  const limit = options?.concurrency ? pLimit(options.concurrency) : async (fn: () => Promise<T>) => fn();
+
+  return {
+    add(fn: () => Promise<T>) {
+      queue.push(() => limit(fn));
+    },
+    runAll() {
+      return Promise.all(queue.map(fn => fn()));
+    },
+  };
+}
+
+export async function loadTypedefs<AdditionalConfig = {}>(
+  pointerOrPointers: UnnormalizedTypeDefPointer | UnnormalizedTypeDefPointer[],
+  options: LoadTypedefsOptions<Partial<AdditionalConfig>>
+): Promise<Source[]> {
   const normalizedPointerOptionsMap = normalizePointers(pointerOrPointers);
-  const loadPromises$: Promise<any>[] = [];
   const found: Source[] = [];
   const foundGlobs: string[] = [];
   const globOptions: any = {};
+  const loadQueue = Queue<void>({
+    concurrency: CONCURRENCY_LIMIT,
+  });
 
   options.cache = options.cache || {};
   options.cwd = options.cwd || process.cwd();
@@ -92,68 +132,87 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
 
   const unixify = await import('unixify').then(m => m.default || m);
 
+  function addSource({ pointer, source, noCache }: { pointer: string; source: Source; noCache?: boolean }): void {
+    found.push(source);
+
+    if (!noCache) {
+      options.cache[pointer] = source;
+    }
+  }
+
   for (const pointer in normalizedPointerOptionsMap) {
     const pointerOptions = normalizedPointerOptionsMap[pointer];
     if (isDocumentString(pointer)) {
-      loadPromises$.push(
-        Promise.resolve().then(async () => {
-          const result = parseGraphQLSDL(`${stringToHash(pointer)}.graphql`, pointer, { ...options, ...pointerOptions });
-          found.push(result);
-          options.cache[pointer] = result;
-        })
-      );
+      // ::documentString
+      loadQueue.add(async () => {
+        const source = parseGraphQLSDL(`${stringToHash(pointer)}.graphql`, pointer, {
+          ...options,
+          ...pointerOptions,
+        });
+
+        addSource({
+          source,
+          pointer,
+        });
+      });
     } else if (isGlob(unixify(pointer))) {
+      // :: globals
       foundGlobs.push(unixify(pointer));
       Object.assign(globOptions, pointerOptions);
     } else if (pointerOptions.loader) {
-      loadPromises$.push(
-        Promise.resolve().then(async () => {
-          let loader;
-          if (typeof pointerOptions.loader === 'string') {
-            loader = await getCustomLoaderByPath(pointerOptions.loader, options.cwd);
-          } else if (typeof pointerOptions.loader === 'function') {
-            loader = pointerOptions.loader;
-          }
-          if (typeof loader !== 'function') {
-            throw new Error(`Failed to load custom loader: ${pointerOptions.loader}`);
-          }
-          const customLoaderResult = await loader(pointer, { ...options, ...pointerOptions }, normalizedPointerOptionsMap);
-          if (isSchema(customLoaderResult && customLoaderResult)) {
-            found.push({
+      loadQueue.add(async () => {
+        let loader;
+        if (typeof pointerOptions.loader === 'string') {
+          loader = await getCustomLoaderByPath(pointerOptions.loader, options.cwd);
+        } else if (typeof pointerOptions.loader === 'function') {
+          loader = pointerOptions.loader;
+        }
+        if (typeof loader !== 'function') {
+          throw new Error(`Failed to load custom loader: ${pointerOptions.loader}`);
+        }
+        const customLoaderResult = await loader(
+          pointer,
+          { ...options, ...pointerOptions },
+          normalizedPointerOptionsMap
+        );
+        if (isSchema(customLoaderResult && customLoaderResult)) {
+          addSource({
+            source: {
               location: pointer,
               schema: customLoaderResult,
-            });
-          } else if (customLoaderResult && customLoaderResult.kind && customLoaderResult.kind === Kind.DOCUMENT) {
-            const result = {
+            },
+            pointer,
+            noCache: true,
+          });
+        } else if (customLoaderResult && customLoaderResult.kind && customLoaderResult.kind === Kind.DOCUMENT) {
+          addSource({
+            source: {
               document: customLoaderResult,
               location: pointer,
-            };
-            options.cache[pointer] = result;
-            found.push(result);
-          } else if (customLoaderResult && customLoaderResult.document) {
-            const result = {
+            },
+            pointer,
+          });
+        } else if (customLoaderResult && customLoaderResult.document) {
+          addSource({
+            source: {
               location: pointer,
               ...customLoaderResult,
-            };
-            options.cache[pointer] = result;
-            found.push(result);
-          }
-        })
-      );
+            },
+            pointer,
+          });
+        }
+      });
     } else {
-      loadPromises$.push(
-        Promise.resolve().then(async () => {
-          const combinedOptions = {
-            ...options,
-            ...pointerOptions,
-          };
-          const loaderResult = await loadSingleFile(pointer, combinedOptions);
-          if (loaderResult) {
-            options.cache[pointer] = loaderResult;
-            found.push(loaderResult);
-          }
-        })
-      );
+      loadQueue.add(async () => {
+        const source = await loadSingleFile(pointer, {
+          ...options,
+          ...pointerOptions,
+        });
+
+        if (source) {
+          addSource({ source, pointer });
+        }
+      });
     }
   }
 
@@ -168,105 +227,123 @@ export async function loadTypedefs<AdditionalConfig = {}>(pointerOrPointers: Unn
       }
     }
 
-    loadPromises$.push(
-      Promise.resolve().then(async () => {
-        const { default: globby } = await import('globby');
-        const paths = await globby(foundGlobs, { absolute: true, ...options, ignore: [] });
-        await Promise.all(
-          paths.map(async path => {
+    loadQueue.add(async () => {
+      const { default: globby } = await import('globby');
+      const limit = pLimit(CONCURRENCY_LIMIT);
+      const paths = await globby(foundGlobs, { absolute: true, ...options, ignore: [] });
+      await Promise.all(
+        paths.map(path =>
+          limit(async () => {
             if (globOptions.loader) {
-              let loader;
-              if (typeof globOptions.loader === 'string') {
-                loader = await getCustomLoaderByPath(globOptions.loader, options.cwd);
-              } else if (typeof globOptions.loader === 'function') {
-                loader = globOptions.loader;
-              }
-              if (typeof loader !== 'function') {
-                throw new Error(`Failed to load custom loader: ${globOptions.loader}`);
-              }
-              const customLoaderResult = await loader(path, { ...options, ...globOptions }, normalizedPointerOptionsMap);
+              const loader = await useCustomLoader(globOptions.loader, options.cwd);
+
+              const customLoaderResult = await loader(
+                path,
+                { ...options, ...globOptions },
+                normalizedPointerOptionsMap
+              );
+
               if (isSchema(customLoaderResult)) {
-                const result = {
-                  schema: customLoaderResult,
-                  document: parse(printSchemaWithDirectives(customLoaderResult)),
-                  location: path,
-                };
-                options.cache[path] = result;
-                found.push(result);
+                addSource({
+                  source: {
+                    schema: customLoaderResult,
+                    document: parse(printSchemaWithDirectives(customLoaderResult)),
+                    location: path,
+                  },
+                  pointer: path,
+                });
               } else if (customLoaderResult && customLoaderResult.kind && customLoaderResult.kind === Kind.DOCUMENT) {
-                const result = {
-                  document: customLoaderResult,
-                  location: path,
-                };
-                options.cache[path] = result;
-                found.push(result);
+                addSource({
+                  source: {
+                    document: customLoaderResult,
+                    location: path,
+                  },
+                  pointer: path,
+                });
               } else if (customLoaderResult && customLoaderResult.document) {
-                const result = {
-                  location: path,
-                  ...customLoaderResult,
-                };
-                options.cache[path] = result;
-                found.push(result);
+                addSource({
+                  source: {
+                    location: path,
+                    ...customLoaderResult,
+                  },
+                  pointer: path,
+                });
               }
             } else {
               const loaderResult = await loadSingleFile(path, { ...options, ...globOptions });
-              options.cache[path] = loaderResult;
-              found.push(loaderResult);
+
+              addSource({
+                source: loaderResult,
+                pointer: path,
+              });
             }
           })
-        );
-      })
-    );
+        )
+      );
+    });
   }
 
-  await Promise.all(loadPromises$);
+  await loadQueue.runAll();
 
   const foundValid: Source[] = [];
-
   const definitionsCacheForImport: DefinitionNode[][] = [];
 
+  // If we have few k of files it may be an issue
+  const limit = pLimit(CONCURRENCY_LIMIT);
+
   await Promise.all(
-    found.map(async partialSource => {
-      if (partialSource) {
-        const specificOptions = {
-          ...options,
-          ...(partialSource.location in normalizedPointerOptionsMap ? globOptions : normalizedPointerOptionsMap[partialSource.location]),
-        };
-        const resultSource: Source = { ...partialSource };
-        if (resultSource.schema) {
-          resultSource.schema = fixSchemaAst(resultSource.schema, specificOptions);
-          resultSource.rawSDL = printSchemaWithDirectives(resultSource.schema, specificOptions);
-        }
-        if (resultSource.rawSDL) {
-          if (isEmptySDL(resultSource.rawSDL)) {
-            resultSource.document = {
-              kind: Kind.DOCUMENT,
-              definitions: [],
-            };
-          } else {
-            resultSource.document = parse(new GraphQLSource(resultSource.rawSDL, resultSource.location), specificOptions);
+    found.map(partialSource =>
+      limit(async () => {
+        if (partialSource) {
+          const specificOptions = {
+            ...options,
+            ...(partialSource.location in normalizedPointerOptionsMap
+              ? globOptions
+              : normalizedPointerOptionsMap[partialSource.location]),
+          };
+          const resultSource: Source = { ...partialSource };
+
+          if (resultSource.schema) {
+            resultSource.schema = fixSchemaAst(resultSource.schema, specificOptions);
+            resultSource.rawSDL = printSchemaWithDirectives(resultSource.schema, specificOptions);
+          }
+
+          if (resultSource.rawSDL) {
+            resultSource.document = isEmptySDL(resultSource.rawSDL)
+              ? {
+                  kind: Kind.DOCUMENT,
+                  definitions: [],
+                }
+              : parse(new GraphQLSource(resultSource.rawSDL, resultSource.location), specificOptions);
+          }
+
+          if (resultSource.document) {
+            if (options.filterKinds) {
+              resultSource.document = filterKind(resultSource.document, specificOptions.filterKinds);
+            }
+
+            if (!resultSource.rawSDL) {
+              resultSource.rawSDL = printWithComments(resultSource.document);
+              resetComments();
+            }
+
+            if (
+              specificOptions.forceGraphQLImport ||
+              (!specificOptions.skipGraphQLImport && /^\#.*import /i.test(resultSource.rawSDL.trimLeft()))
+            ) {
+              resultSource.document = {
+                kind: Kind.DOCUMENT,
+                definitions: await processImportSyntax(resultSource, specificOptions, definitionsCacheForImport),
+              };
+            }
+
+            if (resultSource.document.definitions && resultSource.document.definitions.length > 0) {
+              foundValid.push(resultSource);
+            }
           }
         }
-        if (resultSource.document) {
-          if (options.filterKinds) {
-            resultSource.document = filterKind(resultSource.document, specificOptions.filterKinds);
-          }
-          if (!resultSource.rawSDL) {
-            resultSource.rawSDL = printWithComments(resultSource.document);
-            resetComments();
-          }
-          if (specificOptions.forceGraphQLImport || (!specificOptions.skipGraphQLImport && /^\#.*import /i.test(resultSource.rawSDL.trimLeft()))) {
-            resultSource.document = {
-              kind: Kind.DOCUMENT,
-              definitions: await processImportSyntax(resultSource, specificOptions, definitionsCacheForImport),
-            };
-          }
-          if (resultSource.document.definitions && resultSource.document.definitions.length > 0) {
-            foundValid.push(resultSource);
-          }
-        }
-      }
-    })
+      })
+    )
   );
 
   const pointerList = Object.keys(normalizedPointerOptionsMap);
@@ -288,30 +365,34 @@ export async function loadSingleFile(pointer: string, options: LoadTypedefsOptio
     return options.cache[pointer];
   }
 
-  let error: Error;
-  let found: Source;
+  for await (const loader of options.loaders) {
+    try {
+      const canLoad = await loader.canLoad(pointer, options);
 
-  await Promise.all(
-    options.loaders.map(async loader => {
-      try {
-        const canLoad = await loader.canLoad(pointer, options);
-
-        if (canLoad) {
-          found = await loader.load(pointer, options);
-        }
-      } catch (e) {
-        // Modify the error message to include what failed to load
-        e.message = `Failed to load "${pointer}". ${e?.message ?? ''}`;
-        error = e;
+      if (canLoad) {
+        return await loader.load(pointer, options);
       }
-    })
-  );
-
-  if (!found && error) {
-    debugLog(`Failed to find any GraphQL type definitions in: ${pointer} - ${error.message}`);
-
-    throw error;
+    } catch (error) {
+      debugLog(`Failed to find any GraphQL type definitions in: ${pointer} - ${error.message}`);
+      throw error;
+    }
   }
 
-  return found;
+  return undefined;
+}
+
+async function useCustomLoader(loaderPointer: any, cwd: string) {
+  let loader;
+
+  if (typeof loaderPointer === 'string') {
+    loader = await getCustomLoaderByPath(loaderPointer, cwd);
+  } else if (typeof loaderPointer === 'function') {
+    loader = loaderPointer;
+  }
+
+  if (typeof loader !== 'function') {
+    throw new Error(`Failed to load custom loader: ${loaderPointer}`);
+  }
+
+  return loader;
 }

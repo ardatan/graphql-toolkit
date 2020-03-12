@@ -13,14 +13,21 @@ function fieldAlreadyExists(fieldsArr: ReadonlyArray<any>, otherField: any): boo
     const t2 = extractType(otherField.type);
 
     if (t1.name.value !== t2.name.value) {
-      throw new Error(`Field "${otherField.name.value}" already defined with a different type. Declared as "${t1.name.value}", but you tried to override with "${t2.name.value}"`);
+      throw new Error(
+        `Field "${otherField.name.value}" already defined with a different type. Declared as "${t1.name.value}", but you tried to override with "${t2.name.value}"`
+      );
     }
   }
 
   return !!result;
 }
 
-export function mergeFields<T extends FieldDefinitionNode | InputValueDefinitionNode>(type: { name: NameNode }, f1: ReadonlyArray<T>, f2: ReadonlyArray<T>, config: Config): T[] {
+export function mergeFields<T extends FieldDefinitionNode | InputValueDefinitionNode>(
+  type: { name: NameNode },
+  f1: ReadonlyArray<T>,
+  f2: ReadonlyArray<T>,
+  config: Config
+): T[] {
   const result: T[] = [...f2];
 
   for (const field of f1) {
@@ -53,7 +60,12 @@ export function mergeFields<T extends FieldDefinitionNode | InputValueDefinition
   return result;
 }
 
-function preventConflicts(type: { name: NameNode }, a: FieldDefinitionNode | InputValueDefinitionNode, b: FieldDefinitionNode | InputValueDefinitionNode, ignoreNullability = false) {
+function preventConflicts(
+  type: { name: NameNode },
+  a: FieldDefinitionNode | InputValueDefinitionNode,
+  b: FieldDefinitionNode | InputValueDefinitionNode,
+  ignoreNullability = false
+) {
   const aType = printTypeNode(a.type);
   const bType = printTypeNode(b.type);
 
@@ -89,7 +101,10 @@ function safeChangeForFieldType(oldType: TypeNode, newType: TypeNode, ignoreNull
 
   // old is list
   if (isListTypeNode(oldType)) {
-    return (isListTypeNode(newType) && safeChangeForFieldType(oldType.type, newType.type)) || (isNonNullTypeNode(newType) && safeChangeForFieldType(oldType, newType.type));
+    return (
+      (isListTypeNode(newType) && safeChangeForFieldType(oldType.type, newType.type)) ||
+      (isNonNullTypeNode(newType) && safeChangeForFieldType(oldType, newType.type))
+    );
   }
 
   return false;

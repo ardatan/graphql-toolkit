@@ -1,5 +1,16 @@
 import { DocumentNode, GraphQLSchema, parse, IntrospectionQuery, buildClientSchema, Kind, isSchema } from 'graphql';
-import { SchemaPointerSingle, DocumentPointerSingle, debugLog, SingleFileOptions, Source, UniversalLoader, asArray, isValidPath, parseGraphQLSDL, parseGraphQLJSON } from '@graphql-toolkit/common';
+import {
+  SchemaPointerSingle,
+  DocumentPointerSingle,
+  debugLog,
+  SingleFileOptions,
+  Source,
+  UniversalLoader,
+  asArray,
+  isValidPath,
+  parseGraphQLSDL,
+  parseGraphQLJSON,
+} from '@graphql-toolkit/common';
 import { GraphQLTagPluckOptions, gqlPluckFromCodeString } from '@graphql-toolkit/graphql-tag-pluck';
 
 function isSchemaText(obj: any): obj is string {
@@ -22,16 +33,26 @@ function isSchemaAst(obj: any): obj is DocumentNode {
   return (obj as DocumentNode).kind !== undefined;
 }
 
-function resolveExport(fileExport: GraphQLSchema | DocumentNode | string | { data: IntrospectionQuery } | IntrospectionQuery): GraphQLSchema | DocumentNode | null {
+function resolveExport(
+  fileExport: GraphQLSchema | DocumentNode | string | { data: IntrospectionQuery } | IntrospectionQuery
+): GraphQLSchema | DocumentNode | null {
   if (isSchema(fileExport)) {
     return fileExport;
-  } else if (isSchemaText(fileExport)) {
+  }
+
+  if (isSchemaText(fileExport)) {
     return parse(fileExport);
-  } else if (isWrappedSchemaJson(fileExport)) {
+  }
+
+  if (isWrappedSchemaJson(fileExport)) {
     return buildClientSchema(fileExport.data);
-  } else if (isSchemaJson(fileExport)) {
+  }
+
+  if (isSchemaJson(fileExport)) {
     return buildClientSchema(fileExport);
-  } else if (isSchemaAst(fileExport)) {
+  }
+
+  if (isSchemaAst(fileExport)) {
     return fileExport;
   }
 
@@ -57,7 +78,11 @@ async function tryToLoadFromExport(rawFilePath: string): Promise<GraphQLSchema |
 
       if (rawExport) {
         let exportValue = await rawExport;
-        exportValue = await (exportValue.default || exportValue.schema || exportValue.typeDefs || exportValue.data || exportValue);
+        exportValue = await (exportValue.default ||
+          exportValue.schema ||
+          exportValue.typeDefs ||
+          exportValue.data ||
+          exportValue);
         try {
           return resolveExport(exportValue);
         } catch (e) {
@@ -88,7 +113,10 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
     return 'code-file';
   }
 
-  async canLoad(pointer: SchemaPointerSingle | DocumentPointerSingle, options: CodeFileLoaderOptions): Promise<boolean> {
+  async canLoad(
+    pointer: SchemaPointerSingle | DocumentPointerSingle,
+    options: CodeFileLoaderOptions
+  ): Promise<boolean> {
     if (isValidPath(pointer) && options.path && options.fs) {
       const { resolve, isAbsolute } = options.path;
       if (FILE_EXTENSIONS.find(extension => pointer.endsWith(extension))) {
@@ -109,7 +137,9 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
 
     try {
       const { readFile } = options.fs;
-      const content: string = await new Promise((resolve, reject) => readFile(normalizedFilePath, { encoding: 'utf-8' }, (err, data) => (err ? reject(err) : resolve(data))));
+      const content: string = await new Promise((resolve, reject) =>
+        readFile(normalizedFilePath, { encoding: 'utf-8' }, (err, data) => (err ? reject(err) : resolve(data)))
+      );
 
       const rawSDL = await gqlPluckFromCodeString(normalizedFilePath, content, options.pluckConfig);
       if (rawSDL) {

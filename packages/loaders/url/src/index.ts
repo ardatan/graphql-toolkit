@@ -1,5 +1,20 @@
-import { buildClientSchema, parse, IntrospectionQuery, print, getIntrospectionQuery, IntrospectionOptions, introspectionFromSchema } from 'graphql';
-import { SchemaPointerSingle, Source, DocumentLoader, SingleFileOptions, parseGraphQLJSON, printSchemaWithDirectives } from '@graphql-toolkit/common';
+import {
+  buildClientSchema,
+  parse,
+  IntrospectionQuery,
+  print,
+  getIntrospectionQuery,
+  IntrospectionOptions,
+  introspectionFromSchema,
+} from 'graphql';
+import {
+  SchemaPointerSingle,
+  Source,
+  DocumentLoader,
+  SingleFileOptions,
+  parseGraphQLJSON,
+  printSchemaWithDirectives,
+} from '@graphql-toolkit/common';
 import { isWebUri } from 'valid-url';
 import { fetch as crossFetch } from 'cross-fetch';
 import { makeRemoteExecutableSchema, Fetcher } from 'graphql-tools-fork';

@@ -2,7 +2,11 @@ import { InputValueDefinitionNode } from 'graphql';
 import { Config } from '.';
 import { compareNodes } from '@graphql-toolkit/common';
 
-export function mergeArguments(args1: InputValueDefinitionNode[], args2: InputValueDefinitionNode[], config: Config): InputValueDefinitionNode[] {
+export function mergeArguments(
+  args1: InputValueDefinitionNode[],
+  args2: InputValueDefinitionNode[],
+  config: Config
+): InputValueDefinitionNode[] {
   const result = deduplicateArguments([].concat(args2, args1).filter(a => a));
   if (config && config.sort) {
     result.sort(compareNodes);
