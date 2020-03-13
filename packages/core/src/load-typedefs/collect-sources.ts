@@ -3,7 +3,7 @@ import { isSchema, Kind, parse } from 'graphql';
 import isGlob from 'is-glob';
 import { LoadTypedefsOptions } from '../load-typedefs';
 import { loadFile } from './load-file';
-import { stringToHash, use } from '../utils/helpers';
+import { stringToHash, useStack, StackNext } from '../utils/helpers';
 import { useCustomLoader } from '../utils/custom-loader';
 import { useQueue } from '../utils/queue';
 
@@ -11,18 +11,107 @@ type AddSource = (data: { pointer: string; source: Source; noCache?: boolean }) 
 type AddGlob = (data: { pointer: string; pointerOptions: any }) => void;
 type AddToQueue<T> = (fn: () => Promise<T> | T) => void;
 
-type CollectFn = <TOptions>(
-  data: {
+export async function collectSources<TOptions>({
+  pointerOptionMap,
+  options,
+}: {
+  pointerOptionMap: {
+    [key: string]: any;
+  };
+  options: LoadTypedefsOptions<Partial<TOptions>>;
+}): Promise<Source[]> {
+  const sources: Source[] = [];
+  const globs: string[] = [];
+  const globOptions: any = {};
+  const queue = useQueue<void>({ concurrency: 50 });
+  const unixify = await import('unixify').then(m => m.default || m);
+
+  const addSource: AddSource = ({
+    pointer,
+    source,
+    noCache,
+  }: {
     pointer: string;
-    pointerOptions: any;
-    options: LoadTypedefsOptions<Partial<TOptions>>;
-    pointerOptionMap: Record<string, any>;
-    addSource: AddSource;
-    addGlob: AddGlob;
-    queue: AddToQueue<void>;
-  },
-  next: () => void
-) => void;
+    source: Source;
+    noCache?: boolean;
+  }) => {
+    sources.push(source);
+
+    if (!noCache) {
+      options.cache[pointer] = source;
+    }
+  };
+
+  const collect = useStack(collectDocumentString, collectGlob, collectCustomLoader, collectFallback);
+
+  const addGlob: AddGlob = ({ pointerOptions, pointer }) => {
+    globs.push(pointer);
+    Object.assign(globOptions, pointerOptions);
+  };
+
+  for (const pointer in pointerOptionMap) {
+    const pointerOptions = {
+      ...(pointerOptionMap[pointer] ?? {}),
+      unixify,
+    };
+
+    collect({
+      pointer,
+      pointerOptions,
+      pointerOptionMap,
+      options,
+      addSource,
+      addGlob,
+      queue: queue.add,
+    });
+  }
+
+  if (globs.length) {
+    if (options.ignore) {
+      const ignoreList = asArray(options.ignore)
+        .map(g => `!(${g})`)
+        .map<string>(unixify);
+
+      if (ignoreList.length > 0) {
+        globs.push(...ignoreList);
+      }
+    }
+
+    const { default: globby } = await import('globby');
+    const paths = await globby(globs, { absolute: true, ...options, ignore: [] });
+    const collectFromGlobs = useStack(collectCustomLoader, collectFallback);
+
+    for (let i = 0; i < paths.length; i++) {
+      const pointer = paths[i];
+
+      collectFromGlobs({
+        pointer,
+        pointerOptions: globOptions,
+        pointerOptionMap,
+        options,
+        addSource,
+        addGlob: () => {
+          throw new Error(`I don't accept any new globs!`);
+        },
+        queue: queue.add,
+      });
+    }
+  }
+
+  await queue.runAll();
+
+  return sources;
+}
+
+type CollectOptions<T> = {
+  pointer: string;
+  pointerOptions: any;
+  options: LoadTypedefsOptions<Partial<T>>;
+  pointerOptionMap: Record<string, any>;
+  addSource: AddSource;
+  addGlob: AddGlob;
+  queue: AddToQueue<void>;
+};
 
 function addResultOfCustomLoader({
   pointer,
@@ -62,7 +151,10 @@ function addResultOfCustomLoader({
   }
 }
 
-const collectDocumentString: CollectFn = ({ pointer, pointerOptions, options, addSource, queue }, next) => {
+function collectDocumentString<T>(
+  { pointer, pointerOptions, options, addSource, queue }: CollectOptions<T>,
+  next: StackNext
+) {
   if (isDocumentString(pointer)) {
     return queue(async () => {
       const source = parseGraphQLSDL(`${stringToHash(pointer)}.graphql`, pointer, {
@@ -78,9 +170,9 @@ const collectDocumentString: CollectFn = ({ pointer, pointerOptions, options, ad
   }
 
   next();
-};
+}
 
-const collectGlob: CollectFn = ({ pointer, pointerOptions, addGlob }, next) => {
+function collectGlob<T>({ pointer, pointerOptions, addGlob }: CollectOptions<T>, next: StackNext) {
   if (isGlob(pointerOptions.unixify(pointer))) {
     return addGlob({
       pointer: pointerOptions.unixify(pointer),
@@ -89,12 +181,12 @@ const collectGlob: CollectFn = ({ pointer, pointerOptions, addGlob }, next) => {
   }
 
   next();
-};
+}
 
-const collectCustomLoader: CollectFn = (
-  { pointer, pointerOptions, queue, addSource, options, pointerOptionMap },
-  next
-) => {
+function collectCustomLoader<T>(
+  { pointer, pointerOptions, queue, addSource, options, pointerOptionMap }: CollectOptions<T>,
+  next: StackNext
+) {
   if (pointerOptions.loader) {
     return queue(async () => {
       const loader = await useCustomLoader(pointerOptions.loader, options.cwd);
@@ -109,9 +201,9 @@ const collectCustomLoader: CollectFn = (
   }
 
   next();
-};
+}
 
-const collectFallback: CollectFn = ({ queue, pointer, options, pointerOptions, addSource }) => {
+function collectFallback<T>({ queue, pointer, options, pointerOptions, addSource }: CollectOptions<T>) {
   return queue(async () => {
     const source = await loadFile(pointer, {
       ...options,
@@ -122,96 +214,4 @@ const collectFallback: CollectFn = ({ queue, pointer, options, pointerOptions, a
       addSource({ source, pointer });
     }
   });
-};
-
-export async function collectSources<TOptions>({
-  pointerOptionMap,
-  options,
-}: {
-  pointerOptionMap: {
-    [key: string]: any;
-  };
-  options: LoadTypedefsOptions<Partial<TOptions>>;
-}): Promise<Source[]> {
-  const sources: Source[] = [];
-  const globs: string[] = [];
-  const globOptions: any = {};
-  const queue = useQueue<void>({ concurrency: 50 });
-  const unixify = await import('unixify').then(m => m.default || m);
-
-  const addSource: AddSource = ({
-    pointer,
-    source,
-    noCache,
-  }: {
-    pointer: string;
-    source: Source;
-    noCache?: boolean;
-  }) => {
-    sources.push(source);
-
-    if (!noCache) {
-      options.cache[pointer] = source;
-    }
-  };
-
-  const collect = use(collectDocumentString, collectGlob, collectCustomLoader, collectFallback);
-
-  const addGlob: AddGlob = ({ pointerOptions, pointer }) => {
-    globs.push(pointer);
-    Object.assign(globOptions, pointerOptions);
-  };
-
-  for (const pointer in pointerOptionMap) {
-    const pointerOptions = {
-      ...(pointerOptionMap[pointer] ?? {}),
-      unixify,
-    };
-
-    collect({
-      pointer,
-      pointerOptions,
-      pointerOptionMap,
-      options,
-      addSource,
-      addGlob,
-      queue: queue.add,
-    });
-  }
-
-  if (globs.length) {
-    if (options.ignore) {
-      const ignoreList = asArray(options.ignore)
-        .map(g => `!(${g})`)
-        .map<string>(unixify);
-
-      if (ignoreList.length > 0) {
-        globs.push(...ignoreList);
-      }
-    }
-
-    const { default: globby } = await import('globby');
-    const paths = await globby(globs, { absolute: true, ...options, ignore: [] });
-    const collectFromGlobs = use(collectCustomLoader, collectFallback);
-
-    for (let i = 0; i < paths.length; i++) {
-      const pointer = paths[i];
-
-      collectFromGlobs({
-        pointer,
-        pointerOptions: globOptions,
-        pointerOptionMap,
-        options,
-        addSource,
-        addGlob: () => {
-          throw new Error(`I don't accept any new globs!`);
-        },
-        queue: queue.add,
-      });
-    }
-  }
-
-  await queue.runAll();
-
-  return sources;
 }

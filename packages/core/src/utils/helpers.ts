@@ -23,10 +23,10 @@ export function stringToHash(str: string): number {
   return hash;
 }
 
-type Next = () => void;
-type Fn<T> = (input: T, next: Next) => void;
+export type StackNext = () => void;
+export type StackFn<T> = (input: T, next: StackNext) => void;
 
-export function use<T>(...fns: Array<Fn<T>>) {
+export function useStack<T>(...fns: Array<StackFn<T>>) {
   return (input: T) => {
     function createNext(i: number) {
       if (i >= fns.length) {
