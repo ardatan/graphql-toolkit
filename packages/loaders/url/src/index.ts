@@ -34,7 +34,11 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
     return 'url';
   }
 
-  async canLoad(pointer: SchemaPointerSingle, _: LoadFromUrlOptions): Promise<boolean> {
+  async canLoad(pointer: SchemaPointerSingle, options: LoadFromUrlOptions): Promise<boolean> {
+    return this.canLoadSync(pointer, options);
+  }
+
+  canLoadSync(pointer: SchemaPointerSingle, _options: LoadFromUrlOptions): boolean {
     return !!isWebUri(pointer);
   }
 
@@ -114,5 +118,9 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
       location: pointer,
       schema: remoteExecutableSchema,
     };
+  }
+
+  loadSync(): never {
+    throw new Error('Loader Url has no sync mode');
   }
 }

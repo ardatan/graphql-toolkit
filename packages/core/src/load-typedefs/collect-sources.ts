@@ -5,11 +5,13 @@ import { LoadTypedefsOptions } from '../load-typedefs';
 import { loadFile } from './load-file';
 import { stringToHash, useStack, StackNext } from '../utils/helpers';
 import { useCustomLoader } from '../utils/custom-loader';
-import { useQueue } from '../utils/queue';
+import { useQueue, useSyncQueue } from '../utils/queue';
 
 type AddSource = (data: { pointer: string; source: Source; noCache?: boolean }) => void;
 type AddGlob = (data: { pointer: string; pointerOptions: any }) => void;
 type AddToQueue<T> = (fn: () => Promise<T> | T) => void;
+
+const CONCURRENCY_LIMIT = 50;
 
 export async function collectSources<TOptions>({
   pointerOptionMap,
@@ -23,9 +25,137 @@ export async function collectSources<TOptions>({
   const sources: Source[] = [];
   const globs: string[] = [];
   const globOptions: any = {};
-  const queue = useQueue<void>({ concurrency: 50 });
+  const queue = useQueue<void>({ concurrency: CONCURRENCY_LIMIT });
   const unixify = await import('unixify').then(m => m.default || m);
 
+  const { addSource, addGlob, collect } = createHelpers({
+    sources,
+    globs,
+    options,
+    globOptions,
+  });
+
+  for (const pointer in pointerOptionMap) {
+    const pointerOptions = {
+      ...(pointerOptionMap[pointer] ?? {}),
+      unixify,
+    };
+
+    collect({
+      pointer,
+      pointerOptions,
+      pointerOptionMap,
+      options,
+      addSource,
+      addGlob,
+      queue: queue.add,
+    });
+  }
+
+  if (globs.length) {
+    includeIgnored({
+      options,
+      unixify,
+      globs,
+    });
+
+    const { default: globby } = await import('globby');
+    const paths = await globby(globs, createGlobbyOptions(options));
+
+    collectSourcesFromGlobals({
+      filepaths: paths,
+      options,
+      globOptions,
+      pointerOptionMap,
+      addSource,
+      queue: queue.add,
+    });
+  }
+
+  await queue.runAll();
+
+  return sources;
+}
+
+export function collectSourcesSync<TOptions>({
+  pointerOptionMap,
+  options,
+}: {
+  pointerOptionMap: {
+    [key: string]: any;
+  };
+  options: LoadTypedefsOptions<Partial<TOptions>>;
+}): Source[] {
+  const sources: Source[] = [];
+  const globs: string[] = [];
+  const globOptions: any = {};
+  const queue = useSyncQueue<void>();
+  let unixify = require('unixify');
+
+  unixify = unixify.default || unixify;
+
+  const { addSource, addGlob, collect } = createHelpers({
+    sources,
+    globs,
+    options,
+    globOptions,
+  });
+
+  for (const pointer in pointerOptionMap) {
+    const pointerOptions = {
+      ...(pointerOptionMap[pointer] ?? {}),
+      unixify,
+    };
+
+    collect({
+      pointer,
+      pointerOptions,
+      pointerOptionMap,
+      options,
+      addSource,
+      addGlob,
+      queue: queue.add,
+    });
+  }
+
+  if (globs.length) {
+    includeIgnored({
+      options,
+      unixify,
+      globs,
+    });
+
+    const { default: globby } = require('globby');
+    const paths = globby.sync(globs, createGlobbyOptions(options));
+
+    collectSourcesFromGlobals({
+      filepaths: paths,
+      options,
+      globOptions,
+      pointerOptionMap,
+      addSource,
+      queue: queue.add,
+    });
+  }
+
+  queue.runAll();
+
+  return sources;
+}
+
+//
+
+function createHelpers<T>({
+  sources,
+  globs,
+  options,
+  globOptions,
+}: {
+  sources: Source[];
+  globs: string[];
+  options: LoadTypedefsOptions<Partial<T>>;
+  globOptions: any;
+}) {
   const addSource: AddSource = ({
     pointer,
     source,
@@ -49,58 +179,65 @@ export async function collectSources<TOptions>({
     Object.assign(globOptions, pointerOptions);
   };
 
-  for (const pointer in pointerOptionMap) {
-    const pointerOptions = {
-      ...(pointerOptionMap[pointer] ?? {}),
-      unixify,
-    };
+  return {
+    addSource,
+    collect,
+    addGlob,
+  };
+}
 
-    collect({
+function includeIgnored<
+  T extends {
+    ignore?: string | string[];
+  }
+>({ options, unixify, globs }: { options: T; unixify: any; globs: string[] }) {
+  if (options.ignore) {
+    const ignoreList = asArray(options.ignore)
+      .map(g => `!(${g})`)
+      .map<string>(unixify);
+
+    if (ignoreList.length > 0) {
+      globs.push(...ignoreList);
+    }
+  }
+}
+
+function createGlobbyOptions<T extends object>(options: T): any {
+  return { absolute: true, ...options, ignore: [] };
+}
+
+function collectSourcesFromGlobals<T, P>({
+  filepaths,
+  options,
+  globOptions,
+  pointerOptionMap,
+  addSource,
+  queue,
+}: {
+  filepaths: string[];
+  options: LoadTypedefsOptions<Partial<T>>;
+  globOptions: any;
+  pointerOptionMap: P;
+  addSource: AddSource;
+  queue: AddToQueue<void>;
+}) {
+  const collectFromGlobs = useStack(collectCustomLoader, collectFallback);
+
+  for (let i = 0; i < filepaths.length; i++) {
+    const pointer = filepaths[i];
+
+    collectFromGlobs({
       pointer,
-      pointerOptions,
+      pointerOptions: globOptions,
       pointerOptionMap,
       options,
       addSource,
-      addGlob,
-      queue: queue.add,
+      addGlob: () => {
+        throw new Error(`I don't accept any new globs!`);
+      },
+      queue,
     });
   }
-
-  if (globs.length) {
-    if (options.ignore) {
-      const ignoreList = asArray(options.ignore)
-        .map(g => `!(${g})`)
-        .map<string>(unixify);
-
-      if (ignoreList.length > 0) {
-        globs.push(...ignoreList);
-      }
-    }
-
-    const { default: globby } = await import('globby');
-    const paths = await globby(globs, { absolute: true, ...options, ignore: [] });
-    const collectFromGlobs = useStack(collectCustomLoader, collectFallback);
-
-    for (let i = 0; i < paths.length; i++) {
-      const pointer = paths[i];
-
-      collectFromGlobs({
-        pointer,
-        pointerOptions: globOptions,
-        pointerOptionMap,
-        options,
-        addSource,
-        addGlob: () => {
-          throw new Error(`I don't accept any new globs!`);
-        },
-        queue: queue.add,
-      });
-    }
-  }
-
-  await queue.runAll();
-
-  return sources;
 }
 
 type CollectOptions<T> = {
@@ -156,7 +293,7 @@ function collectDocumentString<T>(
   next: StackNext
 ) {
   if (isDocumentString(pointer)) {
-    return queue(async () => {
+    return queue(() => {
       const source = parseGraphQLSDL(`${stringToHash(pointer)}.graphql`, pointer, {
         ...options,
         ...pointerOptions,

@@ -1,18 +1,10 @@
-import { parse, Kind, Source as GraphQLSource, DefinitionNode } from 'graphql';
-import {
-  Source,
-  printSchemaWithDirectives,
-  fixSchemaAst,
-  SingleFileOptions,
-  Loader,
-  compareStrings,
-} from '@graphql-toolkit/common';
-import { printWithComments, resetComments } from '@graphql-toolkit/schema-merging';
+import { DefinitionNode } from 'graphql';
+import { Source, SingleFileOptions, Loader, compareStrings } from '@graphql-toolkit/common';
 import { normalizePointers } from './utils/pointers';
-import { filterKind } from './filter-document-kind';
-import { RawModule, processImportSyntax, isEmptySDL } from './import-parser';
-import { prepareOptions } from './load-typedefs/options';
-import { collectSources } from './load-typedefs/collect-sources';
+import { RawModule } from './import-parser';
+import { prepareOptions, prepareOptionsSync } from './load-typedefs/options';
+import { collectSources, collectSourcesSync } from './load-typedefs/collect-sources';
+import { parseSource, parseSourceSync } from './load-typedefs/parse';
 import { useLimit } from './utils/helpers';
 
 const CONCURRENCY_LIMIT = 100;
@@ -56,57 +48,68 @@ export async function loadTypedefs<AdditionalConfig = {}>(
 
   await Promise.all(
     sources.map(partialSource =>
-      limit(async () => {
-        if (partialSource) {
-          const specificOptions = {
-            ...options,
-            ...(partialSource.location in pointerOptionMap ? globOptions : pointerOptionMap[partialSource.location]),
-          };
-          const source: Source = { ...partialSource };
-
-          if (source.schema) {
-            source.schema = fixSchemaAst(source.schema, specificOptions);
-            source.rawSDL = printSchemaWithDirectives(source.schema, specificOptions);
-          }
-
-          if (source.rawSDL) {
-            source.document = isEmptySDL(source.rawSDL)
-              ? {
-                  kind: Kind.DOCUMENT,
-                  definitions: [],
-                }
-              : parse(new GraphQLSource(source.rawSDL, source.location), specificOptions);
-          }
-
-          if (source.document) {
-            if (options.filterKinds) {
-              source.document = filterKind(source.document, specificOptions.filterKinds);
-            }
-
-            if (!source.rawSDL) {
-              source.rawSDL = printWithComments(source.document);
-              resetComments();
-            }
-
-            if (
-              specificOptions.forceGraphQLImport ||
-              (!specificOptions.skipGraphQLImport && /^\#.*import /i.test(source.rawSDL.trimLeft()))
-            ) {
-              source.document = {
-                kind: Kind.DOCUMENT,
-                definitions: await processImportSyntax(source, specificOptions, definitionsCacheForImport),
-              };
-            }
-
-            if (source.document.definitions && source.document.definitions.length > 0) {
-              validSources.push(source);
-            }
-          }
-        }
-      })
+      limit(() =>
+        parseSource({
+          partialSource,
+          options,
+          globOptions,
+          pointerOptionMap,
+          addValidSource(source) {
+            validSources.push(source);
+          },
+          cache: definitionsCacheForImport,
+        })
+      )
     )
   );
 
+  return prepareResult({ options, pointerOptionMap, validSources });
+}
+
+export function loadTypedefsSync<AdditionalConfig = {}>(
+  pointerOrPointers: UnnormalizedTypeDefPointer | UnnormalizedTypeDefPointer[],
+  options: LoadTypedefsOptions<Partial<AdditionalConfig>>
+): Source[] {
+  const pointerOptionMap = normalizePointers(pointerOrPointers);
+  const globOptions: any = {};
+
+  prepareOptionsSync<AdditionalConfig>(options);
+
+  const sources = collectSourcesSync({
+    pointerOptionMap,
+    options,
+  });
+
+  const validSources: Source[] = [];
+  const definitionsCacheForImport: DefinitionNode[][] = [];
+
+  sources.forEach(partialSource => {
+    parseSourceSync({
+      partialSource,
+      options,
+      globOptions,
+      pointerOptionMap,
+      addValidSource(source) {
+        validSources.push(source);
+      },
+      cache: definitionsCacheForImport,
+    });
+  });
+
+  return prepareResult({ options, pointerOptionMap, validSources });
+}
+
+//
+
+function prepareResult({
+  options,
+  pointerOptionMap,
+  validSources,
+}: {
+  options: any;
+  pointerOptionMap: any;
+  validSources: Source[];
+}) {
   const pointerList = Object.keys(pointerOptionMap);
 
   if (pointerList.length > 0 && validSources.length === 0) {

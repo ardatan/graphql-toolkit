@@ -25,16 +25,22 @@ function extractData(
 
 export interface GithubLoaderOptions extends SingleFileOptions {
   token: string;
-  pluckConfig: GraphQLTagPluckOptions;
+  pluckConfig?: GraphQLTagPluckOptions;
 }
 
 export class GithubLoader implements UniversalLoader<GithubLoaderOptions> {
   loaderId() {
     return 'github-loader';
   }
+
   async canLoad(pointer: string) {
     return typeof pointer === 'string' && pointer.toLowerCase().startsWith('github:');
   }
+
+  canLoadSync() {
+    return false;
+  }
+
   async load(pointer: string, options: GithubLoaderOptions) {
     const { owner, name, ref, path } = extractData(pointer);
     const request = await fetch('https://api.github.com/graphql', {
@@ -96,5 +102,9 @@ export class GithubLoader implements UniversalLoader<GithubLoaderOptions> {
     }
 
     throw new Error(`Invalid file extension: ${path}`);
+  }
+
+  loadSync(): never {
+    throw new Error('Loader GitHub has no sync mode');
   }
 }

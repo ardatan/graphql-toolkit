@@ -1,4 +1,4 @@
-import { resolveBuiltinModule } from '@graphql-toolkit/common';
+import { resolveBuiltinModule, resolveBuiltinModuleSync } from '@graphql-toolkit/common';
 import { LoadTypedefsOptions } from './../load-typedefs';
 
 function applyDefaultOptions<T>(options: LoadTypedefsOptions<Partial<T>>) {
@@ -14,6 +14,16 @@ export async function prepareOptions<T>(options: LoadTypedefsOptions<Partial<T>>
   options.fs = await resolveBuiltinModule('fs', options.fs);
   options.path = await resolveBuiltinModule('path', options.path);
   options.os = await resolveBuiltinModule('os', options.os);
+
+  return options;
+}
+
+export async function prepareOptionsSync<T>(options: LoadTypedefsOptions<Partial<T>>) {
+  applyDefaultOptions(options);
+
+  options.fs = resolveBuiltinModuleSync('fs', options.fs);
+  options.path = resolveBuiltinModuleSync('path', options.path);
+  options.os = resolveBuiltinModuleSync('os', options.os);
 
   return options;
 }

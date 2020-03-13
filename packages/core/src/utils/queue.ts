@@ -13,3 +13,16 @@ export function useQueue<T>(options?: { concurrency?: number }) {
     },
   };
 }
+
+export function useSyncQueue<T>() {
+  const queue: Array<() => T> = [];
+
+  return {
+    add(fn: () => T) {
+      queue.push(fn);
+    },
+    runAll() {
+      queue.forEach(fn => fn());
+    },
+  };
+}

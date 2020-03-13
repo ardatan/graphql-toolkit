@@ -14,6 +14,7 @@ export class PrismaLoader extends UrlLoader {
   loaderId() {
     return 'prisma';
   }
+
   async canLoad(prismaConfigFilePath: string, options: PrismaLoaderOptions) {
     if (
       typeof prismaConfigFilePath === 'string' &&
@@ -31,6 +32,7 @@ export class PrismaLoader extends UrlLoader {
     }
     return false;
   }
+
   async load(prismaConfigFilePath: string, options: PrismaLoaderOptions) {
     const { graceful, envVars = {}, os = await import('os'), path = await import('path') } = options;
     const home = os.homedir();
