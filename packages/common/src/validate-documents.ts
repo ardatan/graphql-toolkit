@@ -20,12 +20,11 @@ export interface LoadDocumentError {
   readonly errors: ReadonlyArray<GraphQLError>;
 }
 
-// No need to make it async
-export const validateGraphQlDocuments = async (
+export async function validateGraphQlDocuments(
   schema: GraphQLSchema,
   documentFiles: Source[],
   effectiveRules: ValidationRule[] = DEFAULT_EFFECTIVE_RULES
-): Promise<ReadonlyArray<LoadDocumentError>> => {
+): Promise<ReadonlyArray<LoadDocumentError>> {
   const allFragments: FragmentDefinitionNode[] = [];
 
   documentFiles.forEach(documentFile => {
@@ -40,34 +39,36 @@ export const validateGraphQlDocuments = async (
 
   const allErrors: LoadDocumentError[] = [];
 
-  documentFiles.forEach(documentFile => {
-    const documentToValidate = {
-      kind: Kind.DOCUMENT,
-      definitions: [...allFragments, ...documentFile.document.definitions].filter((d, index, arr) => {
-        if (d.kind === Kind.FRAGMENT_DEFINITION) {
-          const foundIndex = arr.findIndex(i => i.kind === Kind.FRAGMENT_DEFINITION && i.name.value === d.name.value);
+  await Promise.all(
+    documentFiles.map(async documentFile => {
+      const documentToValidate = {
+        kind: Kind.DOCUMENT,
+        definitions: [...allFragments, ...documentFile.document.definitions].filter((d, index, arr) => {
+          if (d.kind === Kind.FRAGMENT_DEFINITION) {
+            const foundIndex = arr.findIndex(i => i.kind === Kind.FRAGMENT_DEFINITION && i.name.value === d.name.value);
 
-          if (foundIndex !== index) {
-            return false;
+            if (foundIndex !== index) {
+              return false;
+            }
           }
-        }
 
-        return true;
-      }),
-    };
+          return true;
+        }),
+      };
 
-    const errors = validate(schema, documentToValidate, effectiveRules);
+      const errors = validate(schema, documentToValidate, effectiveRules);
 
-    if (errors.length > 0) {
-      allErrors.push({
-        filePath: documentFile.location,
-        errors,
-      });
-    }
-  });
+      if (errors.length > 0) {
+        allErrors.push({
+          filePath: documentFile.location,
+          errors,
+        });
+      }
+    })
+  );
 
   return allErrors;
-};
+}
 
 export function checkValidationErrors(loadDocumentErrors: ReadonlyArray<LoadDocumentError>): void | never {
   if (loadDocumentErrors.length > 0) {
