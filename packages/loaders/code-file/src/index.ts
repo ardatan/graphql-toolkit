@@ -59,7 +59,7 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
     const normalizedFilePath = ensureAbsolutePath(pointer, options);
 
     try {
-      const content: string = getContent(normalizedFilePath, options);
+      const content = getContent(normalizedFilePath, options);
       const sdl = await gqlPluckFromCodeString(normalizedFilePath, content, options.pluckConfig);
 
       if (sdl) {
@@ -91,7 +91,7 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
     const normalizedFilePath = ensureAbsolutePath(pointer, options);
 
     try {
-      const content: string = getContent(normalizedFilePath, options);
+      const content = getContent(normalizedFilePath, options);
       const sdl = gqlPluckFromCodeStringSync(normalizedFilePath, content, options.pluckConfig);
 
       if (sdl) {

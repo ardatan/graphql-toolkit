@@ -148,13 +148,13 @@ export function mergeExtensions(extensions: SchemaExtensions[]): SchemaExtension
 }
 
 function applyExtensionObject(obj: { extensions: Maybe<Readonly<Record<string, any>>> }, extensions: ExtensionsObject) {
-  obj.extensions = deepMerge.all([obj.extensions || {}, extensions]);
+  obj.extensions = deepMerge.all([obj.extensions || {}, extensions || {}]);
 }
 
 export function applyExtensions(schema: GraphQLSchema, extensions: SchemaExtensions): GraphQLSchema {
   applyExtensionObject(schema, extensions.schemaExtensions);
 
-  for (const [typeName, data] of Object.entries(extensions.types)) {
+  for (const [typeName, data] of Object.entries(extensions.types || {})) {
     const type = schema.getType(typeName);
     applyExtensionObject(type, data.extensions);
 

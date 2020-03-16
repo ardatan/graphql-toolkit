@@ -2,9 +2,9 @@ import { Source, isDocumentString, parseGraphQLSDL, asArray, printSchemaWithDire
 import { isSchema, Kind, parse } from 'graphql';
 import isGlob from 'is-glob';
 import { LoadTypedefsOptions } from '../load-typedefs';
-import { loadFile } from './load-file';
-import { stringToHash, useStack, StackNext } from '../utils/helpers';
-import { useCustomLoader } from '../utils/custom-loader';
+import { loadFile, loadFileSync } from './load-file';
+import { stringToHash, useStack, StackNext, StackFn } from '../utils/helpers';
+import { useCustomLoader, useCustomLoaderSync } from '../utils/custom-loader';
 import { useQueue, useSyncQueue } from '../utils/queue';
 
 type AddSource = (data: { pointer: string; source: Source; noCache?: boolean }) => void;
@@ -33,6 +33,7 @@ export async function collectSources<TOptions>({
     globs,
     options,
     globOptions,
+    stack: [collectDocumentString, collectGlob, collectCustomLoader, collectFallback],
   });
 
   for (const pointer in pointerOptionMap) {
@@ -99,6 +100,7 @@ export function collectSourcesSync<TOptions>({
     globs,
     options,
     globOptions,
+    stack: [collectDocumentString, collectGlob, collectCustomLoaderSync, collectFallbackSync],
   });
 
   for (const pointer in pointerOptionMap) {
@@ -125,10 +127,10 @@ export function collectSourcesSync<TOptions>({
       globs,
     });
 
-    const { default: globby } = require('globby');
+    const globby = require('globby');
     const paths = globby.sync(globs, createGlobbyOptions(options));
 
-    collectSourcesFromGlobals({
+    collectSourcesFromGlobalsSync({
       filepaths: paths,
       options,
       globOptions,
@@ -150,11 +152,13 @@ function createHelpers<T>({
   globs,
   options,
   globOptions,
+  stack,
 }: {
   sources: Source[];
   globs: string[];
   options: LoadTypedefsOptions<Partial<T>>;
   globOptions: any;
+  stack: StackFn<CollectOptions<T>>[];
 }) {
   const addSource: AddSource = ({
     pointer,
@@ -172,7 +176,7 @@ function createHelpers<T>({
     }
   };
 
-  const collect = useStack(collectDocumentString, collectGlob, collectCustomLoader, collectFallback);
+  const collect = useStack(...stack);
 
   const addGlob: AddGlob = ({ pointerOptions, pointer }) => {
     globs.push(pointer);
@@ -222,6 +226,40 @@ function collectSourcesFromGlobals<T, P>({
   queue: AddToQueue<void>;
 }) {
   const collectFromGlobs = useStack(collectCustomLoader, collectFallback);
+
+  for (let i = 0; i < filepaths.length; i++) {
+    const pointer = filepaths[i];
+
+    collectFromGlobs({
+      pointer,
+      pointerOptions: globOptions,
+      pointerOptionMap,
+      options,
+      addSource,
+      addGlob: () => {
+        throw new Error(`I don't accept any new globs!`);
+      },
+      queue,
+    });
+  }
+}
+
+function collectSourcesFromGlobalsSync<T, P>({
+  filepaths,
+  options,
+  globOptions,
+  pointerOptionMap,
+  addSource,
+  queue,
+}: {
+  filepaths: string[];
+  options: LoadTypedefsOptions<Partial<T>>;
+  globOptions: any;
+  pointerOptionMap: P;
+  addSource: AddSource;
+  queue: AddToQueue<void>;
+}) {
+  const collectFromGlobs = useStack(collectCustomLoaderSync, collectFallbackSync);
 
   for (let i = 0; i < filepaths.length; i++) {
     const pointer = filepaths[i];
@@ -340,9 +378,40 @@ function collectCustomLoader<T>(
   next();
 }
 
+function collectCustomLoaderSync<T>(
+  { pointer, pointerOptions, queue, addSource, options, pointerOptionMap }: CollectOptions<T>,
+  next: StackNext
+) {
+  if (pointerOptions.loader) {
+    return queue(() => {
+      const loader = useCustomLoaderSync(pointerOptions.loader, options.cwd);
+      const result = loader(pointer, { ...options, ...pointerOptions }, pointerOptionMap);
+
+      if (result) {
+        addResultOfCustomLoader({ pointer, result, addSource });
+      }
+    });
+  }
+
+  next();
+}
+
 function collectFallback<T>({ queue, pointer, options, pointerOptions, addSource }: CollectOptions<T>) {
   return queue(async () => {
     const source = await loadFile(pointer, {
+      ...options,
+      ...pointerOptions,
+    });
+
+    if (source) {
+      addSource({ source, pointer });
+    }
+  });
+}
+
+function collectFallbackSync<T>({ queue, pointer, options, pointerOptions, addSource }: CollectOptions<T>) {
+  return queue(() => {
+    const source = loadFileSync(pointer, {
       ...options,
       ...pointerOptions,
     });
