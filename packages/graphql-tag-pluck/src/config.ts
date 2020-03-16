@@ -9,7 +9,7 @@ export default function generateConfig(filePath: string, code: string, options: 
     'classProperties',
     'classPrivateProperties',
     'classPrivateMethods',
-    ['decorators', { decoratorsBeforeExport: true }],
+    'decorators-legacy',
     'doExpressions',
     'dynamicImport',
     'exportDefaultFrom',

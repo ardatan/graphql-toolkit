@@ -43,4 +43,15 @@ describe('loadFromCodeFile', () => {
 
     expect(doc.kind).toEqual('Document');
   });
+
+  it('should load a TypeScript file using decorator', async () => {
+    const loaded = await loader.load('./tests/test-files/with-decorator-doc.ts', {
+      noRequire: true,
+      fs,
+      path,
+    });
+    const doc = parse(loaded.rawSDL);
+
+    expect(doc.kind).toEqual('Document');
+  });
 });
