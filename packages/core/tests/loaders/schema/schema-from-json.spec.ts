@@ -1,7 +1,7 @@
 import { loadSchema, loadSchemaSync } from '@graphql-toolkit/core';
 import { JsonFileLoader } from '@graphql-toolkit/json-file-loader';
 import { isSchema, GraphQLObjectType, GraphQLInterfaceType } from 'graphql';
-import { runTests } from '../../utils';
+import { runTests } from '@testing-utils';
 
 describe('Schema From Export', () => {
   runTests({

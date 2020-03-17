@@ -6,12 +6,11 @@
     "test": "lerna run test",
     "lint": "lerna run lint -- --fix",
     "format": "prettier --write packages/**/*.{js,json,css,md,ts,tsx}",
-    "test-and-build": "yarn build && yarn test",
-    "prerelease": "yarn test-and-build",
-    "prerelease:canary": "yarn test-and-build",
+    "prerelease": "yarn build && yarn test",
+    "prerelease:canary": "yarn prerelease",
     "release": "lerna publish --exact --force-publish=\"*\"",
-    "release:canary": "lerna publish --force-publish=\"*\"  --preid \"alpha-`git rev-parse --short HEAD`\" --canary --exact",
-    "ci:release:canary": "lerna publish --force-publish=\"*\"  --preid \"alpha-`git rev-parse --short HEAD`\" --canary --exact --yes"
+    "release:canary": "exit 0",
+    "ci:release:canary": "yarn release:canary --yes"
   },
   "husky": {
     "hooks": {
@@ -32,13 +31,17 @@
     ]
   },
   "devDependencies": {
+    "@types/jest": "25.1.4",
+    "bob-the-bundler": "0.3.0-alpha.7",
     "graphql": "14.6.0",
     "husky": "4.2.3",
+    "jest": "25.1.0",
     "lerna": "3.20.2",
     "lint-staged": "10.0.8",
     "prettier": "1.19.1",
-    "typescript": "3.8.3",
-    "tslint": "6.1.0"
+    "tslint": "6.1.0",
+    "ts-jest": "25.2.1",
+    "typescript": "3.8.3"
   },
   "workspaces": [
     "packages/*",

@@ -1,6 +1,6 @@
 import { GraphQLSchema, BuildSchemaOptions, buildSchema } from 'graphql';
 import { Options } from 'graphql/utilities/schemaPrinter';
-import { printSchemaWithDirectives } from '.';
+import { printSchemaWithDirectives } from './print-schema-with-directives';
 
 function buildFixedSchema(schema: GraphQLSchema, options: BuildSchemaOptions & Options) {
   return buildSchema(printSchemaWithDirectives(schema, options), {

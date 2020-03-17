@@ -1,5 +1,6 @@
 import { buildClientSchema, parse, ParseOptions } from 'graphql';
-import { printSchemaWithDirectives, Source } from '.';
+import { Source } from './loaders';
+import { printSchemaWithDirectives } from './print-schema-with-directives';
 import { GraphQLSchemaValidationOptions } from 'graphql/type/schema';
 import { Options } from 'graphql/utilities/schemaPrinter';
 

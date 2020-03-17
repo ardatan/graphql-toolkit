@@ -1,7 +1,7 @@
 import { isSchema } from 'graphql';
 import { loadSchema, loadSchemaSync } from '@graphql-toolkit/core';
 import { CodeFileLoader } from '@graphql-toolkit/code-file-loader';
-import { runTests } from '../../utils';
+import { runTests } from '@testing-utils';
 
 describe('Schema From Export', () => {
   runTests({

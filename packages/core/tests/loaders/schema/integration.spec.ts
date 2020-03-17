@@ -1,7 +1,7 @@
 import { loadSchema, loadSchemaSync } from '@graphql-toolkit/core';
 import { CodeFileLoader } from '@graphql-toolkit/code-file-loader';
 import { GraphQLFileLoader } from '@graphql-toolkit/graphql-file-loader';
-import { runTests } from '../../utils';
+import { runTests } from '@testing-utils';
 
 describe('loadSchema', () => {
   runTests({

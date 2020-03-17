@@ -3,8 +3,8 @@ import { makeExecutableSchema } from 'graphql-tools-fork';
 import { UrlLoader } from '../src';
 import { printSchemaWithDirectives } from '@graphql-toolkit/common';
 import { ApolloServer } from 'apollo-server-express';
-import * as express from 'express';
-import * as request from 'supertest';
+import express from 'express';
+import request from 'supertest';
 
 const SHOULD_NOT_GET_HERE_ERROR = 'SHOULD_NOT_GET_HERE';
 type MockHandler = (options: Parameters<WindowOrWorkerGlobalScope['fetch']>[1]) => ReturnType<WindowOrWorkerGlobalScope['fetch']>;

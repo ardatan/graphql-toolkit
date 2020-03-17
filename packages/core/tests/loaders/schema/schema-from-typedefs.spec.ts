@@ -1,7 +1,7 @@
 import { loadSchema, loadSchemaSync } from '@graphql-toolkit/core';
 import { GraphQLFileLoader } from '@graphql-toolkit/graphql-file-loader';
 import { CodeFileLoader } from '@graphql-toolkit/code-file-loader';
-import { runTests } from '../../utils';
+import { runTests } from '@testing-utils';
 
 describe('schema from typedefs', () => {
   runTests({

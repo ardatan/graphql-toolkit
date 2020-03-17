@@ -1,25 +1,7 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "resolveJsonModule": true,
-    "importHelpers": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
-    "module": "esnext",
-    "target": "es2018",
-    "lib": ["esnext"],
-    "suppressImplicitAnyIndexErrors": true,
-    "moduleResolution": "node",
-    "emitDecoratorMetadata": true,
-    "sourceMap": true,
-    "declaration": true,
-    "outDir": "./dist/",
-    "noImplicitAny": false,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false
+    "outDir": "dist"
   },
-  "exclude": ["node_modules", "tests", "dist"]
+  "files": ["src/index.ts"]
 }

@@ -3,7 +3,7 @@ import { join } from 'path';
 import { GraphQLFileLoader } from '@graphql-toolkit/graphql-file-loader';
 import { print } from 'graphql';
 import '../../../../testing/to-be-similar-gql-doc';
-import { runTests } from '../../utils';
+import { runTests } from '@testing-utils';
 
 describe('import in documents', () => {
     runTests({

@@ -8,7 +8,7 @@ import { CodeFileLoader } from '@graphql-toolkit/code-file-loader';
 import { parseGraphQLSDL, Source } from '@graphql-toolkit/common';
 import { mergeTypeDefs } from '@graphql-toolkit/schema-merging';
 import '../../../../testing/to-be-similar-gql-doc';
-import { runTests } from '../../utils';
+import { runTests } from '@testing-utils';
 
 type Options = LoadTypedefsOptions & Parameters<typeof mergeTypeDefs>[1];
 type Schemas = { [name: string]: string };

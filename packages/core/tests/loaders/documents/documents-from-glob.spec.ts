@@ -3,7 +3,7 @@ import { join } from 'path';
 import { separateOperations } from 'graphql';
 import { GraphQLFileLoader } from '@graphql-toolkit/graphql-file-loader';
 import { CodeFileLoader } from '@graphql-toolkit/code-file-loader';
-import { runTests } from '../../utils';
+import { runTests } from '@testing-utils';
 
 describe('documentsFromGlob', () => {
   runTests({

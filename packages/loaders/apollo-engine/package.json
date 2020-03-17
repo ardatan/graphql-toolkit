@@ -11,7 +11,7 @@
     "prebuild": "yarn clean",
     "build": "bob",
     "prepack": "bob-update-version",
-    "test": "jest --passWithNoTests --passWithNoTests --no-watchman --config ../../../jest.config.js"
+    "test": "jest --passWithNoTests --no-watchman --config ../../../jest.config.js"
   },
   "sideEffects": false,
   "main": "dist/index.cjs.js",
@@ -25,14 +25,6 @@
   },
   "buildOptions": {
     "input": "./src/index.ts"
-  },
-  "devDependencies": {
-    "@ardatan/bob": "0.2.7",
-    "@types/jest": "25.1.4",
-    "graphql": "14.6.0",
-    "jest": "25.1.0",
-    "ts-jest": "25.2.1",
-    "typescript": "3.8.3"
   },
   "dependencies": {
     "@graphql-toolkit/common": "0.9.7",
