@@ -72,11 +72,6 @@ function safeChangeForFieldType(oldType: TypeNode, newType: TypeNode, ignoreNull
 
   // new is non-null
   if (isNonNullTypeNode(newType)) {
-    // I don't think it's a breaking change but `merge-graphql-schemas` needs it...
-    if (!isNonNullTypeNode(oldType) && !ignoreNullability) {
-      return false;
-    }
-
     const ofType = isNonNullTypeNode(oldType) ? oldType.type : oldType;
 
     return safeChangeForFieldType(ofType, newType.type);
