@@ -64,7 +64,7 @@ export function pushComment(node: { readonly description?: StringValueNode }, en
 }
 
 export function printComment(comment: string): string {
-  return '\n# ' + comment.replace(/\n/g, '\n # ');
+  return '\n# ' + comment.replace(/\n/g, '\n# ');
 }
 
 /**

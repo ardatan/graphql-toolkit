@@ -3,9 +3,12 @@ import { makeExecutableSchema, mergeSchemas } from 'graphql-tools-fork';
 import { buildSchema, buildClientSchema, print, parse } from 'graphql';
 import { stripWhitespaces } from './utils';
 import gql from 'graphql-tag';
-import * as introspectionSchema from './schema.json';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
-const clientType = /* GraphQL */ `
+const introspectionSchema = JSON.parse(readFileSync(join(__dirname, './schema.json'), 'utf8'));
+
+const clientType = /* GraphQL */`
   type Client {
     id: ID!
     name: String
@@ -216,7 +219,7 @@ describe('Merge TypeDefs', () => {
       const merged = mergeTypeDefs(['type Query { f1: String }', 'type Query { f2: String }', 'type MyType { field: Int } type Query { f3: MyType }']);
 
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         type Query {
           f1: String
           f2: String
@@ -285,7 +288,7 @@ describe('Merge TypeDefs', () => {
       ]);
 
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         " or she's not? "
         type MyType {
           field1: Int
@@ -315,7 +318,7 @@ describe('Merge TypeDefs', () => {
       ]);
 
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         type Query @test @test2 {
           f1: String
           f2: String
@@ -353,7 +356,7 @@ describe('Merge TypeDefs', () => {
       const merged = mergeTypeDefs([`directive @id on FIELD_DEFINITION`, `type MyType { id: Int @id }`, `type Query { f1: MyType }`]);
 
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
           directive @id on FIELD_DEFINITION
 
           type MyType {
@@ -383,7 +386,7 @@ describe('Merge TypeDefs', () => {
       ]);
 
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
           directive @id(primitiveArg: String, arrayArg: [String]) on FIELD_DEFINITION
 
           type MyType {
@@ -421,7 +424,7 @@ describe('Merge TypeDefs', () => {
       const merged = mergeTypeDefs([`directive @id on FIELD_DEFINITION`, `directive @id on FIELD_DEFINITION`, `type MyType { id: Int @id }`, `type Query { f1: MyType }`]);
 
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
           directive @id on FIELD_DEFINITION
 
           type MyType {
@@ -509,7 +512,7 @@ describe('Merge TypeDefs', () => {
       const merged = mergeTypeDefs([`directive @id on FIELD_DEFINITION`, `directive @id on OBJECT`, `type MyType { id: Int @id }`, `type Query { f1: MyType }`]);
 
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
           directive @id on FIELD_DEFINITION | OBJECT
 
           type MyType {
@@ -572,7 +575,7 @@ describe('Merge TypeDefs', () => {
       const merged = mergeTypeDefs(['type Query { f1: String }']);
 
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         type Query {
           f1: String
         }
@@ -593,7 +596,7 @@ describe('Merge TypeDefs', () => {
       ]);
 
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         type Query {
           f1: String
         }
@@ -615,7 +618,7 @@ describe('Merge TypeDefs', () => {
       ]);
 
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         type Query {
           f1: String
           f2: String
@@ -637,7 +640,7 @@ describe('Merge TypeDefs', () => {
       ]);
 
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         type Query {
           f1: String
           f2: String
@@ -662,7 +665,7 @@ describe('Merge TypeDefs', () => {
       ]);
 
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         type RootQuery {
           f1: String
           f2: String
@@ -689,7 +692,7 @@ describe('Merge TypeDefs', () => {
       ]);
 
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         type Query {
           f1: String
           f2: String
@@ -711,7 +714,7 @@ describe('Merge TypeDefs', () => {
       ]);
 
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         type MyType { f1: String }
         `)
       );
@@ -730,7 +733,7 @@ describe('Merge TypeDefs', () => {
       ]);
 
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         type MyType { f1: String f2: String }
         `)
       );
@@ -749,7 +752,7 @@ describe('Merge TypeDefs', () => {
       `,
       ]);
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         type Test {
           foo: String
           bar: String
@@ -784,7 +787,7 @@ describe('Merge TypeDefs', () => {
       const printed = stripWhitespaces(print(merged));
 
       expect(printed).toContain(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         type Query {
           foo: String
           bar: String
@@ -792,7 +795,7 @@ describe('Merge TypeDefs', () => {
       `)
       );
       expect(printed).toContain(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         type User {
           name: String
           id: ID
@@ -824,7 +827,7 @@ describe('Merge TypeDefs', () => {
       const printed = stripWhitespaces(print(merged));
 
       expect(printed).toContain(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         input TestInput { t: String! t2: String! }
       `)
       );
@@ -865,7 +868,7 @@ describe('Merge TypeDefs', () => {
       const printed = stripWhitespaces(print(merged));
 
       expect(printed).toContain(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         extend type Query {
           foo: String
           bar: String
@@ -898,7 +901,7 @@ describe('Merge TypeDefs', () => {
 
       const printed = stripWhitespaces(print(merged));
 
-      expect(printed).toContain(stripWhitespaces(`union MyUnion = A | B | C`));
+      expect(printed).toContain(stripWhitespaces(/* GraphQL */`union MyUnion = A | B | C`));
     });
 
     it('should merge unions correctly without extend', () => {
@@ -925,7 +928,7 @@ describe('Merge TypeDefs', () => {
 
       const printed = stripWhitespaces(print(merged));
 
-      expect(printed).toContain(stripWhitespaces(`union MyUnion = A | B | C`));
+      expect(printed).toContain(stripWhitespaces(/* GraphQL */`union MyUnion = A | B | C`));
     });
 
     it('should handle extend inputs', () => {
@@ -942,7 +945,7 @@ describe('Merge TypeDefs', () => {
       `,
       ]);
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         input TestInput {
           foo: String
           bar: String
@@ -964,7 +967,7 @@ describe('Merge TypeDefs', () => {
       `,
       ]);
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         extend type Test {
           foo: String
           bar: String
@@ -986,7 +989,7 @@ describe('Merge TypeDefs', () => {
       `,
       ]);
       expect(stripWhitespaces(print(merged))).toBe(
-        stripWhitespaces(`
+        stripWhitespaces(/* GraphQL */`
         extend input TestInput {
           foo: String
           bar: String
@@ -1000,7 +1003,7 @@ describe('Merge TypeDefs', () => {
     it('includes mutationType', () => {
       const types = [clientType, productType];
       const mergedTypes = mergeTypeDefs(types, { commentDescriptions: true });
-      const expectedMutationType = stripWhitespaces(`
+      const expectedMutationType = stripWhitespaces(/* GraphQL */`
         type Mutation {
       
           # Creates a new client with their name & age
@@ -1026,7 +1029,7 @@ describe('Merge TypeDefs', () => {
     it('includes first product ENUM type', () => {
       const types = [clientType, productType];
       const mergedTypes = mergeTypeDefs(types, { commentDescriptions: true });
-      const expectedEnumType = stripWhitespaces(`
+      const expectedEnumType = stripWhitespaces(/* GraphQL */`
         enum ProductTypes {
           # New
           NEW
@@ -1071,7 +1074,7 @@ describe('Merge TypeDefs', () => {
 
       const mergedTypes = mergeTypeDefs(types);
 
-      const expectedEnumType = stripWhitespaces(`
+      const expectedEnumType = stripWhitespaces(/* GraphQL */`
         """
           Extended Enum with comments and new Value
         """
@@ -1095,7 +1098,7 @@ describe('Merge TypeDefs', () => {
     it('preserves the field comments', () => {
       const types = [clientType, productType];
       const mergedTypes = mergeTypeDefs(types, { commentDescriptions: true });
-      const expectedClientType = stripWhitespaces(`
+      const expectedClientType = stripWhitespaces(/* GraphQL */`
         type ClientWithComment {
           # ClientID
           # Second comment line
@@ -1114,7 +1117,7 @@ describe('Merge TypeDefs', () => {
     it('preserves the type comments', () => {
       const types = [clientType, productType];
       const mergedTypes = mergeTypeDefs(types, { commentDescriptions: true });
-      const expectedClientType = stripWhitespaces(`
+      const expectedClientType = stripWhitespaces(/* GraphQL */`
         # Comments on top of type definition
         # Second comment line
         # Third comment line
@@ -1135,7 +1138,7 @@ describe('Merge TypeDefs', () => {
       const types = [clientType, productType];
       const s = mergeTypeDefs(types, { commentDescriptions: true });
       const mergedTypes = mergeTypeDefs(types, { commentDescriptions: true });
-      const expectedClientType = stripWhitespaces(`
+      const expectedClientType = stripWhitespaces(/* GraphQL */`
         input ClientFormInputWithComment {
           # Name
           name: String!
@@ -1152,7 +1155,7 @@ describe('Merge TypeDefs', () => {
       const parsedClientType = parse(clientType);
       const types = [parsedClientType, productType];
       const mergedTypes = mergeTypeDefs(types, { commentDescriptions: true });
-      const expectedClientType = stripWhitespaces(`
+      const expectedClientType = stripWhitespaces(/* GraphQL */`
         input ClientFormInputWithComment {
           # Name
           name: String!
@@ -1170,7 +1173,7 @@ describe('Merge TypeDefs', () => {
     const parsedClientType = parse(clientType);
     const types = [parsedClientType, productType];
     const mergedTypes = mergeTypeDefs(types, { commentDescriptions: true });
-    const expectedClientType = stripWhitespaces(`
+    const expectedClientType = stripWhitespaces(/* GraphQL */`
       input ClientFormInputWithComment {
         # Name
         name: String!
@@ -1184,12 +1187,12 @@ describe('Merge TypeDefs', () => {
     expect(separateTypes).toContain(expectedClientType);
   });
   it('excludes fields', () => {
-    const userF1Type = stripWhitespaces(`
+    const userF1Type = stripWhitespaces(/* GraphQL */`
       type User {
         f1: String
       }
     `);
-    const userF2Type = stripWhitespaces(`
+    const userF2Type = stripWhitespaces(/* GraphQL */`
       type User {
         f2: String
       }
@@ -1199,13 +1202,14 @@ describe('Merge TypeDefs', () => {
     });
     expect(stripWhitespaces(print(mergedTypes))).toBe(userF2Type);
   });
+
   it('excludes types', () => {
-    const queryType = stripWhitespaces(`
+    const queryType = stripWhitespaces(/* GraphQL */`
       type Query {
         user: User
       }
     `);
-    const userType = stripWhitespaces(`
+    const userType = stripWhitespaces(/* GraphQL */`
       type User {
         name: String
       }
@@ -1215,21 +1219,22 @@ describe('Merge TypeDefs', () => {
     });
     expect(stripWhitespaces(print(mergedTypes))).toBe(userType);
   });
+
   it('should sort fields', () => {
-    const t1 = stripWhitespaces(`
+    const t1 = stripWhitespaces(/* GraphQL */`
       type Query {
         A: String!
         C: String!
       }
     `);
-    const t2 = stripWhitespaces(`
+    const t2 = stripWhitespaces(/* GraphQL */`
       extend type Query {
         B: String!
         D: String!
       }
     `);
     const mergedTypes = mergeTypeDefs([t1, t2], { sort: true });
-    expect(stripWhitespaces(print(mergedTypes))).toContain(stripWhitespaces(`
+    expect(stripWhitespaces(print(mergedTypes))).toContain(stripWhitespaces(/* GraphQL */`
       type Query {
         A: String!
         B: String!
@@ -1238,4 +1243,40 @@ describe('Merge TypeDefs', () => {
       }
     `));
   });
+
+  it('should keep indentation in comment descriptions', () => {
+    const A = /* GraphQL */`
+    type Some {
+      # comment1
+      #  - first line1
+      #  - second line1
+      field1: Int
+    }
+    `;
+
+    const B = /* GraphQL */`
+    type Some {
+      # comment2
+      #  - first line2
+      #  - second line2
+      field2: Int
+    }
+    `;
+
+    expect(mergeTypeDefs([A,B], { commentDescriptions: true })).toBe(
+/* GraphQL */`type Some {
+  
+  # comment1
+  #  - first line1
+  #  - second line1
+  field1: Int
+  
+  # comment2
+  #  - first line2
+  #  - second line2
+  field2: Int
+}
+`);
+  });
+
 });
