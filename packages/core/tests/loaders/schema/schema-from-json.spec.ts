@@ -1,16 +1,21 @@
-import { loadSchema } from '@graphql-toolkit/core';
+import { loadSchema, loadSchemaSync } from '@graphql-toolkit/core';
 import { JsonFileLoader } from '@graphql-toolkit/json-file-loader';
-import { isSchema, GraphQLObjectType, GraphQLInterfaceType, introspectionTypes } from 'graphql';
+import { isSchema, GraphQLObjectType, GraphQLInterfaceType } from 'graphql';
+import { runTests } from '../../../../testing/utils';
 
 describe('Schema From Export', () => {
+  runTests({
+    async: loadSchema,
+    sync: loadSchemaSync
+  })(load => {
     it('should load the schema correctly from an introspection file', async () => {
-      const schema = await loadSchema('./tests/loaders/schema/test-files/githunt.json', {
+      const schema = await load('./tests/loaders/schema/test-files/githunt.json', {
         loaders: [new JsonFileLoader()]
       });
       expect(isSchema(schema)).toBeTruthy();
     });
     it('should load the schema with correct descriptions', async () => {
-      const schema = await loadSchema('./tests/loaders/schema/test-files/githunt.json', {
+      const schema = await load('./tests/loaders/schema/test-files/githunt.json', {
         loaders: [new JsonFileLoader()]
       });
       expect(isSchema(schema)).toBeTruthy();
@@ -33,4 +38,5 @@ describe('Schema From Export', () => {
         }
       }
     });
+  })
 });

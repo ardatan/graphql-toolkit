@@ -1,6 +1,12 @@
 import { freeText } from './utils';
 import { GraphQLTagPluckOptions } from '.';
-import { isVariableDeclarator, isIdentifier, isTemplateLiteral, isImportDefaultSpecifier, isImportSpecifier } from '@babel/types';
+import {
+  isVariableDeclarator,
+  isIdentifier,
+  isTemplateLiteral,
+  isImportDefaultSpecifier,
+  isImportSpecifier,
+} from '@babel/types';
 import { asArray } from '@graphql-toolkit/common';
 
 const defaults: GraphQLTagPluckOptions = {

@@ -1,4 +1,11 @@
-import { Source, parseGraphQLJSON, SchemaPointerSingle, DocumentLoader, isValidPath, SingleFileOptions } from '@graphql-toolkit/common';
+import {
+  Source,
+  parseGraphQLJSON,
+  SchemaPointerSingle,
+  DocumentLoader,
+  isValidPath,
+  SingleFileOptions,
+} from '@graphql-toolkit/common';
 
 const FILE_EXTENSIONS = ['.json'];
 
@@ -13,12 +20,18 @@ export class JsonFileLoader implements DocumentLoader {
   }
 
   async canLoad(pointer: SchemaPointerSingle, options: JsonFileLoaderOptions): Promise<boolean> {
+    return this.canLoadSync(pointer, options);
+  }
+
+  canLoadSync(pointer: SchemaPointerSingle, options: JsonFileLoaderOptions): boolean {
     if (isValidPath(pointer) && options.path && options.fs) {
       const { resolve, isAbsolute } = options.path;
+
       if (FILE_EXTENSIONS.find(extension => pointer.endsWith(extension))) {
         const normalizedFilePath = isAbsolute(pointer) ? pointer : resolve(options.cwd || process.cwd(), pointer);
-        const { exists } = options.fs;
-        if (await new Promise(resolve => exists(normalizedFilePath, resolve))) {
+        const { existsSync } = options.fs;
+
+        if (existsSync(normalizedFilePath)) {
           return true;
         }
       }
@@ -26,10 +39,11 @@ export class JsonFileLoader implements DocumentLoader {
 
     return false;
   }
-
   async load(pointer: SchemaPointerSingle, options: JsonFileLoaderOptions): Promise<Source> {
-    if (options.path) {
-    }
+    return this.loadSync(pointer, options);
+  }
+
+  loadSync(pointer: SchemaPointerSingle, options: JsonFileLoaderOptions): Source {
     const { resolve: resolvePath, isAbsolute } = options.path;
     const normalizedFilepath = isAbsolute(pointer) ? pointer : resolvePath(options.cwd || process.cwd(), pointer);
 

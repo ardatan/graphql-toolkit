@@ -20,8 +20,16 @@ function scanForFiles(globStr: string | string[], globOptions: import('globby').
   return globby.sync(globStr, { absolute: true, ...globOptions });
 }
 
-function buildGlob(basePath: string, extensions: string[], ignoredExtensions: string[] = [], recursive: boolean): string {
-  return `${basePath}${recursive ? '/**' : ''}/${ignoredExtensions.length > 0 ? `!(${ignoredExtensions.map(e => '*.' + e).join('|')})` : '*'}+(${extensions.map(e => '*.' + e).join('|')})`;
+function buildGlob(
+  basePath: string,
+  extensions: string[],
+  ignoredExtensions: string[] = [],
+  recursive: boolean
+): string {
+  const ignored = ignoredExtensions.length > 0 ? `!(${ignoredExtensions.map(e => '*.' + e).join('|')})` : '*';
+  const ext = extensions.map(e => '*.' + e).join('|');
+
+  return `${basePath}${recursive ? '/**' : ''}/${ignored}+(${ext})`;
 }
 
 function extractExports(fileExport: any, exportNames: string[]): any | null {
@@ -72,11 +80,18 @@ const LoadFilesDefaultOptions: LoadFilesOptions = {
   ignoreIndex: false,
 };
 
-export function loadFiles<T = any>(pattern: string | string[], options: LoadFilesOptions = LoadFilesDefaultOptions): T[] {
+export function loadFiles<T = any>(
+  pattern: string | string[],
+  options: LoadFilesOptions = LoadFilesDefaultOptions
+): T[] {
   const execOptions = { ...LoadFilesDefaultOptions, ...options };
   const unixify = require('unixify');
   const relevantPaths = scanForFiles(
-    asArray(pattern).map(path => (isDirectory(path) ? buildGlob(unixify(path), execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive) : unixify(path))),
+    asArray(pattern).map(path =>
+      isDirectory(path)
+        ? buildGlob(unixify(path), execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive)
+        : unixify(path)
+    ),
     options.globOptions
   );
 
@@ -130,12 +145,18 @@ export function loadFiles<T = any>(pattern: string | string[], options: LoadFile
     .filter(v => v);
 }
 
-async function scanForFilesAsync(globStr: string | string[], globOptions: import('globby').GlobbyOptions = {}): Promise<string[]> {
+async function scanForFilesAsync(
+  globStr: string | string[],
+  globOptions: import('globby').GlobbyOptions = {}
+): Promise<string[]> {
   const { default: globby } = await import('globby');
   return globby(globStr, { absolute: true, ...globOptions });
 }
 
-const checkExtension = (path: string, { extensions, ignoredExtensions }: { extensions?: string[]; ignoredExtensions?: string[] }) => {
+const checkExtension = (
+  path: string,
+  { extensions, ignoredExtensions }: { extensions?: string[]; ignoredExtensions?: string[] }
+) => {
   if (ignoredExtensions) {
     for (const ignoredExtension of ignoredExtensions) {
       if (path.endsWith(ignoredExtension)) {
@@ -157,11 +178,18 @@ const checkExtension = (path: string, { extensions, ignoredExtensions }: { exten
   return false;
 };
 
-export async function loadFilesAsync(pattern: string | string[], options: LoadFilesOptions = LoadFilesDefaultOptions): Promise<any[]> {
+export async function loadFilesAsync(
+  pattern: string | string[],
+  options: LoadFilesOptions = LoadFilesDefaultOptions
+): Promise<any[]> {
   const execOptions = { ...LoadFilesDefaultOptions, ...options };
   const unixify = await import('unixify').then(m => m.default || m);
   const relevantPaths = await scanForFilesAsync(
-    asArray(pattern).map(path => (isDirectory(path) ? buildGlob(unixify(path), execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive) : unixify(path))),
+    asArray(pattern).map(path =>
+      isDirectory(path)
+        ? buildGlob(unixify(path), execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive)
+        : unixify(path)
+    ),
     options.globOptions
   );
 

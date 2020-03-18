@@ -1,6 +1,12 @@
-import { UniversalLoader, parseGraphQLSDL, parseGraphQLJSON, SingleFileOptions } from '@graphql-toolkit/common';
-import simplegit from 'simple-git/promise';
-import { GraphQLTagPluckOptions, gqlPluckFromCodeString } from '@graphql-toolkit/graphql-tag-pluck';
+import { UniversalLoader, parseGraphQLSDL, parseGraphQLJSON, SingleFileOptions, Source } from '@graphql-toolkit/common';
+import {
+  GraphQLTagPluckOptions,
+  gqlPluckFromCodeString,
+  gqlPluckFromCodeStringSync,
+} from '@graphql-toolkit/graphql-tag-pluck';
+
+import { loadFromGit, loadFromGitSync } from './load-git';
+import { parse } from './parse';
 
 // git:branch:path/to/file
 function extractData(
@@ -23,41 +29,57 @@ function extractData(
 
 type GitLoaderOptions = SingleFileOptions & { pluckConfig: GraphQLTagPluckOptions };
 
+const createInvalidExtensionError = (path: string) => new Error(`Invalid file extension: ${path}`);
+
 export class GitLoader implements UniversalLoader {
   loaderId() {
     return 'git-loader';
   }
+
   async canLoad(pointer: string) {
+    return this.canLoadSync(pointer);
+  }
+
+  canLoadSync(pointer: string) {
     return typeof pointer === 'string' && pointer.toLowerCase().startsWith('git:');
   }
+
   async load(pointer: string, options: GitLoaderOptions) {
     const { ref, path } = extractData(pointer);
-    const git = simplegit();
+    const content = await loadFromGit({ ref, path });
+    const parsed = parse({ path, options, pointer, content });
 
-    let content: string;
-
-    try {
-      content = await git.show([`${ref}:${path}`]);
-    } catch (error) {
-      throw new Error('Unable to load schema from git: ' + error);
-    }
-
-    if (/\.(gql|graphql)s?$/i.test(path)) {
-      return parseGraphQLSDL(pointer, content, options);
-    }
-
-    if (/\.json$/i.test(path)) {
-      return parseGraphQLJSON(pointer, content, options);
+    if (parsed) {
+      return parsed;
     }
 
     const rawSDL = await gqlPluckFromCodeString(pointer, content, options.pluckConfig);
-    if (rawSDL) {
-      return {
-        location: pointer,
-        rawSDL,
-      };
+
+    return ensureSource({ rawSDL, pointer, path });
+  }
+
+  loadSync(pointer: string, options: GitLoaderOptions) {
+    const { ref, path } = extractData(pointer);
+    const content = loadFromGitSync({ ref, path });
+    const parsed = parse({ path, options, pointer, content });
+
+    if (parsed) {
+      return parsed;
     }
 
-    throw new Error(`Invalid file extension: ${path}`);
+    const rawSDL = gqlPluckFromCodeStringSync(pointer, content, options.pluckConfig);
+
+    return ensureSource({ rawSDL, pointer, path });
   }
+}
+
+function ensureSource({ rawSDL, pointer, path }: { rawSDL: string; pointer: string; path: string }) {
+  if (rawSDL) {
+    return {
+      location: pointer,
+      rawSDL,
+    };
+  }
+
+  throw createInvalidExtensionError(path);
 }

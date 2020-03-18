@@ -9,19 +9,25 @@ const isMergeableObject = (target: any): target is object => {
   if (!target) {
     return false;
   }
+
   if (typeof target !== 'object') {
     return false;
   }
+
   const stringValue = Object.prototype.toString.call(target);
+
   if (stringValue === '[object RegExp]') {
     return false;
   }
+
   if (stringValue === '[object Date]') {
     return false;
   }
+
   if (isScalarType(target)) {
     return false;
   }
+
   return true;
 };
 
@@ -29,7 +35,10 @@ export interface MergeResolversOptions {
   exclusions?: string[];
 }
 
-export function mergeResolvers<TContext, T extends ResolversDefinition<TContext>>(resolversDefinitions: T[], options?: MergeResolversOptions): T {
+export function mergeResolvers<TContext, T extends ResolversDefinition<TContext>>(
+  resolversDefinitions: T[],
+  options?: MergeResolversOptions
+): T {
   if (!resolversDefinitions || resolversDefinitions.length === 0) {
     return {} as T;
   }

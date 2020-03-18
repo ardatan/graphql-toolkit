@@ -43,11 +43,10 @@ export function isDocumentString(str: string): boolean {
 
   try {
     parse(str);
-
     return true;
-  } catch (e) {
-    return false;
-  }
+  } catch (e) {}
+
+  return false;
 }
 
 const invalidPathRegex = /[‘“!$%&^<=>`]/;
@@ -58,21 +57,42 @@ export function isValidPath(str: string): boolean {
 export async function resolveBuiltinModule<Module>(moduleName: string, option?: Module | string): Promise<Module> {
   if (typeof option === 'object') {
     return option;
-  } else {
-    try {
-      if (typeof option === 'string') {
-        return await import(option);
-      } else {
-        return await import(moduleName);
-      }
-    } catch (e) {
-      // tslint:disable-next-line: no-console
-      console.warn(`
-        ${option || moduleName} module couldn't be found for built-in ${moduleName}.
-        Please provide a working module in your loader options!
-      `);
-      return null;
+  }
+
+  try {
+    if (typeof option === 'string') {
+      return await import(option);
     }
+
+    return await import(moduleName);
+  } catch (e) {
+    // tslint:disable-next-line: no-console
+    console.warn(`
+      ${option || moduleName} module couldn't be found for built-in ${moduleName}.
+      Please provide a working module in your loader options!
+    `);
+    return null;
+  }
+}
+
+export function resolveBuiltinModuleSync<Module>(moduleName: string, option?: Module | string): Module {
+  if (typeof option === 'object') {
+    return option;
+  }
+
+  try {
+    if (typeof option === 'string') {
+      return require(option);
+    }
+
+    return require(moduleName);
+  } catch (e) {
+    // tslint:disable-next-line: no-console
+    console.warn(`
+      ${option || moduleName} module couldn't be found for built-in ${moduleName}.
+      Please provide a working module in your loader options!
+    `);
+    return null;
   }
 }
 
@@ -80,28 +100,33 @@ export function compareStrings<A, B>(a: A, b: B) {
   if (a.toString() < b.toString()) {
     return -1;
   }
+
   if (a.toString() > b.toString()) {
     return 1;
   }
+
   return 0;
 }
 
 export function nodeToString(a: ASTNode) {
   if ('alias' in a) {
     return a.alias.value;
-  } else if ('name' in a) {
-    return a.name.value;
-  } else {
-    return a.kind;
   }
+
+  if ('name' in a) {
+    return a.name.value;
+  }
+
+  return a.kind;
 }
 
 export function compareNodes(a: ASTNode, b: ASTNode, customFn?: (a: any, b: any) => number) {
   const aStr = nodeToString(a);
   const bStr = nodeToString(b);
+
   if (typeof customFn === 'function') {
     return customFn(aStr, bStr);
-  } else {
-    return compareStrings(aStr, bStr);
   }
+
+  return compareStrings(aStr, bStr);
 }

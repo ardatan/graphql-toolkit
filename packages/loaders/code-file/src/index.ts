@@ -1,78 +1,21 @@
-import { DocumentNode, GraphQLSchema, parse, IntrospectionQuery, buildClientSchema, Kind, isSchema } from 'graphql';
-import { SchemaPointerSingle, DocumentPointerSingle, debugLog, SingleFileOptions, Source, UniversalLoader, asArray, isValidPath, parseGraphQLSDL, parseGraphQLJSON } from '@graphql-toolkit/common';
-import { GraphQLTagPluckOptions, gqlPluckFromCodeString } from '@graphql-toolkit/graphql-tag-pluck';
-
-function isSchemaText(obj: any): obj is string {
-  return typeof obj === 'string';
-}
-
-function isWrappedSchemaJson(obj: any): obj is { data: IntrospectionQuery } {
-  const json = obj as { data: IntrospectionQuery };
-
-  return json.data !== undefined && json.data.__schema !== undefined;
-}
-
-function isSchemaJson(obj: any): obj is IntrospectionQuery {
-  const json = obj as IntrospectionQuery;
-
-  return json !== undefined && json.__schema !== undefined;
-}
-
-function isSchemaAst(obj: any): obj is DocumentNode {
-  return (obj as DocumentNode).kind !== undefined;
-}
-
-function resolveExport(fileExport: GraphQLSchema | DocumentNode | string | { data: IntrospectionQuery } | IntrospectionQuery): GraphQLSchema | DocumentNode | null {
-  if (isSchema(fileExport)) {
-    return fileExport;
-  } else if (isSchemaText(fileExport)) {
-    return parse(fileExport);
-  } else if (isWrappedSchemaJson(fileExport)) {
-    return buildClientSchema(fileExport.data);
-  } else if (isSchemaJson(fileExport)) {
-    return buildClientSchema(fileExport);
-  } else if (isSchemaAst(fileExport)) {
-    return fileExport;
-  }
-
-  return null;
-}
-
-async function tryToLoadFromExport(rawFilePath: string): Promise<GraphQLSchema | DocumentNode> {
-  let filePath = rawFilePath;
-
-  try {
-    if (typeof require !== 'undefined' && require.cache) {
-      filePath = require.resolve(filePath);
-
-      if (require.cache[filePath]) {
-        delete require.cache[filePath];
-      }
-    }
-
-    const rawExports = await import(filePath);
-
-    if (rawExports) {
-      let rawExport = rawExports.default || rawExports.schema || rawExports.typeDefs || rawExports.data || rawExports;
-
-      if (rawExport) {
-        let exportValue = await rawExport;
-        exportValue = await (exportValue.default || exportValue.schema || exportValue.typeDefs || exportValue.data || exportValue);
-        try {
-          return resolveExport(exportValue);
-        } catch (e) {
-          throw new Error('Exported schema must be of type GraphQLSchema, text, AST, or introspection JSON.');
-        }
-      } else {
-        throw new Error(`Invalid export from export file ${filePath}: missing default export or 'schema' export!`);
-      }
-    } else {
-      throw new Error(`Invalid export from export file ${filePath}: empty export!`);
-    }
-  } catch (e) {
-    throw new Error(`Unable to load from file "${filePath}": ${e.message}`);
-  }
-}
+import { Kind, isSchema } from 'graphql';
+import {
+  SchemaPointerSingle,
+  DocumentPointerSingle,
+  debugLog,
+  SingleFileOptions,
+  Source,
+  UniversalLoader,
+  asArray,
+  isValidPath,
+  parseGraphQLSDL,
+} from '@graphql-toolkit/common';
+import {
+  GraphQLTagPluckOptions,
+  gqlPluckFromCodeString,
+  gqlPluckFromCodeStringSync,
+} from '@graphql-toolkit/graphql-tag-pluck';
+import { tryToLoadFromExport, tryToLoadFromExportSync } from './load-from-module';
 
 export type CodeFileLoaderOptions = {
   require?: string | string[];
@@ -88,13 +31,22 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
     return 'code-file';
   }
 
-  async canLoad(pointer: SchemaPointerSingle | DocumentPointerSingle, options: CodeFileLoaderOptions): Promise<boolean> {
+  async canLoad(
+    pointer: SchemaPointerSingle | DocumentPointerSingle,
+    options: CodeFileLoaderOptions
+  ): Promise<boolean> {
+    return this.canLoadSync(pointer, options);
+  }
+
+  canLoadSync(pointer: SchemaPointerSingle | DocumentPointerSingle, options: CodeFileLoaderOptions): boolean {
     if (isValidPath(pointer) && options.path && options.fs) {
       const { resolve, isAbsolute } = options.path;
+
       if (FILE_EXTENSIONS.find(extension => pointer.endsWith(extension))) {
         const normalizedFilePath = isAbsolute(pointer) ? pointer : resolve(options.cwd || process.cwd(), pointer);
-        const { exists } = options.fs;
-        if (await new Promise(resolve => exists(normalizedFilePath, resolve))) {
+        const { existsSync } = options.fs;
+
+        if (existsSync(normalizedFilePath)) {
           return true;
         }
       }
@@ -104,16 +56,14 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
   }
 
   async load(pointer: SchemaPointerSingle | DocumentPointerSingle, options: CodeFileLoaderOptions): Promise<Source> {
-    const { resolve, isAbsolute } = options.path;
-    const normalizedFilePath = isAbsolute(pointer) ? pointer : resolve(options.cwd || process.cwd(), pointer);
+    const normalizedFilePath = ensureAbsolutePath(pointer, options);
 
     try {
-      const { readFile } = options.fs;
-      const content: string = await new Promise((resolve, reject) => readFile(normalizedFilePath, { encoding: 'utf-8' }, (err, data) => (err ? reject(err) : resolve(data))));
+      const content = getContent(normalizedFilePath, options);
+      const sdl = await gqlPluckFromCodeString(normalizedFilePath, content, options.pluckConfig);
 
-      const rawSDL = await gqlPluckFromCodeString(normalizedFilePath, content, options.pluckConfig);
-      if (rawSDL) {
-        return parseGraphQLSDL(pointer, rawSDL, options);
+      if (sdl) {
+        return parseSDL({ pointer, sdl, options });
       }
     } catch (e) {
       debugLog(`Failed to load schema from code file "${normalizedFilePath}": ${e.message}`);
@@ -125,20 +75,80 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
       if (options && options.require) {
         await Promise.all(asArray(options.require).map(m => import(m)));
       }
-      let loaded = await tryToLoadFromExport(normalizedFilePath);
-      if (isSchema(loaded)) {
-        return {
-          location: pointer,
-          schema: loaded,
-        };
-      } else if (loaded && loaded.kind === Kind.DOCUMENT) {
-        return {
-          location: pointer,
-          document: loaded,
-        };
+
+      const loaded = await tryToLoadFromExport(normalizedFilePath);
+      const source = resolveSource(pointer, loaded);
+
+      if (source) {
+        return source;
       }
     }
 
     return null;
   }
+
+  loadSync(pointer: SchemaPointerSingle | DocumentPointerSingle, options: CodeFileLoaderOptions): Source {
+    const normalizedFilePath = ensureAbsolutePath(pointer, options);
+
+    try {
+      const content = getContent(normalizedFilePath, options);
+      const sdl = gqlPluckFromCodeStringSync(normalizedFilePath, content, options.pluckConfig);
+
+      if (sdl) {
+        return parseSDL({ pointer, sdl, options });
+      }
+    } catch (e) {
+      debugLog(`Failed to load schema from code file "${normalizedFilePath}": ${e.message}`);
+
+      throw e;
+    }
+
+    if (!options.noRequire) {
+      if (options && options.require) {
+        asArray(options.require).forEach(m => require(m));
+      }
+
+      const loaded = tryToLoadFromExportSync(normalizedFilePath);
+      const source = resolveSource(pointer, loaded);
+
+      if (source) {
+        return source;
+      }
+    }
+
+    return null;
+  }
+}
+
+function parseSDL({ pointer, sdl, options }: { pointer: string; sdl: string; options: CodeFileLoaderOptions }) {
+  return parseGraphQLSDL(pointer, sdl, options);
+}
+
+function resolveSource(pointer: string, value: any): Source | null {
+  if (isSchema(value)) {
+    return {
+      location: pointer,
+      schema: value,
+    };
+  } else if (value && value.kind === Kind.DOCUMENT) {
+    return {
+      location: pointer,
+      document: value,
+    };
+  }
+
+  return null;
+}
+
+function ensureAbsolutePath(
+  pointer: SchemaPointerSingle | DocumentPointerSingle,
+  options: CodeFileLoaderOptions
+): string {
+  const { resolve, isAbsolute } = options.path;
+
+  return isAbsolute(pointer) ? pointer : resolve(options.cwd || process.cwd(), pointer);
+}
+
+function getContent(filepath: string, options: CodeFileLoaderOptions): string {
+  return options.fs.readFileSync(filepath, { encoding: 'utf-8' });
 }

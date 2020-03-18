@@ -36,7 +36,11 @@ export function mergeGraphQLNodes(nodes: ReadonlyArray<DefinitionNode>, config?:
         collectComment(node);
       }
 
-      if (config && config.exclusions && (config.exclusions.includes(name + '.*') || config.exclusions.includes(name))) {
+      if (
+        config &&
+        config.exclusions &&
+        (config.exclusions.includes(name + '.*') || config.exclusions.includes(name))
+      ) {
         delete prev[name];
       } else if (isGraphQLType(nodeDefinition) || isGraphQLTypeExtension(nodeDefinition)) {
         prev[name] = mergeType(nodeDefinition, prev[name] as any, config);

@@ -1,8 +1,20 @@
 import { GraphQLSchema, DocumentNode, buildASTSchema, BuildSchemaOptions, buildSchema } from 'graphql';
-import { IResolvers, SchemaDirectiveVisitor, IResolverValidationOptions, ILogger, addResolveFunctionsToSchema, addErrorLoggingToSchema } from 'graphql-tools-fork';
+import {
+  IResolvers,
+  SchemaDirectiveVisitor,
+  IResolverValidationOptions,
+  ILogger,
+  addResolveFunctionsToSchema,
+  addErrorLoggingToSchema,
+} from 'graphql-tools-fork';
 import { mergeTypeDefs, Config } from './typedefs-mergers/merge-typedefs';
 import { mergeResolvers } from './merge-resolvers';
-import { extractResolversFromSchema, ResolversComposerMapping, composeResolvers, asArray } from '@graphql-toolkit/common';
+import {
+  extractResolversFromSchema,
+  ResolversComposerMapping,
+  composeResolvers,
+  asArray,
+} from '@graphql-toolkit/common';
 import { mergeExtensions, extractExtensionsFromSchema, applyExtensions } from './extensions';
 
 export interface MergeSchemasConfig<Resolvers extends IResolvers = IResolvers> extends Config, BuildSchemaOptions {
@@ -15,71 +27,81 @@ export interface MergeSchemasConfig<Resolvers extends IResolvers = IResolvers> e
   logger?: ILogger;
 }
 
-export function mergeSchemas({ schemas, typeDefs, resolvers, resolversComposition, schemaDirectives, resolverValidationOptions, logger, ...config }: MergeSchemasConfig) {
-  const typeDefsOutput = mergeTypeDefs([...schemas, ...(typeDefs ? asArray(typeDefs) : [])], config);
-  const resolversOutput = composeResolvers(mergeResolvers([...schemas.map(schema => extractResolversFromSchema(schema)), ...(resolvers ? asArray<IResolvers>(resolvers) : [])], config), resolversComposition || {});
-  const extensionsOutput = mergeExtensions(schemas.map(s => extractExtensionsFromSchema(s)));
-  let schema = typeof typeDefsOutput === 'string' ? buildSchema(typeDefsOutput, config) : buildASTSchema(typeDefsOutput, config);
-  applyExtensions(schema, extensionsOutput);
+const defaultResolverValidationOptions: Partial<IResolverValidationOptions> = {
+  requireResolversForArgs: false,
+  requireResolversForNonScalar: false,
+  requireResolversForAllFields: false,
+  requireResolversForResolveType: false,
+  allowResolversNotInSchema: true,
+};
 
-  if (resolversOutput) {
-    schema = addResolveFunctionsToSchema({
-      schema,
-      resolvers: resolversOutput,
-      resolverValidationOptions: {
-        requireResolversForArgs: false,
-        requireResolversForNonScalar: false,
-        requireResolversForAllFields: false,
-        requireResolversForResolveType: false,
-        allowResolversNotInSchema: true,
-        ...(resolverValidationOptions || {}),
-      },
-    });
-  }
+export function mergeSchemas(config: MergeSchemasConfig) {
+  const typeDefs = mergeTypes(config);
+  const resolvers = composeResolvers(
+    mergeResolvers(
+      [...config.schemas.map(schema => extractResolversFromSchema(schema)), ...ensureResolvers(config)],
+      config
+    ),
+    config.resolversComposition || {}
+  );
 
-  if (logger) {
-    addErrorLoggingToSchema(schema, logger);
-  }
-
-  if (schemaDirectives) {
-    SchemaDirectiveVisitor.visitSchemaDirectives(schema, schemaDirectives);
-  }
-
-  return schema;
+  return makeSchema({ resolvers, typeDefs }, config);
 }
 
-export async function mergeSchemasAsync({ schemas, typeDefs, resolvers, resolversComposition, schemaDirectives, resolverValidationOptions, logger, ...config }: MergeSchemasConfig) {
-  const [typeDefsOutput, resolversOutput] = await Promise.all([
-    mergeTypeDefs([...schemas, ...(typeDefs ? asArray(typeDefs) : [])], config),
-    Promise.all(schemas.map(async schema => extractResolversFromSchema(schema))).then(extractedResolvers =>
-      composeResolvers(mergeResolvers([...extractedResolvers, ...(resolvers ? asArray<IResolvers>(resolvers) : [])], config), resolversComposition || {})
+export async function mergeSchemasAsync(config: MergeSchemasConfig) {
+  const [typeDefs, resolvers] = await Promise.all([
+    mergeTypes(config),
+    Promise.all(config.schemas.map(async schema => extractResolversFromSchema(schema))).then(extractedResolvers =>
+      composeResolvers(
+        mergeResolvers([...extractedResolvers, ...ensureResolvers(config)], config),
+        config.resolversComposition || {}
+      )
     ),
   ]);
 
-  let schema = typeof typeDefsOutput === 'string' ? buildSchema(typeDefsOutput, config) : buildASTSchema(typeDefsOutput, config);
+  return makeSchema({ resolvers, typeDefs }, config);
+}
 
-  if (resolversOutput) {
+function mergeTypes({ schemas, typeDefs, ...config }: MergeSchemasConfig) {
+  return mergeTypeDefs([...schemas, ...(typeDefs ? asArray(typeDefs) : [])], config);
+}
+
+function ensureResolvers(config: MergeSchemasConfig) {
+  return config.resolvers ? asArray<IResolvers>(config.resolvers) : [];
+}
+
+function makeSchema(
+  { resolvers, typeDefs }: { resolvers: IResolvers; typeDefs: string | DocumentNode },
+  config: MergeSchemasConfig
+) {
+  const extensions = mergeExtensions(config.schemas.map(s => extractExtensionsFromSchema(s)));
+
+  let schema = typeof typeDefs === 'string' ? buildSchema(typeDefs, config) : buildASTSchema(typeDefs, config);
+
+  // add resolvers
+  if (resolvers) {
     schema = addResolveFunctionsToSchema({
       schema,
-      resolvers: resolversOutput,
+      resolvers,
       resolverValidationOptions: {
-        requireResolversForArgs: false,
-        requireResolversForNonScalar: false,
-        requireResolversForAllFields: false,
-        requireResolversForResolveType: false,
-        allowResolversNotInSchema: true,
-        ...(resolverValidationOptions || {}),
+        ...defaultResolverValidationOptions,
+        ...(config.resolverValidationOptions || {}),
       },
     });
   }
 
-  if (logger) {
-    addErrorLoggingToSchema(schema, logger);
+  // use logger
+  if (config.logger) {
+    addErrorLoggingToSchema(schema, config.logger);
   }
 
-  if (schemaDirectives) {
-    SchemaDirectiveVisitor.visitSchemaDirectives(schema, schemaDirectives);
+  // use schema directives
+  if (config.schemaDirectives) {
+    SchemaDirectiveVisitor.visitSchemaDirectives(schema, config.schemaDirectives);
   }
+
+  // extensions
+  applyExtensions(schema, extensions);
 
   return schema;
 }

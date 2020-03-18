@@ -52,7 +52,13 @@ export type EnumTypeExtensions = {
   values: Record<string, ExtensionsObject>;
 };
 
-export type PossibleTypeExtensions = InputTypeExtensions | InterfaceTypeExtensions | ObjectTypeExtensions | UnionTypeExtensions | ScalarTypeExtensions | EnumTypeExtensions;
+export type PossibleTypeExtensions =
+  | InputTypeExtensions
+  | InterfaceTypeExtensions
+  | ObjectTypeExtensions
+  | UnionTypeExtensions
+  | ScalarTypeExtensions
+  | EnumTypeExtensions;
 export type SchemaExtensions = {
   schemaExtensions: ExtensionsObject;
   types: Record<string, { extensions: ExtensionsObject } & PossibleTypeExtensions>;
@@ -135,7 +141,10 @@ export function travelSchemaPossibleExtensions(
 }
 
 export function mergeExtensions(extensions: SchemaExtensions[]): SchemaExtensions {
-  return extensions.reduce((result, extensionObj) => deepMerge.all([result, extensionObj]) as SchemaExtensions, {} as SchemaExtensions);
+  return extensions.reduce(
+    (result, extensionObj) => deepMerge.all([result, extensionObj]) as SchemaExtensions,
+    {} as SchemaExtensions
+  );
 }
 
 function applyExtensionObject(obj: { extensions: Maybe<Readonly<Record<string, any>>> }, extensions: ExtensionsObject) {
@@ -186,17 +195,31 @@ export function extractExtensionsFromSchema(schema: GraphQLSchema): SchemaExtens
   travelSchemaPossibleExtensions(schema, {
     onSchema: schema => (result.schemaExtensions = schema.extensions || {}),
     onObjectType: type => (result.types[type.name] = { fields: {}, type: 'object', extensions: type.extensions || {} }),
-    onObjectField: (type, field) => ((result.types[type.name] as ObjectTypeExtensions).fields[field.name] = { arguments: {}, extensions: field.extensions || {} }),
-    onObjectFieldArg: (type, field, arg) => ((result.types[type.name] as ObjectTypeExtensions).fields[field.name].arguments[arg.name] = arg.extensions || {}),
-    onInterface: type => (result.types[type.name] = { fields: {}, type: 'interface', extensions: type.extensions || {} }),
-    onInterfaceField: (type, field) => ((result.types[type.name] as InterfaceTypeExtensions).fields[field.name] = { arguments: {}, extensions: field.extensions || {} }),
-    onInterfaceFieldArg: (type, field, arg) => ((result.types[type.name] as InterfaceTypeExtensions).fields[field.name].arguments[arg.name] = arg.extensions || {}),
+    onObjectField: (type, field) =>
+      ((result.types[type.name] as ObjectTypeExtensions).fields[field.name] = {
+        arguments: {},
+        extensions: field.extensions || {},
+      }),
+    onObjectFieldArg: (type, field, arg) =>
+      ((result.types[type.name] as ObjectTypeExtensions).fields[field.name].arguments[arg.name] = arg.extensions || {}),
+    onInterface: type =>
+      (result.types[type.name] = { fields: {}, type: 'interface', extensions: type.extensions || {} }),
+    onInterfaceField: (type, field) =>
+      ((result.types[type.name] as InterfaceTypeExtensions).fields[field.name] = {
+        arguments: {},
+        extensions: field.extensions || {},
+      }),
+    onInterfaceFieldArg: (type, field, arg) =>
+      ((result.types[type.name] as InterfaceTypeExtensions).fields[field.name].arguments[arg.name] =
+        arg.extensions || {}),
     onEnum: type => (result.types[type.name] = { values: {}, type: 'enum', extensions: type.extensions || {} }),
-    onEnumValue: (type, value) => ((result.types[type.name] as EnumTypeExtensions).values[value.name] = value.extensions || {}),
+    onEnumValue: (type, value) =>
+      ((result.types[type.name] as EnumTypeExtensions).values[value.name] = value.extensions || {}),
     onScalar: type => (result.types[type.name] = { type: 'scalar', extensions: type.extensions || {} }),
     onUnion: type => (result.types[type.name] = { type: 'union', extensions: type.extensions || {} }),
     onInputType: type => (result.types[type.name] = { fields: {}, type: 'input', extensions: type.extensions || {} }),
-    onInputFieldType: (type, field) => ((result.types[type.name] as InputTypeExtensions).fields[field.name] = { extensions: field.extensions || {} }),
+    onInputFieldType: (type, field) =>
+      ((result.types[type.name] as InputTypeExtensions).fields[field.name] = { extensions: field.extensions || {} }),
   });
 
   return result;

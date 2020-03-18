@@ -1,4 +1,16 @@
-import { getDescription, StringValueNode, TypeDefinitionNode, FieldDefinitionNode, InputValueDefinitionNode, DocumentNode, ASTNode, NameNode, TypeNode, visit, VisitFn } from 'graphql';
+import {
+  getDescription,
+  StringValueNode,
+  TypeDefinitionNode,
+  FieldDefinitionNode,
+  InputValueDefinitionNode,
+  DocumentNode,
+  ASTNode,
+  NameNode,
+  TypeNode,
+  visit,
+  VisitFn,
+} from 'graphql';
 
 let commentsRegistry: {
   [path: string]: string[];
@@ -37,7 +49,12 @@ export function collectComment(node: TypeDefinitionNode): void {
   }
 }
 
-export function pushComment(node: { readonly description?: StringValueNode }, entity: string, field?: string, argument?: string): void {
+export function pushComment(
+  node: { readonly description?: StringValueNode },
+  entity: string,
+  field?: string,
+  argument?: string
+): void {
   const comment = getDescription(node, { commentDescriptions: true });
 
   if (typeof comment !== 'string' || comment.length === 0) {
@@ -90,7 +107,13 @@ function join(maybeArray?: readonly any[], separator?: string) {
 }
 
 function addDescription(cb: VisitFn<any, any>): VisitFn<any, any> {
-  return (node: { description?: StringValueNode; name: NameNode; type?: TypeNode; kind: string }, _key, _parent, path, ancestors) => {
+  return (
+    node: { description?: StringValueNode; name: NameNode; type?: TypeNode; kind: string },
+    _key,
+    _parent,
+    path,
+    ancestors
+  ) => {
     const keys: string[] = [];
     const parent = path.reduce((prev, key) => {
       if (['fields', 'arguments', 'values'].includes(key as any)) {
@@ -138,7 +161,9 @@ function wrap(start: string, maybeString: any, end?: string) {
  */
 function printBlockString(value: string, isDescription: boolean) {
   const escaped = value.replace(/"""/g, '\\"""');
-  return (value[0] === ' ' || value[0] === '\t') && value.indexOf('\n') === -1 ? `"""${escaped.replace(/"$/, '"\n')}"""` : `"""\n${isDescription ? escaped : indent(escaped)}\n"""`;
+  return (value[0] === ' ' || value[0] === '\t') && value.indexOf('\n') === -1
+    ? `"""${escaped.replace(/"$/, '"\n')}"""`
+    : `"""\n${isDescription ? escaped : indent(escaped)}\n"""`;
 }
 
 /**
@@ -165,7 +190,11 @@ export function printWithComments(ast: ASTNode) {
 
       SelectionSet: ({ selections }) => block(selections),
 
-      Field: ({ alias, name, arguments: args, directives, selectionSet }) => join([wrap('', alias, ': ') + name + wrap('(', join(args, ', '), ')'), join(directives, ' '), selectionSet], '  '),
+      Field: ({ alias, name, arguments: args, directives, selectionSet }) =>
+        join(
+          [wrap('', alias, ': ') + name + wrap('(', join(args, ', '), ')'), join(directives, ' '), selectionSet],
+          '  '
+        ),
 
       Argument: addDescription(({ name, value }) => `${name}: ${value}`),
 
@@ -173,7 +202,8 @@ export function printWithComments(ast: ASTNode) {
 
       IntValue: ({ value }) => value,
       FloatValue: ({ value }) => value,
-      StringValue: ({ value, block: isBlockString }, key) => (isBlockString ? printBlockString(value, key === 'description') : JSON.stringify(value)),
+      StringValue: ({ value, block: isBlockString }, key) =>
+        isBlockString ? printBlockString(value, key === 'description') : JSON.stringify(value),
       BooleanValue: ({ value }) => (value ? 'true' : 'false'),
       NullValue: () => 'null',
       EnumValue: ({ value }) => value,
@@ -193,39 +223,71 @@ export function printWithComments(ast: ASTNode) {
 
       // Type System Definitions
 
-      SchemaDefinition: ({ directives, operationTypes }) => join(['schema', join(directives, ' '), block(operationTypes)], ' '),
+      SchemaDefinition: ({ directives, operationTypes }) =>
+        join(['schema', join(directives, ' '), block(operationTypes)], ' '),
 
-      ScalarTypeDefinition: addDescription(({ name, directives }) => join(['scalar', name, join(directives, ' ')], ' ')),
+      ScalarTypeDefinition: addDescription(({ name, directives }) =>
+        join(['scalar', name, join(directives, ' ')], ' ')
+      ),
 
-      ObjectTypeDefinition: addDescription(({ name, interfaces, directives, fields }) => join(['type', name, wrap('implements ', join(interfaces, ' & ')), join(directives, ' '), block(fields)], ' ')),
+      ObjectTypeDefinition: addDescription(({ name, interfaces, directives, fields }) =>
+        join(['type', name, wrap('implements ', join(interfaces, ' & ')), join(directives, ' '), block(fields)], ' ')
+      ),
 
-      FieldDefinition: addDescription(({ name, arguments: args, type, directives }) => `${name + wrap('(', join(args, ', '), ')')}: ${type}${wrap(' ', join(directives, ' '))}`),
+      FieldDefinition: addDescription(
+        ({ name, arguments: args, type, directives }) =>
+          `${name + wrap('(', join(args, ', '), ')')}: ${type}${wrap(' ', join(directives, ' '))}`
+      ),
 
-      InputValueDefinition: addDescription(({ name, type, defaultValue, directives }) => join([`${name}: ${type}`, wrap('= ', defaultValue), join(directives, ' ')], ' ')),
+      InputValueDefinition: addDescription(({ name, type, defaultValue, directives }) =>
+        join([`${name}: ${type}`, wrap('= ', defaultValue), join(directives, ' ')], ' ')
+      ),
 
-      InterfaceTypeDefinition: addDescription(({ name, directives, fields }) => join(['interface', name, join(directives, ' '), block(fields)], ' ')),
+      InterfaceTypeDefinition: addDescription(({ name, directives, fields }) =>
+        join(['interface', name, join(directives, ' '), block(fields)], ' ')
+      ),
 
-      UnionTypeDefinition: addDescription(({ name, directives, types }) => join(['union', name, join(directives, ' '), types && types.length !== 0 ? `= ${join(types, ' | ')}` : ''], ' ')),
+      UnionTypeDefinition: addDescription(({ name, directives, types }) =>
+        join(['union', name, join(directives, ' '), types && types.length !== 0 ? `= ${join(types, ' | ')}` : ''], ' ')
+      ),
 
-      EnumTypeDefinition: addDescription(({ name, directives, values }) => join(['enum', name, join(directives, ' '), block(values)], ' ')),
+      EnumTypeDefinition: addDescription(({ name, directives, values }) =>
+        join(['enum', name, join(directives, ' '), block(values)], ' ')
+      ),
 
       EnumValueDefinition: addDescription(({ name, directives }) => join([name, join(directives, ' ')], ' ')),
 
-      InputObjectTypeDefinition: addDescription(({ name, directives, fields }) => join(['input', name, join(directives, ' '), block(fields)], ' ')),
+      InputObjectTypeDefinition: addDescription(({ name, directives, fields }) =>
+        join(['input', name, join(directives, ' '), block(fields)], ' ')
+      ),
 
       ScalarTypeExtension: ({ name, directives }) => join(['extend scalar', name, join(directives, ' ')], ' '),
 
-      ObjectTypeExtension: ({ name, interfaces, directives, fields }) => join(['extend type', name, wrap('implements ', join(interfaces, ' & ')), join(directives, ' '), block(fields)], ' '),
+      ObjectTypeExtension: ({ name, interfaces, directives, fields }) =>
+        join(
+          ['extend type', name, wrap('implements ', join(interfaces, ' & ')), join(directives, ' '), block(fields)],
+          ' '
+        ),
 
-      InterfaceTypeExtension: ({ name, directives, fields }) => join(['extend interface', name, join(directives, ' '), block(fields)], ' '),
+      InterfaceTypeExtension: ({ name, directives, fields }) =>
+        join(['extend interface', name, join(directives, ' '), block(fields)], ' '),
 
-      UnionTypeExtension: ({ name, directives, types }) => join(['extend union', name, join(directives, ' '), types && types.length !== 0 ? `= ${join(types, ' | ')}` : ''], ' '),
+      UnionTypeExtension: ({ name, directives, types }) =>
+        join(
+          ['extend union', name, join(directives, ' '), types && types.length !== 0 ? `= ${join(types, ' | ')}` : ''],
+          ' '
+        ),
 
-      EnumTypeExtension: ({ name, directives, values }) => join(['extend enum', name, join(directives, ' '), block(values)], ' '),
+      EnumTypeExtension: ({ name, directives, values }) =>
+        join(['extend enum', name, join(directives, ' '), block(values)], ' '),
 
-      InputObjectTypeExtension: ({ name, directives, fields }) => join(['extend input', name, join(directives, ' '), block(fields)], ' '),
+      InputObjectTypeExtension: ({ name, directives, fields }) =>
+        join(['extend input', name, join(directives, ' '), block(fields)], ' '),
 
-      DirectiveDefinition: addDescription(({ name, arguments: args, locations }) => `directive @${name}${wrap('(', join(args, ', '), ')')} on ${join(locations, ' | ')}`),
+      DirectiveDefinition: addDescription(
+        ({ name, arguments: args, locations }) =>
+          `directive @${name}${wrap('(', join(args, ', '), ')')} on ${join(locations, ' | ')}`
+      ),
     },
   });
 }

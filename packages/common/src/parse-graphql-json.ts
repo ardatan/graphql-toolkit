@@ -19,7 +19,11 @@ function parseBOM(content: string): any {
   return JSON.parse(stripBOM(content));
 }
 
-export function parseGraphQLJSON(location: string, jsonContent: string, options: Options & ParseOptions & GraphQLSchemaValidationOptions): Source {
+export function parseGraphQLJSON(
+  location: string,
+  jsonContent: string,
+  options: Options & ParseOptions & GraphQLSchemaValidationOptions
+): Source {
   let parsedJson = parseBOM(jsonContent);
 
   if (parsedJson['data']) {
@@ -28,6 +32,7 @@ export function parseGraphQLJSON(location: string, jsonContent: string, options:
 
   if (parsedJson.kind === 'Document') {
     const document = parsedJson;
+
     return {
       location,
       document,
@@ -35,6 +40,7 @@ export function parseGraphQLJSON(location: string, jsonContent: string, options:
   } else if (parsedJson.__schema) {
     const schema = buildClientSchema(parsedJson, options);
     const rawSDL = printSchemaWithDirectives(schema, options);
+
     return {
       location,
       document: parse(rawSDL, options),
@@ -42,5 +48,6 @@ export function parseGraphQLJSON(location: string, jsonContent: string, options:
       schema,
     };
   }
+
   throw new Error(`Not valid JSON content`);
 }

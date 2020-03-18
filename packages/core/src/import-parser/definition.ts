@@ -1,9 +1,30 @@
 import { keyBy, uniqBy, includes, reverse } from 'lodash';
-import { NamedTypeNode, DirectiveNode, DirectiveDefinitionNode, InputValueDefinitionNode, FieldDefinitionNode, DefinitionNode, TypeNode, Kind, SelectionNode } from 'graphql';
+import {
+  NamedTypeNode,
+  DirectiveNode,
+  DirectiveDefinitionNode,
+  InputValueDefinitionNode,
+  FieldDefinitionNode,
+  DefinitionNode,
+  TypeNode,
+  Kind,
+  SelectionNode,
+} from 'graphql';
 
 const builtinTypes = ['String', 'Float', 'Int', 'Boolean', 'ID', 'Upload'];
 
-const builtinDirectives = ['deprecated', 'skip', 'include', 'cacheControl', 'key', 'external', 'requires', 'provides', 'connection', 'client'];
+const builtinDirectives = [
+  'deprecated',
+  'skip',
+  'include',
+  'cacheControl',
+  'key',
+  'external',
+  'requires',
+  'provides',
+  'connection',
+  'client',
+];
 
 export interface DefinitionMap {
   [key: string]: DefinitionNode;
@@ -18,16 +39,28 @@ export interface DefinitionMap {
  * @param newTypeDefinitions All imported definitions
  * @returns Final collection of type definitions for the resulting schema
  */
-export function completeDefinitionPool(allDefinitions: DefinitionNode[], definitionPool: DefinitionNode[], newTypeDefinitions: DefinitionNode[]): DefinitionNode[] {
+export function completeDefinitionPool(
+  allDefinitions: DefinitionNode[],
+  definitionPool: DefinitionNode[],
+  newTypeDefinitions: DefinitionNode[]
+): DefinitionNode[] {
   const visitedDefinitions: { [name: string]: boolean } = {};
+
   while (newTypeDefinitions.length > 0) {
     const schemaMap: DefinitionMap = keyBy(reverse(allDefinitions), d => ('name' in d ? d.name.value : 'schema'));
     const newDefinition = newTypeDefinitions.shift();
+
     if (visitedDefinitions['name' in newDefinition ? newDefinition.name.value : 'schema']) {
       continue;
     }
 
-    const collectedTypedDefinitions = collectNewTypeDefinitions(allDefinitions, definitionPool, newDefinition, schemaMap);
+    const collectedTypedDefinitions = collectNewTypeDefinitions(
+      allDefinitions,
+      definitionPool,
+      newDefinition,
+      schemaMap
+    );
+
     newTypeDefinitions.push(...collectedTypedDefinitions);
     definitionPool.push(...collectedTypedDefinitions);
 
@@ -50,7 +83,12 @@ export function completeDefinitionPool(allDefinitions: DefinitionNode[], definit
  * @param schemaMap Map of all definitions for easy lookup
  * @returns All relevant type definitions to add to the final schema
  */
-function collectNewTypeDefinitions(allDefinitions: DefinitionNode[], definitionPool: DefinitionNode[], newDefinition: DefinitionNode, schemaMap: DefinitionMap): DefinitionNode[] {
+function collectNewTypeDefinitions(
+  allDefinitions: DefinitionNode[],
+  definitionPool: DefinitionNode[],
+  newDefinition: DefinitionNode,
+  schemaMap: DefinitionMap
+): DefinitionNode[] {
   let newTypeDefinitions: DefinitionNode[] = [];
 
   if (newDefinition.kind !== 'DirectiveDefinition') {
@@ -67,9 +105,12 @@ function collectNewTypeDefinitions(allDefinitions: DefinitionNode[], definitionP
 
   if (newDefinition.kind === 'InterfaceTypeDefinition') {
     const interfaceName = newDefinition.name.value;
+
     newDefinition.fields.forEach(collectNode);
 
-    const interfaceImplementations = allDefinitions.filter(d => d.kind === 'ObjectTypeDefinition' && d.interfaces.some(i => i.name.value === interfaceName));
+    const interfaceImplementations = allDefinitions.filter(
+      d => d.kind === 'ObjectTypeDefinition' && d.interfaces.some(i => i.name.value === interfaceName)
+    );
     newTypeDefinitions.push(...interfaceImplementations);
   }
 
@@ -78,9 +119,11 @@ function collectNewTypeDefinitions(allDefinitions: DefinitionNode[], definitionP
       if (!definitionPool.some(d => 'name' in d && d.name.value === type.name.value)) {
         const typeName = type.name.value;
         const typeMatch = schemaMap[typeName];
+
         if (!typeMatch) {
           throw new Error(`Couldn't find type ${typeName} in any of the schemas.`);
         }
+
         newTypeDefinitions.push(schemaMap[type.name.value]);
       }
     });
@@ -92,9 +135,11 @@ function collectNewTypeDefinitions(allDefinitions: DefinitionNode[], definitionP
       if (!definitionPool.some(d => 'name' in d && d.name.value === int.name.value)) {
         const interfaceName = int.name.value;
         const interfaceMatch = schemaMap[interfaceName];
+
         if (!interfaceMatch) {
           throw new Error(`Couldn't find interface ${interfaceName} in any of the schemas.`);
         }
+
         newTypeDefinitions.push(schemaMap[int.name.value]);
       }
     });
@@ -112,9 +157,11 @@ function collectNewTypeDefinitions(allDefinitions: DefinitionNode[], definitionP
       if (!definitionPool.some(d => 'name' in d && d.name.value === operationType.type.name.value)) {
         const typeName = operationType.type.name.value;
         const typeMatch = schemaMap[typeName];
+
         if (!typeMatch) {
           throw new Error(`Couldn't find type ${typeName} in any of the schemas.`);
         }
+
         newTypeDefinitions.push(schemaMap[operationType.type.name.value]);
       }
     });
@@ -133,11 +180,14 @@ function collectNewTypeDefinitions(allDefinitions: DefinitionNode[], definitionP
   function collectFragments(node: SelectionNode) {
     if (node.kind === Kind.FRAGMENT_SPREAD) {
       const fragmentName = node.name.value;
+
       if (!definitionPool.some(d => 'name' in d && d.name.value === fragmentName)) {
         const fragmentMatch = schemaMap[fragmentName];
+
         if (!fragmentMatch) {
           throw new Error(`Fragment ${fragmentName}: Couldn't find fragment ${fragmentName} in any of the documents.`);
         }
+
         newTypeDefinitions.push(fragmentMatch);
       }
     } else if (node.selectionSet) {
@@ -155,11 +205,16 @@ function collectNewTypeDefinitions(allDefinitions: DefinitionNode[], definitionP
     const nodeTypeName = nodeType.name.value;
 
     // collect missing argument input types
-    if (!definitionPool.some(d => 'name' in d && d.name.value === nodeTypeName) && !includes(builtinTypes, nodeTypeName)) {
+    if (
+      !definitionPool.some(d => 'name' in d && d.name.value === nodeTypeName) &&
+      !includes(builtinTypes, nodeTypeName)
+    ) {
       const argTypeMatch = schemaMap[nodeTypeName];
+
       if (!argTypeMatch) {
         throw new Error(`Field ${node.name.value}: Couldn't find type ${nodeTypeName} in any of the schemas.`);
       }
+
       newTypeDefinitions.push(argTypeMatch);
     }
 
@@ -168,13 +223,17 @@ function collectNewTypeDefinitions(allDefinitions: DefinitionNode[], definitionP
 
   function collectDirective(directive: DirectiveNode) {
     const directiveName = directive.name.value;
-    if (!definitionPool.some(d => 'name' in d && d.name.value === directiveName) && !includes(builtinDirectives, directiveName)) {
+    if (
+      !definitionPool.some(d => 'name' in d && d.name.value === directiveName) &&
+      !includes(builtinDirectives, directiveName)
+    ) {
       const directive = schemaMap[directiveName] as DirectiveDefinitionNode;
+
       if (!directive) {
         throw new Error(`Directive ${directiveName}: Couldn't find type ${directiveName} in any of the schemas.`);
       }
-      directive.arguments.forEach(collectNode);
 
+      directive.arguments.forEach(collectNode);
       newTypeDefinitions.push(directive);
     }
   }
@@ -189,7 +248,7 @@ function collectNewTypeDefinitions(allDefinitions: DefinitionNode[], definitionP
 function getNamedType(type: TypeNode): NamedTypeNode {
   if (type.kind === 'NamedType') {
     return type;
-  } else {
-    return getNamedType(type.type);
   }
+
+  return getNamedType(type.type);
 }

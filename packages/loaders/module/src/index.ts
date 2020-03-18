@@ -1,6 +1,15 @@
 import { parse, isSchema } from 'graphql';
-import { UniversalLoader, fixSchemaAst, printSchemaWithDirectives, SingleFileOptions } from '@graphql-toolkit/common';
-import { Options } from 'graphql/utilities/schemaPrinter';
+import {
+  UniversalLoader,
+  fixSchemaAst,
+  printSchemaWithDirectives,
+  SingleFileOptions,
+  Source,
+} from '@graphql-toolkit/common';
+
+const InvalidError = new Error(`Imported object was not a string, DocumentNode or GraphQLSchema`);
+const createLoadError = (error: any) =>
+  new Error('Unable to load schema from module: ' + `${error && error.message ? error.message : error}`);
 
 // module:node/module#export
 function extractData(
@@ -25,47 +34,91 @@ export class ModuleLoader implements UniversalLoader {
   loaderId() {
     return 'module-loader';
   }
+
   async canLoad(pointer: string) {
+    return this.canLoadSync(pointer);
+  }
+
+  canLoadSync(pointer: string) {
     return typeof pointer === 'string' && pointer.toLowerCase().startsWith('module:');
   }
+
   async load(pointer: string, options: SingleFileOptions) {
+    try {
+      const result = this.parse(pointer, options, await this.importModule(pointer));
+
+      if (result) {
+        return result;
+      }
+
+      throw InvalidError;
+    } catch (error) {
+      throw createLoadError(error);
+    }
+  }
+
+  loadSync(pointer: string, options: SingleFileOptions) {
+    try {
+      const result = this.parse(pointer, options, this.importModuleSync(pointer));
+
+      if (result) {
+        return result;
+      }
+
+      throw InvalidError;
+    } catch (error) {
+      throw createLoadError(error);
+    }
+  }
+
+  private parse(pointer: string, options: SingleFileOptions, importedModule: any): Source | void {
+    if (isSchema(importedModule)) {
+      const schema = fixSchemaAst(importedModule, options);
+      return {
+        schema,
+        get document() {
+          return parse(printSchemaWithDirectives(schema, options));
+        },
+        location: pointer,
+      };
+    } else if (typeof importedModule === 'string') {
+      return {
+        location: pointer,
+        document: parse(importedModule),
+      };
+    } else if (typeof importedModule === 'object' && importedModule.kind === 'Document') {
+      return {
+        location: pointer,
+        document: importedModule,
+      };
+    }
+  }
+
+  private extractFromModule(mod: any, modulePath: string, identifier?: string) {
+    const thing = mod[!identifier || identifier === 'default' ? 'default' : identifier];
+
+    if (!thing) {
+      throw new Error('Unable to import an object from module: ' + modulePath);
+    }
+
+    return thing;
+  }
+
+  // Sync and Async
+
+  private async importModule(pointer: string) {
     const { modulePath, exportName } = extractData(pointer);
 
-    let thing: any;
+    const imported = await import(modulePath);
 
-    try {
-      const imported = await import(modulePath);
+    return this.extractFromModule(imported, modulePath, exportName);
+  }
 
-      thing = imported[!exportName || exportName === 'default' ? 'default' : exportName];
+  private async importModuleSync(pointer: string) {
+    const { modulePath, exportName } = extractData(pointer);
 
-      if (!thing) {
-        throw new Error('Unable to import an object from module: ' + modulePath);
-      }
+    const imported = require(modulePath);
 
-      if (isSchema(thing)) {
-        const schema = fixSchemaAst(thing, options);
-        return {
-          schema,
-          get document() {
-            return parse(printSchemaWithDirectives(schema, options));
-          },
-          location: pointer,
-        };
-      } else if (typeof thing === 'string') {
-        return {
-          location: pointer,
-          document: parse(thing),
-        };
-      } else if (typeof thing === 'object' && thing.kind === 'Document') {
-        return {
-          location: pointer,
-          document: thing,
-        };
-      }
-
-      throw new Error(`Imported object was not a string, DocumentNode or GraphQLSchema`);
-    } catch (error) {
-      throw new Error('Unable to load schema from module: ' + `${error && error.message ? error.message : error}`);
-    }
+    return this.extractFromModule(imported, modulePath, exportName);
   }
 }

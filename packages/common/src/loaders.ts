@@ -27,9 +27,22 @@ export type DocumentPointerSingle = ElementOf<DocumentPointer>;
 export interface Loader<TPointer = string, TOptions extends SingleFileOptions = SingleFileOptions> {
   loaderId(): string;
   canLoad(pointer: TPointer, options?: TOptions): Promise<boolean>;
-  load(pointer: TPointer, options?: TOptions): Promise<Source | null>;
+  canLoadSync?(pointer: TPointer, options?: TOptions): boolean;
+  load(pointer: TPointer, options?: TOptions): Promise<Source | never>;
+  loadSync?(pointer: TPointer, options?: TOptions): Source | never;
 }
 
-export type SchemaLoader<TOptions extends SingleFileOptions = SingleFileOptions> = Loader<SchemaPointerSingle, TOptions>;
-export type DocumentLoader<TOptions extends SingleFileOptions = SingleFileOptions> = Loader<DocumentPointerSingle, TOptions>;
-export type UniversalLoader<TOptions extends SingleFileOptions = SingleFileOptions> = Loader<SchemaPointerSingle | DocumentPointerSingle, TOptions>;
+export type SchemaLoader<TOptions extends SingleFileOptions = SingleFileOptions> = Loader<
+  SchemaPointerSingle,
+  TOptions
+>;
+
+export type DocumentLoader<TOptions extends SingleFileOptions = SingleFileOptions> = Loader<
+  DocumentPointerSingle,
+  TOptions
+>;
+
+export type UniversalLoader<TOptions extends SingleFileOptions = SingleFileOptions> = Loader<
+  SchemaPointerSingle | DocumentPointerSingle,
+  TOptions
+>;

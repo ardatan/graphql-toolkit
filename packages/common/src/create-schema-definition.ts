@@ -1,7 +1,11 @@
 import { GraphQLObjectType } from 'graphql';
 
 export function createSchemaDefinition(
-  def: { query: string | GraphQLObjectType | null; mutation: string | GraphQLObjectType | null; subscription: string | GraphQLObjectType | null },
+  def: {
+    query: string | GraphQLObjectType | null;
+    mutation: string | GraphQLObjectType | null;
+    subscription: string | GraphQLObjectType | null;
+  },
   config?: {
     force?: boolean;
   }
@@ -15,9 +19,11 @@ export function createSchemaDefinition(
   if (def.query) {
     schemaRoot.query = def.query.toString();
   }
+
   if (def.mutation) {
     schemaRoot.mutation = def.mutation.toString();
   }
+
   if (def.subscription) {
     schemaRoot.subscription = def.subscription.toString();
   }
@@ -28,7 +34,9 @@ export function createSchemaDefinition(
 
   if (fields.length) {
     return `schema { ${fields.join('\n')} }`;
-  } else if (config && config.force) {
+  }
+
+  if (config && config.force) {
     return ` schema { query: Query } `;
   }
 
