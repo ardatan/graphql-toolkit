@@ -39,7 +39,7 @@
     "@types/babel__traverse": "7.0.9",
     "@types/fs-extra": "8.1.0",
     "@types/jest": "25.1.4",
-    "fs-extra": "8.1.0",
+    "fs-extra": "9.0.0",
     "graphql": "14.6.0",
     "jest": "25.1.0",
     "ts-jest": "25.2.1",
