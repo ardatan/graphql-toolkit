@@ -26,9 +26,9 @@
     "input": "./src/index.ts"
   },
   "dependencies": {
-    "@babel/parser": "7.8.8",
-    "@babel/traverse": "7.8.6",
-    "@babel/types": "7.8.7",
+    "@babel/parser": "7.9.0",
+    "@babel/traverse": "7.9.0",
+    "@babel/types": "7.9.0",
     "@graphql-toolkit/common": "0.9.9"
   },
   "optionalDependencies": {
