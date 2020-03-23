@@ -15,7 +15,7 @@ import {
   composeResolvers,
   asArray,
 } from '@graphql-toolkit/common';
-import { mergeExtensions, extractExtensionsFromSchema, applyExtensions } from './extensions';
+import { mergeExtensions, extractExtensionsFromSchema, applyExtensions, SchemaExtensions } from './extensions';
 
 export interface MergeSchemasConfig<Resolvers extends IResolvers = IResolvers> extends Config, BuildSchemaOptions {
   schemas: GraphQLSchema[];
@@ -37,29 +37,35 @@ const defaultResolverValidationOptions: Partial<IResolverValidationOptions> = {
 
 export function mergeSchemas(config: MergeSchemasConfig) {
   const typeDefs = mergeTypes(config);
-  const resolvers = composeResolvers(
-    mergeResolvers(
-      [...config.schemas.map(schema => extractResolversFromSchema(schema)), ...ensureResolvers(config)],
-      config
-    ),
-    config.resolversComposition || {}
-  );
+  const extractedResolvers: IResolvers<any, any>[] = [];
+  const extractedExtensions: SchemaExtensions[] = [];
+  for (const schema of config.schemas) {
+    extractedResolvers.push(extractResolversFromSchema(schema));
+    extractedExtensions.push(extractExtensionsFromSchema(schema));
+  }
+  extractedResolvers.push(...ensureResolvers(config));
 
-  return makeSchema({ resolvers, typeDefs }, config);
+  const resolvers = composeResolvers(mergeResolvers(extractedResolvers, config), config.resolversComposition || {});
+  const extensions = mergeExtensions(extractedExtensions);
+
+  return makeSchema({ resolvers, typeDefs, extensions }, config);
 }
 
 export async function mergeSchemasAsync(config: MergeSchemasConfig) {
-  const [typeDefs, resolvers] = await Promise.all([
+  const [typeDefs, resolvers, extensions] = await Promise.all([
     mergeTypes(config),
-    Promise.all(config.schemas.map(async schema => extractResolversFromSchema(schema))).then(extractedResolvers =>
+    Promise.all(config.schemas.map(async (schema) => extractResolversFromSchema(schema))).then((extractedResolvers) =>
       composeResolvers(
         mergeResolvers([...extractedResolvers, ...ensureResolvers(config)], config),
         config.resolversComposition || {}
       )
     ),
+    Promise.all(config.schemas.map(async (schema) => extractExtensionsFromSchema(schema))).then((extractedExtensions) =>
+      mergeExtensions(extractedExtensions)
+    ),
   ]);
 
-  return makeSchema({ resolvers, typeDefs }, config);
+  return makeSchema({ resolvers, typeDefs, extensions }, config);
 }
 
 function mergeTypes({ schemas, typeDefs, ...config }: MergeSchemasConfig) {
@@ -71,16 +77,18 @@ function ensureResolvers(config: MergeSchemasConfig) {
 }
 
 function makeSchema(
-  { resolvers, typeDefs }: { resolvers: IResolvers; typeDefs: string | DocumentNode },
+  {
+    resolvers,
+    typeDefs,
+    extensions,
+  }: { resolvers: IResolvers; typeDefs: string | DocumentNode; extensions: SchemaExtensions },
   config: MergeSchemasConfig
 ) {
-  const extensions = mergeExtensions(config.schemas.map(s => extractExtensionsFromSchema(s)));
-
   let schema = typeof typeDefs === 'string' ? buildSchema(typeDefs, config) : buildASTSchema(typeDefs, config);
 
   // add resolvers
   if (resolvers) {
-    schema = addResolveFunctionsToSchema({
+    addResolveFunctionsToSchema({
       schema,
       resolvers,
       resolverValidationOptions: {
