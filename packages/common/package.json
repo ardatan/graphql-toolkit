@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "aggregate-error": "3.0.1",
-    "graphql-tools-fork": "8.9.7",
+    "graphql-tools-fork": "8.9.8",
     "lodash": "4.17.15"
   },
   "publishConfig": {
