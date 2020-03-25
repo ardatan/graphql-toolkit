@@ -202,4 +202,30 @@ describe('Resolvers composition', () => {
     expect((await asyncIterator.next()).value).toBe(4);
     expect((await asyncIterator.next()).value).toBe(6);
   });
+  it('should support *.* pattern', async () => {
+    const resolvers = {
+      Query: {
+        foo: async () => 0,
+        bar: async () => 1,
+      },
+      Mutation: {
+        qux: async () => 2,
+        baz: async () => 3,
+      }
+    };
+    const resolversComposition = {
+      '*.*': [
+        next => async (...args) => {
+          const result = await next(...args);
+          return result + 1;
+        }
+      ]
+    }
+    const composedResolvers = composeResolvers(resolvers, resolversComposition);
+
+    expect(await composedResolvers.Query.foo()).toBe(1);
+    expect(await composedResolvers.Query.bar()).toBe(2);
+    expect(await composedResolvers.Mutation.qux()).toBe(3);
+    expect(await composedResolvers.Mutation.baz()).toBe(4);
+  });
 });
