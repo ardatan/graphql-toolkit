@@ -52,6 +52,7 @@ jobs:
                 npx match-version @graphql-toolkit ${{ steps.canary.outputs.version }}
           bot-token: ${{ secrets.GH_API_TOKEN }}
           bot: 'theguild-bot'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
   test:
     name: Testing on ${{matrix.os}} and Node ${{matrix.node_version}} w/ GraphQL ${{matrix.graphql_version}}
     runs-on: ${{matrix.os}}
