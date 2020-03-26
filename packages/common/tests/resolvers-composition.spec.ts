@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { composeResolvers, ResolversComposerMapping } from '../src';
+import { composeResolvers, ResolversComposerMapping, extractResolversFromSchema } from '../src';
 import { makeExecutableSchema } from 'graphql-tools-fork';
 import { execute } from 'graphql';
 import { $$asyncIterator, createAsyncIterator } from 'iterall';
@@ -202,6 +202,7 @@ describe('Resolvers composition', () => {
     expect((await asyncIterator.next()).value).toBe(4);
     expect((await asyncIterator.next()).value).toBe(6);
   });
+  
   it('should support *.* pattern', async () => {
     const resolvers = {
       Query: {
@@ -227,5 +228,50 @@ describe('Resolvers composition', () => {
     expect(await composedResolvers.Query.bar()).toBe(2);
     expect(await composedResolvers.Mutation.qux()).toBe(3);
     expect(await composedResolvers.Mutation.baz()).toBe(4);
+  });
+
+  it('should support *.* pattern and run it only for field resolvers, without scalars resolvers', async () => {
+    const resolvers = extractResolversFromSchema(makeExecutableSchema({
+      typeDefs: /* GraphQL */`
+        type Query {
+          users: [User]
+        }
+
+        type User {
+          id: ID!
+        }
+      `,
+      resolvers: {
+        Query: {
+          users: () => {
+            return [{
+              id: 1,
+            }]
+          }
+        }
+      }
+    }));
+
+    const functionsCalledSet: Set<string> = new Set();
+    const resolversComposition = {
+      '*.*': [
+        next => {
+          functionsCalledSet.add(next.name)
+          return next;
+        }
+      ]
+    }
+
+    composeResolvers(resolvers, resolversComposition);
+    const functionsCalled = Array.from(functionsCalledSet);
+    expect(functionsCalled).toContain('users');
+    expect(functionsCalled).not.toContain('serializeID');
+    expect(functionsCalled).not.toContain('coerceID');
+    expect(functionsCalled).not.toContain('parseLiteral');
+    expect(functionsCalled).not.toContain('serializeString');
+    expect(functionsCalled).not.toContain('coerceString');
+    expect(functionsCalled).not.toContain('serializeBoolean');
+    expect(functionsCalled).not.toContain('coerceBoolean');
+
   });
 });
