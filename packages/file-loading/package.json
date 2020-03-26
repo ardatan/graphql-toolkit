@@ -1,6 +1,6 @@
 {
   "name": "@graphql-toolkit/file-loading",
-  "version": "0.9.9",
+  "version": "0.9.10",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": "git@github.com:ardatan/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
