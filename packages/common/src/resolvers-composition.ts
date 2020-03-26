@@ -2,7 +2,7 @@ import { IResolvers, IFieldResolver } from 'graphql-tools-fork';
 import { chainFunctions, asArray } from './helpers';
 import { flattenArray } from './flatten-array';
 import { get, set } from 'lodash';
-import { GraphQLScalarType } from 'graphql';
+import { isScalarType } from 'graphql';
 
 export type ResolversComposition<Resolver extends IFieldResolver<any, any> = IFieldResolver<any, any>> = (
   next: Resolver
@@ -31,16 +31,18 @@ function resolveRelevantMappings<Resolvers extends IResolvers>(
 
   if (splitted.length === 2) {
     const typeName = splitted[0];
+
+    if (isScalarType(resolvers[typeName])) {
+      return [];
+    }
+
     const fieldName = splitted[1];
+
     if (typeName === '*') {
       return flattenArray(
-        Object.keys(resolvers).map((typeName) => {
-          if (!(resolvers[typeName] instanceof GraphQLScalarType)) {
-            return resolveRelevantMappings(resolvers, `${typeName}.${fieldName}`, allMappings);
-          } else {
-            return [];
-          }
-        })
+        Object.keys(resolvers).map((typeName) =>
+          resolveRelevantMappings(resolvers, `${typeName}.${fieldName}`, allMappings)
+        )
       );
     }
 

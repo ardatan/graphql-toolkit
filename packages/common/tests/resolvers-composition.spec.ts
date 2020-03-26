@@ -1,7 +1,7 @@
 import gql from 'graphql-tag';
 import { composeResolvers, ResolversComposerMapping, extractResolversFromSchema } from '../src';
 import { makeExecutableSchema } from 'graphql-tools-fork';
-import { execute } from 'graphql';
+import { execute, GraphQLScalarType, Kind } from 'graphql';
 import { $$asyncIterator, createAsyncIterator } from 'iterall';
 
 describe('Resolvers composition', () => {
@@ -202,7 +202,7 @@ describe('Resolvers composition', () => {
     expect((await asyncIterator.next()).value).toBe(4);
     expect((await asyncIterator.next()).value).toBe(6);
   });
-  
+
   it('should support *.* pattern', async () => {
     const resolvers = {
       Query: {
@@ -212,7 +212,7 @@ describe('Resolvers composition', () => {
       Mutation: {
         qux: async () => 2,
         baz: async () => 3,
-      }
+      },
     };
     const resolversComposition = {
       '*.*': [
@@ -231,26 +231,32 @@ describe('Resolvers composition', () => {
   });
 
   it('should support *.* pattern and run it only for field resolvers, without scalars resolvers', async () => {
-    const resolvers = extractResolversFromSchema(makeExecutableSchema({
-      typeDefs: /* GraphQL */`
-        type Query {
-          users: [User]
-        }
-
-        type User {
-          id: ID!
-        }
-      `,
-      resolvers: {
+    const resolvers = {
         Query: {
-          users: () => {
-            return [{
+          me: () => ({
               id: 1,
-            }]
-          }
-        }
-      }
-    }));
+              age: 20,
+            }),
+        },
+        PositiveInt: new GraphQLScalarType({
+          name: 'PositiveInt',
+          serialize: val => parseInt(val.toString()),
+          parseValue: val => parseInt(val.toString()),
+          parseLiteral: literal => {
+            switch (literal.kind) {
+              case Kind.INT:
+              case Kind.FLOAT:
+              case Kind.STRING:
+                const intVal = parseInt(literal.value.toString());
+                if (intVal > 0) {
+                  return literal.value;
+                }
+              default:
+                throw new Error(`Value ${JSON.stringify(literal)} is not a positive integer`)
+            }
+          },
+        })
+      };
 
     const functionsCalledSet: Set<string> = new Set();
     const resolversComposition = {
@@ -264,14 +270,10 @@ describe('Resolvers composition', () => {
 
     composeResolvers(resolvers, resolversComposition);
     const functionsCalled = Array.from(functionsCalledSet);
-    expect(functionsCalled).toContain('users');
-    expect(functionsCalled).not.toContain('serializeID');
-    expect(functionsCalled).not.toContain('coerceID');
+    expect(functionsCalled).toContain('me');
+    expect(functionsCalled).not.toContain('serialize');
+    expect(functionsCalled).not.toContain('parseValue');
     expect(functionsCalled).not.toContain('parseLiteral');
-    expect(functionsCalled).not.toContain('serializeString');
-    expect(functionsCalled).not.toContain('coerceString');
-    expect(functionsCalled).not.toContain('serializeBoolean');
-    expect(functionsCalled).not.toContain('coerceBoolean');
 
   });
 });
