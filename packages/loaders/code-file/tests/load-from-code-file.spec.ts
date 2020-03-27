@@ -54,6 +54,16 @@ describe('loadFromCodeFile', () => {
 
     expect(doc.kind).toEqual('Document');
   });
+
+  it('should support string interpolation', async () => {
+    const loaded = await loader.load('./tests/test-files/string-interpolation.js', {
+      fs,
+      path,
+    });
+    const doc = parse(loaded.rawSDL);
+
+    expect(doc.kind).toEqual('Document');
+  });
 });
 
 describe('loadFromCodeFileSync', () => {
@@ -88,6 +98,17 @@ describe('loadFromCodeFileSync', () => {
       cwd: path.resolve(__dirname, 'test-files'),
       noRequire: true,
     });
+    const doc = parse(loaded.rawSDL);
+
+    expect(doc.kind).toEqual('Document');
+  });
+
+  it('should support string interpolation', () => {
+    const loaded = loader.loadSync('./tests/test-files/string-interpolation.js', {
+      fs,
+      path,
+    });
+
     const doc = parse(loaded.rawSDL);
 
     expect(doc.kind).toEqual('Document');

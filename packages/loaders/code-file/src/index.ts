@@ -1,4 +1,4 @@
-import { Kind, isSchema } from 'graphql';
+import { Kind, isSchema, print } from 'graphql';
 import {
   SchemaPointerSingle,
   DocumentPointerSingle,
@@ -9,6 +9,7 @@ import {
   asArray,
   isValidPath,
   parseGraphQLSDL,
+  printSchemaWithDirectives,
 } from '@graphql-toolkit/common';
 import {
   GraphQLTagPluckOptions,
@@ -22,6 +23,7 @@ export type CodeFileLoaderOptions = {
   pluckConfig?: GraphQLTagPluckOptions;
   fs?: typeof import('fs');
   path?: typeof import('path');
+  noPluck?: boolean;
 } & SingleFileOptions;
 
 const FILE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.vue'];
@@ -42,7 +44,7 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
     if (isValidPath(pointer) && options.path && options.fs) {
       const { resolve, isAbsolute } = options.path;
 
-      if (FILE_EXTENSIONS.find(extension => pointer.endsWith(extension))) {
+      if (FILE_EXTENSIONS.find((extension) => pointer.endsWith(extension))) {
         const normalizedFilePath = isAbsolute(pointer) ? pointer : resolve(options.cwd || process.cwd(), pointer);
         const { existsSync } = options.fs;
 
@@ -58,30 +60,41 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
   async load(pointer: SchemaPointerSingle | DocumentPointerSingle, options: CodeFileLoaderOptions): Promise<Source> {
     const normalizedFilePath = ensureAbsolutePath(pointer, options);
 
-    try {
-      const content = getContent(normalizedFilePath, options);
-      const sdl = await gqlPluckFromCodeString(normalizedFilePath, content, options.pluckConfig);
+    const errors: Error[] = [];
 
-      if (sdl) {
-        return parseSDL({ pointer, sdl, options });
+    if (!options.noPluck) {
+      try {
+        const content = getContent(normalizedFilePath, options);
+        const sdl = await gqlPluckFromCodeString(normalizedFilePath, content, options.pluckConfig);
+
+        if (sdl) {
+          return parseSDL({ pointer, sdl, options });
+        }
+      } catch (e) {
+        debugLog(`Failed to load schema from code file "${normalizedFilePath}": ${e.message}`);
+        errors.push(e);
       }
-    } catch (e) {
-      debugLog(`Failed to load schema from code file "${normalizedFilePath}": ${e.message}`);
-
-      throw e;
     }
 
     if (!options.noRequire) {
-      if (options && options.require) {
-        await Promise.all(asArray(options.require).map(m => import(m)));
-      }
+      try {
+        if (options && options.require) {
+          await Promise.all(asArray(options.require).map((m) => import(m)));
+        }
 
-      const loaded = await tryToLoadFromExport(normalizedFilePath);
-      const source = resolveSource(pointer, loaded);
+        const loaded = await tryToLoadFromExport(normalizedFilePath);
+        const source = resolveSource(pointer, loaded, options);
 
-      if (source) {
-        return source;
+        if (source) {
+          return source;
+        }
+      } catch (e) {
+        errors.push(e);
       }
+    }
+
+    if (errors.length > 0) {
+      throw errors[0];
     }
 
     return null;
@@ -90,30 +103,41 @@ export class CodeFileLoader implements UniversalLoader<CodeFileLoaderOptions> {
   loadSync(pointer: SchemaPointerSingle | DocumentPointerSingle, options: CodeFileLoaderOptions): Source {
     const normalizedFilePath = ensureAbsolutePath(pointer, options);
 
-    try {
-      const content = getContent(normalizedFilePath, options);
-      const sdl = gqlPluckFromCodeStringSync(normalizedFilePath, content, options.pluckConfig);
+    const errors: Error[] = [];
 
-      if (sdl) {
-        return parseSDL({ pointer, sdl, options });
+    if (!options.noPluck) {
+      try {
+        const content = getContent(normalizedFilePath, options);
+        const sdl = gqlPluckFromCodeStringSync(normalizedFilePath, content, options.pluckConfig);
+
+        if (sdl) {
+          return parseSDL({ pointer, sdl, options });
+        }
+      } catch (e) {
+        debugLog(`Failed to load schema from code file "${normalizedFilePath}": ${e.message}`);
+        errors.push(e);
       }
-    } catch (e) {
-      debugLog(`Failed to load schema from code file "${normalizedFilePath}": ${e.message}`);
-
-      throw e;
     }
 
     if (!options.noRequire) {
-      if (options && options.require) {
-        asArray(options.require).forEach(m => require(m));
-      }
+      try {
+        if (options && options.require) {
+          asArray(options.require).forEach((m) => require(m));
+        }
 
-      const loaded = tryToLoadFromExportSync(normalizedFilePath);
-      const source = resolveSource(pointer, loaded);
+        const loaded = tryToLoadFromExportSync(normalizedFilePath);
+        const source = resolveSource(pointer, loaded, options);
 
-      if (source) {
-        return source;
+        if (source) {
+          return source;
+        }
+      } catch (e) {
+        errors.push(e);
       }
+    }
+
+    if (errors.length > 0) {
+      throw errors[0];
     }
 
     return null;
@@ -124,17 +148,21 @@ function parseSDL({ pointer, sdl, options }: { pointer: string; sdl: string; opt
   return parseGraphQLSDL(pointer, sdl, options);
 }
 
-function resolveSource(pointer: string, value: any): Source | null {
+function resolveSource(pointer: string, value: any, options: CodeFileLoaderOptions): Source | null {
   if (isSchema(value)) {
     return {
       location: pointer,
+      rawSDL: printSchemaWithDirectives(value, options),
       schema: value,
     };
-  } else if (value && value.kind === Kind.DOCUMENT) {
+  } else if (value?.kind === Kind.DOCUMENT) {
     return {
       location: pointer,
+      rawSDL: print(value),
       document: value,
     };
+  } else if (typeof value === 'string') {
+    return parseGraphQLSDL(pointer, value, options);
   }
 
   return null;
