@@ -1,10 +1,23 @@
-import { loadResolversFiles, loadSchemaFiles } from '@graphql-toolkit/file-loading';
+import { loadResolversFiles, loadSchemaFiles, loadFilesAsync } from '@graphql-toolkit/file-loading';
 import { print } from 'graphql';
 
 function testSchemaDir({ path, expected, note, extensions, ignoreIndex }: { path: string; expected: any; note: string; extensions?: string[] | null; ignoreIndex?: boolean }) {
-  it(`should return the correct schema results for path: ${path} (${note})`, () => {
+  it(`SYNC: should return the correct schema results for path: ${path} (${note})`, () => {
     const options = { ignoreIndex };
     const result = loadSchemaFiles(path, extensions ? { ...options, extensions } : options);
+
+    expect(result.length).toBe(expected.length);
+    expect(result.map(res => {
+      if (res['kind'] === 'Document') {
+        res = print(res);
+      }
+      return stripWhitespaces(res);
+    })).toEqual(expected.map(stripWhitespaces));
+  });
+  
+  it(`ASYNC: should return the correct schema results for path: ${path} (${note})`, async () => {
+    const options = { ignoreIndex };
+    const result = await loadFilesAsync(path, extensions ? { ...options, extensions } : options);
 
     expect(result.length).toBe(expected.length);
     expect(result.map(res => {
@@ -21,11 +34,24 @@ function testResolversDir({ path, expected, note, extensions, compareValue, igno
     compareValue = true;
   }
 
-  it(`should return the correct resolvers results for path: ${path} (${note})`, () => {
+  it(`SYNC: should return the correct resolvers results for path: ${path} (${note})`, () => {
     const options = {
       ignoreIndex,
     };
     const result = loadResolversFiles(path, extensions ? { ...options, extensions } : options);
+
+    expect(result.length).toBe(expected.length);
+
+    if (compareValue) {
+      expect(result).toEqual(expected);
+    }
+  });
+
+  it(`ASYNC: should return the correct resolvers results for path: ${path} (${note})`, async () => {
+    const options = {
+      ignoreIndex,
+    };
+    const result = await loadFilesAsync(path, extensions ? { ...options, extensions } : options);
 
     expect(result.length).toBe(expected.length);
 

@@ -25,8 +25,8 @@ export class PrismaLoader extends UrlLoader {
     ) {
       const path = options.path || (await import('path'));
       const joinedYmlPath = path.join(options.cwd || process.cwd(), prismaConfigFilePath);
-      const fs = options.fs;
-      if (await new Promise(resolve => fs.exists(joinedYmlPath, resolve))) {
+      const fs = options.fs.promises;
+      if (!!(await fs.stat(joinedYmlPath).catch((_) => false))) {
         return true;
       }
     }

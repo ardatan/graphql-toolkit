@@ -26,8 +26,8 @@ function buildGlob(
   ignoredExtensions: string[] = [],
   recursive: boolean
 ): string {
-  const ignored = ignoredExtensions.length > 0 ? `!(${ignoredExtensions.map(e => '*.' + e).join('|')})` : '*';
-  const ext = extensions.map(e => '*.' + e).join('|');
+  const ignored = ignoredExtensions.length > 0 ? `!(${ignoredExtensions.map((e) => '*.' + e).join('|')})` : '*';
+  const ext = extensions.map((e) => '*.' + e).join('|');
 
   return `${basePath}${recursive ? '/**' : ''}/${ignored}+(${ext})`;
 }
@@ -87,7 +87,7 @@ export function loadFiles<T = any>(
   const execOptions = { ...LoadFilesDefaultOptions, ...options };
   const unixify = require('unixify');
   const relevantPaths = scanForFiles(
-    asArray(pattern).map(path =>
+    asArray(pattern).map((path) =>
       isDirectory(path)
         ? buildGlob(unixify(path), execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive)
         : unixify(path)
@@ -96,7 +96,7 @@ export function loadFiles<T = any>(
   );
 
   return relevantPaths
-    .map(path => {
+    .map((path) => {
       if (!checkExtension(path, options)) {
         return;
       }
@@ -142,7 +142,7 @@ export function loadFiles<T = any>(
         return readFileSync(path, { encoding: 'utf-8' });
       }
     })
-    .filter(v => v);
+    .filter((v) => v);
 }
 
 async function scanForFilesAsync(
@@ -183,9 +183,9 @@ export async function loadFilesAsync(
   options: LoadFilesOptions = LoadFilesDefaultOptions
 ): Promise<any[]> {
   const execOptions = { ...LoadFilesDefaultOptions, ...options };
-  const unixify = await import('unixify').then(m => m.default || m);
+  const unixify = await import('unixify').then((m) => m.default || m);
   const relevantPaths = await scanForFilesAsync(
-    asArray(pattern).map(path =>
+    asArray(pattern).map((path) =>
       isDirectory(path)
         ? buildGlob(unixify(path), execOptions.extensions, execOptions.ignoredExtensions, execOptions.recursive)
         : unixify(path)
@@ -193,19 +193,15 @@ export async function loadFilesAsync(
     options.globOptions
   );
 
-  const require$ = (path: string) => import(path);
+  const require$ = (path: string) => import(path).catch(async () => require(path));
+  const { extname } = await import('path');
 
   return Promise.all(
     relevantPaths
-      .map(async path => {
-        if (!checkExtension(path, options)) {
-          return;
-        }
-
-        if (isIndex(path, execOptions.extensions) && options.ignoreIndex) {
-          return false;
-        }
-        const { extname } = await import('path');
+      .filter(
+        (path) => checkExtension(path, options) && !(isIndex(path, execOptions.extensions) && options.ignoreIndex)
+      )
+      .map(async (path) => {
         const extension = extname(path);
 
         if (extension.endsWith('.js') || extension.endsWith('.ts') || execOptions.useRequire) {
@@ -222,24 +218,18 @@ export async function loadFilesAsync(
 
           return extractedExport;
         } else {
-          return new Promise(async (resolve, reject) => {
-            const { readFile } = await import('fs');
-            readFile(path, { encoding: 'utf-8' }, (err, data) => {
-              if (err) {
-                reject(err);
-              }
-              resolve(data);
-            });
-          });
+          const {
+            promises: { readFile },
+          } = await import('fs');
+          return readFile(path, { encoding: 'utf-8' });
         }
       })
-      .filter(p => p)
   );
 }
 
 function isIndex(path: string, extensions: string[] = []): boolean {
   const IS_INDEX = /(\/|\\)index\.[^\/\\]+$/i; // (/ or \) AND `index.` AND (everything except \ and /)(end of line)
-  return IS_INDEX.test(path) && extensions.some(ext => path.endsWith('.' + ext));
+  return IS_INDEX.test(path) && extensions.some((ext) => path.endsWith('.' + ext));
 }
 
 export { loadFilesAsync as loadSchemaFilesAsync, loadFiles as loadSchemaFiles };
