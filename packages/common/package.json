@@ -1,6 +1,6 @@
 {
   "name": "@graphql-toolkit/common",
-  "version": "0.9.10",
+  "version": "0.9.11",
   "description": "Common package containting utils and types for GraphQL Toolkit",
   "repository": "git@github.com:ardatan/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
@@ -38,9 +38,9 @@
   },
   "dependencies": {
     "aggregate-error": "3.0.1",
+    "camel-case": "4.1.1",
     "graphql-tools-fork": "9.0.1",
-    "lodash": "4.17.15",
-    "camel-case": "4.1.1"
+    "lodash": "4.17.15"
   },
   "publishConfig": {
     "access": "public",
