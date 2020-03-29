@@ -39,7 +39,8 @@
   "dependencies": {
     "aggregate-error": "3.0.1",
     "graphql-tools-fork": "9.0.1",
-    "lodash": "4.17.15"
+    "lodash": "4.17.15",
+    "camel-case": "4.1.1"
   },
   "publishConfig": {
     "access": "public",
