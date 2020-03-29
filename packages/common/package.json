@@ -1,6 +1,6 @@
 {
   "name": "@graphql-toolkit/common",
-  "version": "0.9.11",
+  "version": "0.9.12",
   "description": "Common package containting utils and types for GraphQL Toolkit",
   "repository": "git@github.com:ardatan/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
@@ -32,6 +32,7 @@
     "@types/jest": "25.1.4",
     "@types/lodash": "4.14.149",
     "graphql": "14.6.0",
+    "graphql-tools-fork": "9.0.1",
     "jest": "25.2.3",
     "ts-jest": "25.2.1",
     "typescript": "3.8.3"
