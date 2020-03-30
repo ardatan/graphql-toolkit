@@ -1,4 +1,4 @@
-import { makeExecutableSchema } from 'graphql-tools-fork';
+import { makeExecutableSchema, RenameTypes, transformSchema } from 'graphql-tools-fork';
 import { buildSchema, printSchema } from 'graphql';
 import { printSchemaWithDirectives } from '../src';
 import GraphQLJSON from 'graphql-type-json';
@@ -86,4 +86,34 @@ describe('printSchemaWithDirectives', () => {
     expect(output).toContain('Test Field Comment');
 
   });
+  it('should print transformed schema correctly', () => {
+
+    const printedSchema = /* GraphQL */`
+      type Foo {
+        bar: String
+      }
+      type Bar {
+        foo: Foo
+      }
+      type Query {
+        bar: Bar
+      }
+   `;
+
+    const schema = buildSchema(printedSchema);
+
+    const transformedSchema = transformSchema(schema, [
+      new RenameTypes(typeName => `My${typeName}`)
+    ]);
+    const printedTransformedSchema = printSchemaWithDirectives(transformedSchema);
+    expect(printedTransformedSchema).not.toContain(/* GraphQL */`type Foo`);
+    expect(printedTransformedSchema).toContain(/* GraphQL */`type MyFoo`);
+    expect(printedTransformedSchema).not.toContain(/* GraphQL */`type Bar`);
+    expect(printedTransformedSchema).toContain(/* GraphQL */`type MyBar`);
+    expect(printedTransformedSchema).not.toContain(/* GraphQL */`bar: Bar`);
+    expect(printedTransformedSchema).toContain(/* GraphQL */`bar: MyBar`);
+    expect(printedTransformedSchema).not.toContain(/* GraphQL */`foo: Foo`);
+    expect(printedTransformedSchema).toContain(/* GraphQL */`foo: MyFoo`);
+  });
+
 });

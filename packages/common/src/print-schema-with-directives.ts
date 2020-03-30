@@ -8,6 +8,11 @@ import {
   isSpecifiedScalarType,
   isIntrospectionType,
   isScalarType,
+  parse,
+  TypeDefinitionNode,
+  DirectiveNode,
+  FieldDefinitionNode,
+  InputValueDefinitionNode,
 } from 'graphql';
 import { Options } from 'graphql/utilities/schemaPrinter';
 import { createSchemaDefinition } from './create-schema-definition';
@@ -32,12 +37,8 @@ export function printSchemaWithDirectives(schema: GraphQLSchema, options: Option
       continue;
     }
 
-    if (type.astNode) {
-      result.push(print(type.extensionASTNodes ? extendDefinition(type) : type.astNode));
-    } else {
-      // KAMIL: we might want to turn on descriptions in future
-      result.push(printType(correctType(typeName, typesMap), { commentDescriptions: options.commentDescriptions }));
-    }
+    // KAMIL: we might want to turn on descriptions in future
+    result.push(print(correctType(typeName, typesMap)?.astNode));
   }
 
   const directives = schema.getDirectives();
@@ -84,6 +85,26 @@ function correctType<TMap extends { [key: string]: GraphQLNamedType }, TName ext
   const type = typesMap[typeName];
 
   type.name = typeName.toString();
+
+  if (type.astNode && type.extensionASTNodes) {
+    type.astNode = type.extensionASTNodes ? extendDefinition(type) : type.astNode;
+  }
+  const doc = parse(printType(type));
+  const fixedAstNode = doc.definitions[0] as TypeDefinitionNode;
+  const originalAstNode = type?.astNode;
+  if (originalAstNode) {
+    (fixedAstNode.directives as DirectiveNode[]) = originalAstNode?.directives as DirectiveNode[];
+    if ('fields' in fixedAstNode && 'fields' in originalAstNode) {
+      for (const fieldDefinitionNode of fixedAstNode.fields) {
+        const originalFieldDefinitionNode = (originalAstNode.fields as (
+          | InputValueDefinitionNode
+          | FieldDefinitionNode
+        )[]).find((field) => field.name.value === fieldDefinitionNode.name.value);
+        (fieldDefinitionNode.directives as DirectiveNode[]) = originalFieldDefinitionNode?.directives as DirectiveNode[];
+      }
+    }
+  }
+  type.astNode = fixedAstNode;
 
   return type;
 }
