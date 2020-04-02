@@ -1,4 +1,4 @@
-import { printSchemaWithDirectives } from '@graphql-toolkit/common';
+import { printSchemaWithDirectives, SchemaPrintOptions } from '@graphql-toolkit/common';
 import { parse, GraphQLSchema, DefinitionNode, DocumentNode, ParseOptions, concatAST } from 'graphql';
 
 import { transform as skipRedundantNodesTransform } from 'relay-compiler/lib/transforms/SkipRedundantNodesTransform';
@@ -9,9 +9,8 @@ import CompilerContext from 'relay-compiler/lib/core/CompilerContext';
 import { transform as relayTransform } from 'relay-compiler/lib/core/RelayParser';
 import { print as relayPrint } from 'relay-compiler/lib/core/IRPrinter';
 import { create as relayCreate } from 'relay-compiler/lib/core/Schema';
-import { Options } from 'graphql/utilities/schemaPrinter';
 
-export type OptimizeDocumentsOptions = Options &
+export type OptimizeDocumentsOptions = SchemaPrintOptions &
   ParseOptions & {
     includeFragments?: boolean;
   };
@@ -44,8 +43,8 @@ export function optimizeDocuments(
     result.push(
       ...fragmentCompilerContext
         .documents()
-        .filter(doc => doc.kind === 'Fragment')
-        .map(doc => parse(relayPrint(adjustedSchema, doc), options))
+        .filter((doc) => doc.kind === 'Fragment')
+        .map((doc) => parse(relayPrint(adjustedSchema, doc), options))
     );
   }
 
@@ -58,7 +57,7 @@ export function optimizeDocuments(
       skipRedundantNodesTransform,
     ]);
 
-  result.push(...queryCompilerContext.documents().map(doc => parse(relayPrint(adjustedSchema, doc), options)));
+  result.push(...queryCompilerContext.documents().map((doc) => parse(relayPrint(adjustedSchema, doc), options)));
 
   return result;
 }

@@ -46,7 +46,7 @@ describe('validateGraphQlDocuments', () => {
       },
     ]);
 
-    expect(result.length).toBe(1);
+    expect(result).toHaveLength(1);
     expect(result[0].filePath).toBe('query.graphql');
     expect(result[0].errors[0] instanceof GraphQLError).toBeTruthy();
     expect(result[0].errors[0].message).toBe('Fragment "pizzeriaFragment" cannot be spread here as objects of type "Query" can never be of type "Pizzeria".');

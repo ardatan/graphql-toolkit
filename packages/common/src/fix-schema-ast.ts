@@ -1,15 +1,15 @@
 import { GraphQLSchema, BuildSchemaOptions, buildSchema } from 'graphql';
-import { Options } from 'graphql/utilities/schemaPrinter';
-import { printSchemaWithDirectives } from '.';
+import { SchemaPrintOptions } from './types';
+import { printSchemaWithDirectives } from './print-schema-with-directives';
 
-function buildFixedSchema(schema: GraphQLSchema, options: BuildSchemaOptions & Options) {
+function buildFixedSchema(schema: GraphQLSchema, options: BuildSchemaOptions & SchemaPrintOptions) {
   return buildSchema(printSchemaWithDirectives(schema, options), {
     noLocation: true,
     ...(options || {}),
   });
 }
 
-export function fixSchemaAst(schema: GraphQLSchema, options: BuildSchemaOptions & Options) {
+export function fixSchemaAst(schema: GraphQLSchema, options: BuildSchemaOptions & SchemaPrintOptions) {
   let schemaWithValidAst: GraphQLSchema;
   if (!schema.astNode) {
     Object.defineProperty(schema, 'astNode', {

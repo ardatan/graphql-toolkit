@@ -14,10 +14,10 @@ import {
   FieldDefinitionNode,
   InputValueDefinitionNode,
 } from 'graphql';
-import { Options } from 'graphql/utilities/schemaPrinter';
+import { SchemaPrintOptions } from './types';
 import { createSchemaDefinition } from './create-schema-definition';
 
-export function printSchemaWithDirectives(schema: GraphQLSchema, options: Options = {}): string {
+export function printSchemaWithDirectives(schema: GraphQLSchema, options: SchemaPrintOptions = {}): string {
   const typesMap = schema.getTypeMap();
 
   const result: string[] = [

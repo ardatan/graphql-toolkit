@@ -6,20 +6,10 @@ module.exports = {
     'ts-jest': {
       diagnostics: false,
       tsConfig: {
-        module: 'commonjs'
-      }
+        module: 'commonjs',
+      },
     },
   },
-  reporters: [
-    'default',
-    [
-      'jest-junit',
-      {
-        classNameTemplate: '{classname}',
-        titleTemplate: '{title}',
-        addFileAttribute: 'true',
-      },
-    ],
-  ],
+  reporters: ['default'],
   modulePathIgnorePatterns: ['<rootDir>/dist'],
 };

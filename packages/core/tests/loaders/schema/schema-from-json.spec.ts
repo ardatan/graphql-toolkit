@@ -26,7 +26,7 @@ describe('Schema From Export', () => {
         if (type.description || introspectionType.description) {
           expect(type.description).toBe(introspectionType.description);
         }
-        if (type instanceof GraphQLObjectType || type instanceof GraphQLInterfaceType) {
+        if (!typeName.startsWith('__') && (type instanceof GraphQLObjectType || type instanceof GraphQLInterfaceType)) {
           const fieldMap = type.getFields();
           for (const fieldName in fieldMap) {
             const field = fieldMap[fieldName];

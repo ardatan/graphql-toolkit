@@ -1,7 +1,8 @@
 import { buildClientSchema, parse, ParseOptions } from 'graphql';
-import { printSchemaWithDirectives, Source } from '.';
 import { GraphQLSchemaValidationOptions } from 'graphql/type/schema';
-import { Options } from 'graphql/utilities/schemaPrinter';
+import { printSchemaWithDirectives } from './print-schema-with-directives';
+import { Source } from './loaders';
+import { SchemaPrintOptions } from './types';
 
 function stripBOM(content: string): string {
   content = content.toString();
@@ -22,7 +23,7 @@ function parseBOM(content: string): any {
 export function parseGraphQLJSON(
   location: string,
   jsonContent: string,
-  options: Options & ParseOptions & GraphQLSchemaValidationOptions
+  options: SchemaPrintOptions & ParseOptions & GraphQLSchemaValidationOptions
 ): Source {
   let parsedJson = parseBOM(jsonContent);
 

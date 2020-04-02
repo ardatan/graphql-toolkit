@@ -32,16 +32,28 @@
     ]
   },
   "devDependencies": {
-    "graphql": "14.6.0",
+    "@ardatan/bob": "0.2.7",
+    "@types/jest": "25.1.5",
+    "@types/lodash": "4.14.149",
+    "graphql": "15.0.0",
+    "graphql-tools-fork": "9.0.1",
     "husky": "4.2.3",
+    "jest": "25.2.6",
     "lerna": "3.20.2",
     "lint-staged": "10.1.1",
     "prettier": "2.0.2",
+    "rimraf": "3.0.2",
+    "ts-jest": "25.3.0",
     "typescript": "3.8.3",
     "tslint": "6.1.0"
   },
   "workspaces": [
     "packages/*",
     "packages/loaders/*"
-  ]
+  ],
+  "resolutions": {
+    "**/apollo-language-server/graphql": "^15.0.0",
+    "**/@types/graphql-upload/graphql": "^15.0.0",
+    "**/@types/relay-compiler/graphql": "^15.0.0"
+  }
 }

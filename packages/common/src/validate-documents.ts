@@ -8,6 +8,7 @@ import {
   FragmentDefinitionNode,
   ValidationContext,
   ASTVisitor,
+  DocumentNode,
 } from 'graphql';
 import { Source } from './loaders';
 
@@ -27,7 +28,7 @@ export async function validateGraphQlDocuments(
 ): Promise<ReadonlyArray<LoadDocumentError>> {
   const allFragments: FragmentDefinitionNode[] = [];
 
-  documentFiles.forEach(documentFile => {
+  documentFiles.forEach((documentFile) => {
     if (documentFile.document) {
       for (const definitionNode of documentFile.document.definitions) {
         if (definitionNode.kind === Kind.FRAGMENT_DEFINITION) {
@@ -40,14 +41,17 @@ export async function validateGraphQlDocuments(
   const allErrors: LoadDocumentError[] = [];
 
   await Promise.all(
-    documentFiles.map(async documentFile => {
+    documentFiles.map(async (documentFile) => {
       const documentToValidate = {
         kind: Kind.DOCUMENT,
-        definitions: [...allFragments, ...documentFile.document.definitions].filter((d, index, arr) => {
-          if (d.kind === Kind.FRAGMENT_DEFINITION) {
-            const foundIndex = arr.findIndex(i => i.kind === Kind.FRAGMENT_DEFINITION && i.name.value === d.name.value);
+        definitions: [...allFragments, ...documentFile.document.definitions].filter((definition, index, list) => {
+          if (definition.kind === Kind.FRAGMENT_DEFINITION) {
+            const firstIndex = list.findIndex(
+              (def) => def.kind === Kind.FRAGMENT_DEFINITION && def.name.value === definition.name.value
+            );
+            const isDuplicated = firstIndex !== index;
 
-            if (foundIndex !== index) {
+            if (isDuplicated) {
               return false;
             }
           }
@@ -56,7 +60,10 @@ export async function validateGraphQlDocuments(
         }),
       };
 
-      const errors = validate(schema, documentToValidate, effectiveRules);
+      const errors = skipUnusedFragmentsInNonOperations(
+        documentToValidate,
+        validate(schema, documentToValidate, effectiveRules)
+      );
 
       if (errors.length > 0) {
         allErrors.push({
@@ -81,7 +88,7 @@ export function checkValidationErrors(loadDocumentErrors: ReadonlyArray<LoadDocu
         error.message = `${error.name}: ${graphQLError.message}`;
         error.stack = error.message;
         graphQLError.locations.forEach(
-          location => (error.stack += `\n    at ${loadDocumentError.filePath}:${location.line}:${location.column}`)
+          (location) => (error.stack += `\n    at ${loadDocumentError.filePath}:${location.line}:${location.column}`)
         );
 
         errors.push(error);
@@ -90,4 +97,23 @@ export function checkValidationErrors(loadDocumentErrors: ReadonlyArray<LoadDocu
 
     throw new AggregateError(errors);
   }
+}
+
+/**
+ * GraphQL 15.0.0 throws an error ("unused fragment") when DocumentNode includes only a FragmentDefinitionNode
+ * In previous versions, it was valid.
+ * That's why we need to filter out "unused fragment" errors when a document has only fragments
+ *
+ * @deprecated
+ */
+function skipUnusedFragmentsInNonOperations(doc: DocumentNode, errors: readonly GraphQLError[]) {
+  if (errors.length > 0) {
+    const isFragmentOnly = doc.definitions.some((def) => def.kind === 'OperationDefinition') === false;
+
+    if (isFragmentOnly) {
+      return errors.filter((error) => error.message.includes('is never used') === false);
+    }
+  }
+
+  return errors;
 }

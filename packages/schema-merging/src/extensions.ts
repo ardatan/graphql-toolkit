@@ -20,7 +20,7 @@ import {
   GraphQLInterfaceType,
 } from 'graphql';
 import * as deepMerge from 'deepmerge';
-import Maybe from 'graphql/tsutils/Maybe';
+import { Maybe } from '@graphql-toolkit/common';
 
 export type ExtensionsObject = Record<string, any>;
 
@@ -165,7 +165,7 @@ export function applyExtensions(schema: GraphQLSchema, extensions: SchemaExtensi
 
         for (const [arg, argData] of Object.entries(fieldData.arguments)) {
           applyExtensionObject(
-            field.args.find(a => a.name === arg),
+            field.args.find((a) => a.name === arg),
             argData
           );
         }
@@ -193,8 +193,9 @@ export function extractExtensionsFromSchema(schema: GraphQLSchema): SchemaExtens
   };
 
   travelSchemaPossibleExtensions(schema, {
-    onSchema: schema => (result.schemaExtensions = schema.extensions || {}),
-    onObjectType: type => (result.types[type.name] = { fields: {}, type: 'object', extensions: type.extensions || {} }),
+    onSchema: (schema) => (result.schemaExtensions = schema.extensions || {}),
+    onObjectType: (type) =>
+      (result.types[type.name] = { fields: {}, type: 'object', extensions: type.extensions || {} }),
     onObjectField: (type, field) =>
       ((result.types[type.name] as ObjectTypeExtensions).fields[field.name] = {
         arguments: {},
@@ -202,7 +203,7 @@ export function extractExtensionsFromSchema(schema: GraphQLSchema): SchemaExtens
       }),
     onObjectFieldArg: (type, field, arg) =>
       ((result.types[type.name] as ObjectTypeExtensions).fields[field.name].arguments[arg.name] = arg.extensions || {}),
-    onInterface: type =>
+    onInterface: (type) =>
       (result.types[type.name] = { fields: {}, type: 'interface', extensions: type.extensions || {} }),
     onInterfaceField: (type, field) =>
       ((result.types[type.name] as InterfaceTypeExtensions).fields[field.name] = {
@@ -212,12 +213,12 @@ export function extractExtensionsFromSchema(schema: GraphQLSchema): SchemaExtens
     onInterfaceFieldArg: (type, field, arg) =>
       ((result.types[type.name] as InterfaceTypeExtensions).fields[field.name].arguments[arg.name] =
         arg.extensions || {}),
-    onEnum: type => (result.types[type.name] = { values: {}, type: 'enum', extensions: type.extensions || {} }),
+    onEnum: (type) => (result.types[type.name] = { values: {}, type: 'enum', extensions: type.extensions || {} }),
     onEnumValue: (type, value) =>
       ((result.types[type.name] as EnumTypeExtensions).values[value.name] = value.extensions || {}),
-    onScalar: type => (result.types[type.name] = { type: 'scalar', extensions: type.extensions || {} }),
-    onUnion: type => (result.types[type.name] = { type: 'union', extensions: type.extensions || {} }),
-    onInputType: type => (result.types[type.name] = { fields: {}, type: 'input', extensions: type.extensions || {} }),
+    onScalar: (type) => (result.types[type.name] = { type: 'scalar', extensions: type.extensions || {} }),
+    onUnion: (type) => (result.types[type.name] = { type: 'union', extensions: type.extensions || {} }),
+    onInputType: (type) => (result.types[type.name] = { fields: {}, type: 'input', extensions: type.extensions || {} }),
     onInputFieldType: (type, field) =>
       ((result.types[type.name] as InputTypeExtensions).fields[field.name] = { extensions: field.extensions || {} }),
   });
