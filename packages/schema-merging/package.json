@@ -1,6 +1,6 @@
 {
   "name": "@graphql-toolkit/schema-merging",
-  "version": "0.9.12",
+  "version": "0.10.0",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": "git@github.com:ardatan/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
@@ -30,7 +30,7 @@
     "@types/deepmerge": "2.2.0"
   },
   "dependencies": {
-    "@graphql-toolkit/common": "0.9.12",
+    "@graphql-toolkit/common": "0.10.0",
     "deepmerge": "4.2.2",
     "graphql-tools-fork": "9.0.1",
     "tslib": "1.11.1"
