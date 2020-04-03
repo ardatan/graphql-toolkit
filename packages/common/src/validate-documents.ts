@@ -8,13 +8,11 @@ import {
   FragmentDefinitionNode,
   ValidationContext,
   ASTVisitor,
-  DocumentNode,
 } from 'graphql';
 import { Source } from './loaders';
 
 export type ValidationRule = (context: ValidationContext) => ASTVisitor;
-const DEFAULT_IGNORED_RULES = ['NoUnusedFragments', 'NoUnusedVariables', 'KnownDirectives'];
-const DEFAULT_EFFECTIVE_RULES = specifiedRules.filter((f: Function) => !DEFAULT_IGNORED_RULES.includes(f.name));
+const DEFAULT_EFFECTIVE_RULES = createDefaultRules();
 
 export interface LoadDocumentError {
   readonly filePath: string;
@@ -60,10 +58,7 @@ export async function validateGraphQlDocuments(
         }),
       };
 
-      const errors = skipUnusedFragmentsInNonOperations(
-        documentToValidate,
-        validate(schema, documentToValidate, effectiveRules)
-      );
+      const errors = validate(schema, documentToValidate, effectiveRules);
 
       if (errors.length > 0) {
         allErrors.push({
@@ -99,21 +94,14 @@ export function checkValidationErrors(loadDocumentErrors: ReadonlyArray<LoadDocu
   }
 }
 
-/**
- * GraphQL 15.0.0 throws an error ("unused fragment") when DocumentNode includes only a FragmentDefinitionNode
- * In previous versions, it was valid.
- * That's why we need to filter out "unused fragment" errors when a document has only fragments
- *
- * @deprecated
- */
-function skipUnusedFragmentsInNonOperations(doc: DocumentNode, errors: readonly GraphQLError[]) {
-  if (errors.length > 0) {
-    const isFragmentOnly = doc.definitions.some((def) => def.kind === 'OperationDefinition') === false;
+function createDefaultRules() {
+  const ignored = ['NoUnusedFragmentsRule', 'NoUnusedVariablesRule', 'KnownDirectivesRule'];
 
-    if (isFragmentOnly) {
-      return errors.filter((error) => error.message.includes('is never used') === false);
-    }
-  }
+  // GraphQL v14 has no Rule suffix in function names
+  // Adding `*Rule` makes validation backwards compatible
+  ignored.forEach((rule) => {
+    ignored.push(rule.replace(/Rule$/, ''));
+  });
 
-  return errors;
+  return specifiedRules.filter((f: Function) => !ignored.includes(f.name));
 }
