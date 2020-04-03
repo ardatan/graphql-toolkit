@@ -1,5 +1,6 @@
 ![tool](https://user-images.githubusercontent.com/25294569/64810060-4d9c8680-d5a3-11e9-9a66-84ff20e1179f.gif)
 
+![CI](https://github.com/ardatan/graphql-toolkit/workflows/CI/badge.svg)
 [![Discord Chat](https://img.shields.io/discord/625400653321076807)](https://discord.gg/xud7bH9)
 
 A set of utils for faster development of GraphQL tools. Use these utils if you are creating a tool that loads schema/documents, merges schemas, scan for schema/documents/resolvers files.
