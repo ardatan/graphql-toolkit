@@ -35,7 +35,7 @@
     "vue-template-compiler": "^2.6.11"
   },
   "devDependencies": {
-    "@types/babel__traverse": "7.0.9",
+    "@types/babel__traverse": "7.0.10",
     "@types/fs-extra": "8.1.0",
     "fs-extra": "9.0.0",
     "vue-template-compiler": "2.6.11"
