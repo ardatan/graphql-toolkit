@@ -971,5 +971,48 @@ describe('graphql-tag-pluck', () => {
           }
       `));
     });
+
+    it('should pluck graphql template literal in a code file that has decorators', async () => {
+      const gqlString = await pluck('tmp-XXXXXX.ts', freeText(`
+        const CurrentUserForProfile = gql\`
+          query CurrentUserForProfile {
+            currentUser {
+              login
+              avatar_url
+            }
+          }
+        \`;
+        
+        @Component({
+          selector: 'app-dialog',
+          template: 'test',
+        })
+        export class DialogComponent implements OnInit {
+          constructor(
+            public apollo: Apollo,
+            @Inject(MAT_DIALOG_DATA) public data: any
+          ) {}
+        
+          ngOnInit(): void {
+            this.apollo
+              .watchQuery<any>({
+                query: CurrentUserForProfile,
+              })
+              .valueChanges.subscribe();
+          }
+        }
+      `));
+
+  
+      expect(gqlString).toEqual(freeText(/* GraphQL */`
+        query CurrentUserForProfile {
+          currentUser {
+            login
+            avatar_url
+          }
+        }
+      `));
+
+    })
   });
 });
