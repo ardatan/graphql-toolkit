@@ -445,7 +445,7 @@ runTests({
     expect(await importSchema(schemaA)).toBeSimilarGqlDoc(expectedSDL);
   });
   
-  test(`importSchema: import all - exclude Query/Mutation/Subscription type`, async () => {
+  test(`importSchema: import all - include Query/Mutation/Subscription type`, async () => {
     const schemaC = `
               type C1 {
                 id: ID!
@@ -505,6 +505,7 @@ runTests({
     const expectedSDL = /* GraphQL */`\
           type Query {
             greet: String!
+            hello: String!
           }
           
           type A {

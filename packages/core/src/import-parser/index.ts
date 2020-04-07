@@ -2,7 +2,6 @@ import { DefinitionNode, parse, ObjectTypeDefinitionNode, DocumentNode, Kind } f
 import { groupBy, keyBy, isEqual, uniqBy, flatten } from 'lodash';
 import { LoadTypedefsOptions } from '../load-typedefs';
 import { loadFile, loadFileSync } from '../load-typedefs/load-file';
-
 import { completeDefinitionPool } from './definition';
 import { Source, compareNodes } from '@graphql-toolkit/common';
 
@@ -14,8 +13,6 @@ export interface RawModule {
   imports: string[];
   from: string;
 }
-
-const rootFields = ['Query', 'Mutation', 'Subscription'];
 
 const gqlExt = /\.g(raph)?ql(s)?$/;
 function isGraphQLFile(f: string) {
@@ -41,7 +38,7 @@ export function parseImportLine(importLine: string): RawModule {
       const [, wildcard, importsString, , from] = matches;
 
       // Extract imported types
-      const imports = wildcard === '*' ? ['*'] : importsString.split(',').map(d => d.trim());
+      const imports = wildcard === '*' ? ['*'] : importsString.split(',').map((d) => d.trim());
 
       // Return information about the import line
       return { imports, from };
@@ -68,9 +65,9 @@ export function parseImportLine(importLine: string): RawModule {
 export function parseSDL(sdl: string): RawModule[] {
   return sdl
     .split('\n')
-    .map(l => l.trim())
-    .filter(l => l.startsWith('# import ') || l.startsWith('#import '))
-    .map(l => l.replace('#', '').trim())
+    .map((l) => l.trim())
+    .filter((l) => l.startsWith('# import ') || l.startsWith('#import '))
+    .map((l) => l.replace('#', '').trim())
     .map(parseImportLine);
 }
 
@@ -100,7 +97,7 @@ export async function processImportSyntax(
 /**
  * Main entry point. Recursively process all import statement in a schema
  *
- * @param filePath File path to the initial schema file
+ * @param documentSource File path to the initial schema file
  * @returns Single bundled schema with all imported types
  */
 export function processImportSyntaxSync(
@@ -119,8 +116,6 @@ export function processImportSyntaxSync(
     allDefinitions,
   });
 }
-
-//
 
 function process({
   typeDefinitions,
@@ -149,7 +144,7 @@ function process({
         processedTypeNames.push(type.name.value);
         mergedFirstTypes.push(type);
       } else {
-        const existingType = mergedFirstTypes.find(t => t.name.value === type.name.value);
+        const existingType = mergedFirstTypes.find((t) => t.name.value === type.name.value);
 
         if ('fields' in existingType) {
           (existingType as any).fields = uniqBy(
@@ -196,8 +191,8 @@ export function isEmptySDL(sdl: string): boolean {
   return (
     sdl
       .split('\n')
-      .map(l => l.trim())
-      .filter(l => !(l.length === 0 || l.startsWith('#'))).length === 0
+      .map((l) => l.trim())
+      .filter((l) => !(l.length === 0 || l.startsWith('#'))).length === 0
   );
 }
 
@@ -257,7 +252,7 @@ export async function collectDefinitions(
 
   // Process each file (recursively)
   await Promise.all(
-    rawModules.map(async module => {
+    rawModules.map(async (module) => {
       // If it was not yet processed (in case of circular dependencies)
       const filepath = resolveModuleFilePath(source.location, module.from, options);
       if (
@@ -297,7 +292,7 @@ export function collectDefinitionsSync(
   const rawModules = preapreRawModules({ allDefinitions, source, imports, options, typeDefinitions });
 
   // Process each file (recursively)
-  rawModules.forEach(module => {
+  rawModules.forEach((module) => {
     // If it was not yet processed (in case of circular dependencies)
     const filepath = resolveModuleFilePath(source.location, module.from, options);
     if (
@@ -356,7 +351,7 @@ function canProcess({
   module: RawModule;
 }) {
   const processedFile = options.processedFiles.get(filepath);
-  if (!processedFile || !processedFile.find(rModule => isEqual(rModule, module))) {
+  if (!processedFile || !processedFile.find((rModule) => isEqual(rModule, module))) {
     // Mark this specific import line as processed for this file (for cicular dependency cases)
     options.processedFiles.set(filepath, processedFile ? processedFile.concat(module) : [module]);
 
@@ -387,25 +382,24 @@ function filterImportedDefinitions(
   if (imports.includes('*')) {
     if (imports.length === 1 && imports[0] === '*' && allDefinitions.length > 1) {
       const previousTypeDefinitions: { [key: string]: DefinitionNode } = keyBy(
-        flatten(allDefinitions.slice(0, allDefinitions.length - 1)).filter(
-          def => 'name' in def && !rootFields.includes(def.name.value)
-        ),
-        def => 'name' in def && def.name.value
+        flatten(allDefinitions.slice(0, allDefinitions.length - 1)).filter((def) => 'name' in def),
+        (def) => 'name' in def && def.name.value
       );
       return typeDefinitions.filter(
-        typeDef => typeDef.kind === 'ObjectTypeDefinition' && previousTypeDefinitions[typeDef.name.value]
+        (typeDef) => typeDef.kind === 'ObjectTypeDefinition' && previousTypeDefinitions[typeDef.name.value]
       ) as ObjectTypeDefinitionNode[];
     }
+
     return filteredDefinitions;
   } else {
-    const importedTypes = imports.map(i => i.split('.')[0]);
-    const result = filteredDefinitions.filter(d => 'name' in d && importedTypes.includes(d.name.value));
-    const fieldImports = imports.filter(i => i.split('.').length > 1);
-    const groupedFieldImports = groupBy(fieldImports, x => x.split('.')[0]);
+    const importedTypes = imports.map((i) => i.split('.')[0]);
+    const result = filteredDefinitions.filter((d) => 'name' in d && importedTypes.includes(d.name.value));
+    const fieldImports = imports.filter((i) => i.split('.').length > 1);
+    const groupedFieldImports = groupBy(fieldImports, (x) => x.split('.')[0]);
 
     for (const rootType in groupedFieldImports) {
-      const fields = groupedFieldImports[rootType].map(x => x.split('.')[1]);
-      const objectTypeDefinition: any = filteredDefinitions.find(def => 'name' in def && def.name.value === rootType);
+      const fields = groupedFieldImports[rootType].map((x) => x.split('.')[1]);
+      const objectTypeDefinition: any = filteredDefinitions.find((def) => 'name' in def && def.name.value === rootType);
 
       if (objectTypeDefinition && 'fields' in objectTypeDefinition && !fields.includes('*')) {
         objectTypeDefinition.fields = objectTypeDefinition.fields.filter(

@@ -1,7 +1,9 @@
 import { loadSchema, loadSchemaSync } from '@graphql-toolkit/core';
 import { CodeFileLoader } from '@graphql-toolkit/code-file-loader';
 import { GraphQLFileLoader } from '@graphql-toolkit/graphql-file-loader';
+import {printSchema} from 'graphql';
 import { runTests } from '../../../../testing/utils';
+import '../../../../testing/to-be-similar-gql-doc';
 
 describe('loadSchema', () => {
   runTests({
@@ -36,6 +38,33 @@ describe('loadSchema', () => {
       });
 
       expect(schema.getTypeMap()['User']).toBeDefined();
+    });
+
+    test('import and merge Query types from few different files', async () => {
+      const schema = await load('./tests/loaders/schema/fixtures/multiple-root/*/schema.graphql', {
+        loaders: [new GraphQLFileLoader()]
+      });
+      const schemaStr = printSchema(schema);
+      
+      expect(schemaStr).toBeSimilarGqlDoc(/* GraphQL */`
+        type Query {
+          a: A
+          b: B
+          c: C
+        }
+
+        type A {
+          text: String
+        }
+
+        type B {
+          text: String
+        }
+
+        type C {
+          text: String
+        }
+      `);
     });
 })
 });

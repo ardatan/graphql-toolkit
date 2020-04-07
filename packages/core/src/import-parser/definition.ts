@@ -47,10 +47,12 @@ export function completeDefinitionPool(
   const visitedDefinitions: { [name: string]: boolean } = {};
 
   while (newTypeDefinitions.length > 0) {
-    const schemaMap: DefinitionMap = keyBy(reverse(allDefinitions), d => ('name' in d ? d.name.value : 'schema'));
+    const schemaMap: DefinitionMap = keyBy(reverse(allDefinitions), (d) => ('name' in d ? d.name.value : 'schema'));
     const newDefinition = newTypeDefinitions.shift();
 
-    if (visitedDefinitions['name' in newDefinition ? newDefinition.name.value : 'schema']) {
+    const defName = 'name' in newDefinition ? newDefinition.name.value : 'schema';
+
+    if (visitedDefinitions[defName]) {
       continue;
     }
 
@@ -64,7 +66,7 @@ export function completeDefinitionPool(
     newTypeDefinitions.push(...collectedTypedDefinitions);
     definitionPool.push(...collectedTypedDefinitions);
 
-    visitedDefinitions['name' in newDefinition ? newDefinition.name.value : 'schema'] = true;
+    visitedDefinitions[defName] = true;
   }
 
   return uniqBy(definitionPool, 'name.value');
@@ -91,32 +93,32 @@ function collectNewTypeDefinitions(
 ): DefinitionNode[] {
   let newTypeDefinitions: DefinitionNode[] = [];
 
-  if (newDefinition.kind !== 'DirectiveDefinition') {
+  if (newDefinition.kind !== Kind.DIRECTIVE_DEFINITION) {
     newDefinition.directives.forEach(collectDirective);
   }
 
-  if (newDefinition.kind === 'EnumTypeDefinition') {
-    newDefinition.values.forEach(value => value.directives.forEach(collectDirective));
+  if (newDefinition.kind === Kind.ENUM_TYPE_DEFINITION) {
+    newDefinition.values.forEach((value) => value.directives.forEach(collectDirective));
   }
 
-  if (newDefinition.kind === 'InputObjectTypeDefinition') {
+  if (newDefinition.kind === Kind.INPUT_OBJECT_TYPE_DEFINITION) {
     newDefinition.fields.forEach(collectNode);
   }
 
-  if (newDefinition.kind === 'InterfaceTypeDefinition') {
+  if (newDefinition.kind === Kind.INTERFACE_TYPE_DEFINITION) {
     const interfaceName = newDefinition.name.value;
 
     newDefinition.fields.forEach(collectNode);
 
     const interfaceImplementations = allDefinitions.filter(
-      d => d.kind === 'ObjectTypeDefinition' && d.interfaces.some(i => i.name.value === interfaceName)
+      (d) => d.kind === Kind.OBJECT_TYPE_DEFINITION && d.interfaces.some((i) => i.name.value === interfaceName)
     );
     newTypeDefinitions.push(...interfaceImplementations);
   }
 
-  if (newDefinition.kind === 'UnionTypeDefinition') {
-    newDefinition.types.forEach(type => {
-      if (!definitionPool.some(d => 'name' in d && d.name.value === type.name.value)) {
+  if (newDefinition.kind === Kind.UNION_TYPE_DEFINITION) {
+    newDefinition.types.forEach((type) => {
+      if (!definitionPool.some((d) => 'name' in d && d.name.value === type.name.value)) {
         const typeName = type.name.value;
         const typeMatch = schemaMap[typeName];
 
@@ -129,10 +131,10 @@ function collectNewTypeDefinitions(
     });
   }
 
-  if (newDefinition.kind === 'ObjectTypeDefinition') {
+  if (newDefinition.kind === Kind.OBJECT_TYPE_DEFINITION) {
     // collect missing interfaces
-    newDefinition.interfaces.forEach(int => {
-      if (!definitionPool.some(d => 'name' in d && d.name.value === int.name.value)) {
+    newDefinition.interfaces.forEach((int) => {
+      if (!definitionPool.some((d) => 'name' in d && d.name.value === int.name.value)) {
         const interfaceName = int.name.value;
         const interfaceMatch = schemaMap[interfaceName];
 
@@ -145,16 +147,16 @@ function collectNewTypeDefinitions(
     });
 
     // iterate over all fields
-    newDefinition.fields.forEach(field => {
+    newDefinition.fields.forEach((field) => {
       collectNode(field);
       // collect missing argument input types
       field.arguments.forEach(collectNode);
     });
   }
 
-  if (newDefinition.kind === 'SchemaDefinition') {
-    newDefinition.operationTypes.forEach(operationType => {
-      if (!definitionPool.some(d => 'name' in d && d.name.value === operationType.type.name.value)) {
+  if (newDefinition.kind === Kind.SCHEMA_DEFINITION) {
+    newDefinition.operationTypes.forEach((operationType) => {
+      if (!definitionPool.some((d) => 'name' in d && d.name.value === operationType.type.name.value)) {
         const typeName = operationType.type.name.value;
         const typeMatch = schemaMap[typeName];
 
@@ -181,7 +183,7 @@ function collectNewTypeDefinitions(
     if (node.kind === Kind.FRAGMENT_SPREAD) {
       const fragmentName = node.name.value;
 
-      if (!definitionPool.some(d => 'name' in d && d.name.value === fragmentName)) {
+      if (!definitionPool.some((d) => 'name' in d && d.name.value === fragmentName)) {
         const fragmentMatch = schemaMap[fragmentName];
 
         if (!fragmentMatch) {
@@ -206,7 +208,7 @@ function collectNewTypeDefinitions(
 
     // collect missing argument input types
     if (
-      !definitionPool.some(d => 'name' in d && d.name.value === nodeTypeName) &&
+      !definitionPool.some((d) => 'name' in d && d.name.value === nodeTypeName) &&
       !includes(builtinTypes, nodeTypeName)
     ) {
       const argTypeMatch = schemaMap[nodeTypeName];
@@ -224,7 +226,7 @@ function collectNewTypeDefinitions(
   function collectDirective(directive: DirectiveNode) {
     const directiveName = directive.name.value;
     if (
-      !definitionPool.some(d => 'name' in d && d.name.value === directiveName) &&
+      !definitionPool.some((d) => 'name' in d && d.name.value === directiveName) &&
       !includes(builtinDirectives, directiveName)
     ) {
       const directive = schemaMap[directiveName] as DirectiveDefinitionNode;
@@ -246,7 +248,7 @@ function collectNewTypeDefinitions(
  * @returns {NamedTypeNode} The found NamedTypeNode
  */
 function getNamedType(type: TypeNode): NamedTypeNode {
-  if (type.kind === 'NamedType') {
+  if (type.kind === Kind.NAMED_TYPE) {
     return type;
   }
 
