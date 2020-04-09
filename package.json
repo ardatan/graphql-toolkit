@@ -37,7 +37,7 @@
     "bob-the-bundler": "1.0.0-rc.14",
     "graphql": "15.0.0",
     "graphql-tools-fork": "9.0.1",
-    "husky": "4.2.3",
+    "husky": "4.2.4",
     "jest": "25.2.7",
     "lerna": "3.20.2",
     "lint-staged": "10.1.2",
