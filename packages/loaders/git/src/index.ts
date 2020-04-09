@@ -1,4 +1,4 @@
-import { UniversalLoader, parseGraphQLSDL, parseGraphQLJSON, SingleFileOptions, Source } from '@graphql-toolkit/common';
+import { UniversalLoader, SingleFileOptions } from '@graphql-toolkit/common';
 import {
   GraphQLTagPluckOptions,
   gqlPluckFromCodeString,

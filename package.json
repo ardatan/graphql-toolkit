@@ -2,8 +2,8 @@
   "private": true,
   "scripts": {
     "clean": "lerna clean --yes && rm -rf node_modules",
-    "build": "lerna run build",
-    "test": "lerna run test",
+    "build": "tsc --project tsconfig.json && bob build",
+    "test": "jest --no-watchman",
     "lint": "lerna run lint -- --fix",
     "format": "prettier --write packages/**/*.{js,json,css,md,ts,tsx}",
     "test-and-build": "yarn build && yarn test",
@@ -32,15 +32,16 @@
     ]
   },
   "devDependencies": {
-    "@ardatan/bob": "0.2.7",
     "@types/jest": "25.2.1",
     "@types/lodash": "4.14.149",
+    "bob-the-bundler": "1.0.0-rc.11",
     "graphql": "15.0.0",
     "graphql-tools-fork": "9.0.1",
     "husky": "4.2.3",
     "jest": "25.2.7",
     "lerna": "3.20.2",
     "lint-staged": "10.1.2",
+    "nock": "12.0.3",
     "prettier": "2.0.4",
     "rimraf": "3.0.2",
     "ts-jest": "25.3.1",

@@ -17,7 +17,7 @@ import {
 import { SchemaPrintOptions } from './types';
 import { createSchemaDefinition } from './create-schema-definition';
 
-export function printSchemaWithDirectives(schema: GraphQLSchema, options: SchemaPrintOptions = {}): string {
+export function printSchemaWithDirectives(schema: GraphQLSchema, _options: SchemaPrintOptions = {}): string {
   const typesMap = schema.getTypeMap();
 
   const result: string[] = [
@@ -96,11 +96,11 @@ function correctType<TMap extends { [key: string]: GraphQLNamedType }, TName ext
     (fixedAstNode.directives as DirectiveNode[]) = originalAstNode?.directives as DirectiveNode[];
     if ('fields' in fixedAstNode && 'fields' in originalAstNode) {
       for (const fieldDefinitionNode of fixedAstNode.fields) {
-        const originalFieldDefinitionNode = (originalAstNode.fields as (
-          | InputValueDefinitionNode
-          | FieldDefinitionNode
-        )[]).find((field) => field.name.value === fieldDefinitionNode.name.value);
-        (fieldDefinitionNode.directives as DirectiveNode[]) = originalFieldDefinitionNode?.directives as DirectiveNode[];
+        const originalFieldDefinitionNode = (
+          originalAstNode.fields as (InputValueDefinitionNode | FieldDefinitionNode)[]
+        ).find((field) => field.name.value === fieldDefinitionNode.name.value);
+        (fieldDefinitionNode.directives as DirectiveNode[]) =
+          originalFieldDefinitionNode?.directives as DirectiveNode[];
       }
     }
   }

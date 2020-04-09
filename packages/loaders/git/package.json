@@ -6,12 +6,7 @@
   "author": "Dotan Simha <dotansimha@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "lint": "tslint src/**/*.ts",
-    "clean": "rimraf dist",
-    "prebuild": "yarn clean",
-    "build": "bob",
-    "prepack": "bob-update-version",
-    "test": "jest --passWithNoTests --passWithNoTests --no-watchman --config ../../../jest.config.js"
+    "prepack": "bob prepack"
   },
   "sideEffects": false,
   "main": "dist/index.cjs.js",
@@ -23,13 +18,16 @@
   "peerDependencies": {
     "graphql": "^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0"
   },
-  "buildOptions": {
-    "input": "./src/index.ts"
-  },
   "dependencies": {
     "@graphql-toolkit/common": "0.10.3",
     "@graphql-toolkit/graphql-tag-pluck": "0.10.3",
     "simple-git": "1.132.0"
+  },
+  "buildOptions": {
+    "external": [
+      "simple-git",
+      "simple-git/promise"
+    ]
   },
   "publishConfig": {
     "access": "public",

@@ -10,7 +10,6 @@ import {
   UnionTypeDefinitionNode,
   ScalarTypeDefinitionNode,
   InputObjectTypeDefinitionNode,
-  GraphQLSchema,
   InterfaceTypeDefinitionNode,
   DirectiveDefinitionNode,
   SchemaDefinitionNode,

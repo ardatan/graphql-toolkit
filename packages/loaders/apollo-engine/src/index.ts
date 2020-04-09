@@ -1,6 +1,5 @@
 import { SchemaLoader, SingleFileOptions, Source } from '@graphql-toolkit/common';
-import { ClientConfig } from 'apollo-language-server';
-import { EngineSchemaProvider } from 'apollo-language-server/lib/providers/schema/engine';
+import { ClientConfig, schemaProviderFromConfig } from 'apollo-language-server';
 
 export class ApolloEngineLoader implements SchemaLoader {
   loaderId() {
@@ -16,8 +15,8 @@ export class ApolloEngineLoader implements SchemaLoader {
   }
 
   async load(_: 'apollo-engine', options: ClientConfig & SingleFileOptions): Promise<Source> {
-    const engineSchemaProvider = new EngineSchemaProvider(options);
-    const schema = await engineSchemaProvider.resolveSchema({});
+    const schemaProvider = schemaProviderFromConfig(options);
+    const schema = await schemaProvider.resolveSchema({});
 
     return {
       location: 'apollo-engine',

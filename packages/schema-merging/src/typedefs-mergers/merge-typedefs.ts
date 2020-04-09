@@ -1,20 +1,4 @@
-import {
-  DefinitionNode,
-  DocumentNode,
-  GraphQLSchema,
-  parse,
-  print,
-  Source,
-  GraphQLObjectType,
-  isSpecifiedScalarType,
-  isIntrospectionType,
-  printType,
-  ObjectTypeExtensionNode,
-  GraphQLNamedType,
-  Kind,
-  isScalarType,
-  isSchema,
-} from 'graphql';
+import { DefinitionNode, DocumentNode, GraphQLSchema, parse, Source, Kind, isSchema } from 'graphql';
 import { isSourceTypes, isStringTypes, isSchemaDefinition } from './utils';
 import { MergedResultMap, mergeGraphQLNodes } from './merge-nodes';
 import { resetComments, printWithComments } from './comments';
@@ -135,7 +119,7 @@ export function mergeGraphQLTypes(
   resetComments();
 
   const allNodes: ReadonlyArray<DefinitionNode> = types
-    .map<DocumentNode>(type => {
+    .map<DocumentNode>((type) => {
       if (isSchema(type)) {
         return parse(printSchemaWithDirectives(type));
       } else if (isStringTypes(type) || isSourceTypes(type)) {
@@ -144,7 +128,7 @@ export function mergeGraphQLTypes(
 
       return type;
     })
-    .map(ast => ast.definitions)
+    .map((ast) => ast.definitions)
     .reduce((defs, newDef = []) => [...defs, ...newDef], []);
 
   // XXX: right now we don't handle multiple schema definitions
@@ -155,8 +139,8 @@ export function mergeGraphQLTypes(
   } = allNodes.filter(isSchemaDefinition).reduce(
     (def, node) => {
       node.operationTypes
-        .filter(op => op.type.name.value)
-        .forEach(op => {
+        .filter((op) => op.type.name.value)
+        .forEach((op) => {
           def[op.operation] = op.type.name.value;
         });
 
@@ -177,9 +161,11 @@ export function mergeGraphQLTypes(
   }
 
   if (config && config.useSchemaDefinition) {
-    const queryType = schemaDef.query ? schemaDef.query : allTypes.find(t => t === 'Query');
-    const mutationType = schemaDef.mutation ? schemaDef.mutation : allTypes.find(t => t === 'Mutation');
-    const subscriptionType = schemaDef.subscription ? schemaDef.subscription : allTypes.find(t => t === 'Subscription');
+    const queryType = schemaDef.query ? schemaDef.query : allTypes.find((t) => t === 'Query');
+    const mutationType = schemaDef.mutation ? schemaDef.mutation : allTypes.find((t) => t === 'Mutation');
+    const subscriptionType = schemaDef.subscription
+      ? schemaDef.subscription
+      : allTypes.find((t) => t === 'Subscription');
     schemaDef = {
       query: queryType,
       mutation: mutationType,

@@ -1,11 +1,17 @@
 import { loadSchema, loadSchemaSync } from '@graphql-toolkit/core';
 import { CodeFileLoader } from '@graphql-toolkit/code-file-loader';
 import { GraphQLFileLoader } from '@graphql-toolkit/graphql-file-loader';
-import {printSchema} from 'graphql';
-import { runTests } from '../../../../testing/utils';
+import { printSchema } from 'graphql';
+import { runTests, useMonorepo } from '../../../../testing/utils';
 import '../../../../testing/to-be-similar-gql-doc';
 
+const monorepo = useMonorepo({
+  dirname: __dirname,
+});
+
 describe('loadSchema', () => {
+  monorepo.correctCWD();
+  
   runTests({
     async: loadSchema,
     sync: loadSchemaSync

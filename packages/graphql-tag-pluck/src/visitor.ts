@@ -82,7 +82,7 @@ const defaults: GraphQLTagPluckOptions = {
   globalGqlIdentifierName: ['gql', 'graphql'],
 };
 
-export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
+export default (code: string, out: any, options: GraphQLTagPluckOptions = {}) => {
   // Apply defaults to options
   let { modules, globalGqlIdentifierName, gqlMagicComment } = {
     ...defaults,
@@ -92,34 +92,34 @@ export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
   // Prevent case related potential errors
   gqlMagicComment = gqlMagicComment.toLowerCase();
   // normalize `name` and `identifier` values
-  modules = modules.map(mod => {
+  modules = modules.map((mod) => {
     return {
       name: mod.name,
       identifier: mod.identifier && mod.identifier.toLowerCase(),
     };
   });
-  globalGqlIdentifierName = asArray(globalGqlIdentifierName).map(s => s.toLowerCase());
+  globalGqlIdentifierName = asArray(globalGqlIdentifierName).map((s) => s.toLowerCase());
 
   // Keep imported identifiers
   // import gql from 'graphql-tag' -> gql
   // import { graphql } from 'gatsby' -> graphql
   // Will result with ['gql', 'graphql']
-  const definedIdentifierNames = [];
+  const definedIdentifierNames: string[] = [];
 
   // Will accumulate all template literals
-  const gqlTemplateLiterals = [];
+  const gqlTemplateLiterals: string[] = [];
 
   // Check if package is registered
-  function isValidPackage(name) {
-    return modules.some(pkg => pkg.name && name && pkg.name.toLowerCase() === name.toLowerCase());
+  function isValidPackage(name: string) {
+    return modules.some((pkg) => pkg.name && name && pkg.name.toLowerCase() === name.toLowerCase());
   }
 
   // Check if identifier is defined and imported from registered packages
-  function isValidIdentifier(name) {
-    return definedIdentifierNames.some(id => id === name) || globalGqlIdentifierName.includes(name);
+  function isValidIdentifier(name: string) {
+    return definedIdentifierNames.some((id) => id === name) || globalGqlIdentifierName.includes(name);
   }
 
-  const pluckStringFromFile = ({ start, end }) => {
+  const pluckStringFromFile = ({ start, end }: { start: number; end: number }) => {
     return freeText(
       code
         // Slice quotes
@@ -134,7 +134,7 @@ export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
 
   // Push all template literals leaded by graphql magic comment
   // e.g. /* GraphQL */ `query myQuery {}` -> query myQuery {}
-  const pluckMagicTemplateLiteral = (node, takeExpression = false) => {
+  const pluckMagicTemplateLiteral = (node: any, takeExpression = false) => {
     const leadingComments = node.leadingComments;
 
     if (!leadingComments) {
@@ -160,7 +160,7 @@ export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
 
   return {
     CallExpression: {
-      enter(path) {
+      enter(path: any) {
         // Find the identifier name used from graphql-tag, commonJS
         // e.g. import gql from 'graphql-tag' -> gql
         if (path.node.callee.name === 'require' && isValidPackage(path.node.arguments[0].value)) {
@@ -193,16 +193,16 @@ export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
     },
 
     ImportDeclaration: {
-      enter(path) {
+      enter(path: any) {
         // Find the identifier name used from graphql-tag, es6
         // e.g. import gql from 'graphql-tag' -> gql
         if (!isValidPackage(path.node.source.value)) {
           return;
         }
 
-        const moduleNode = modules.find(pkg => pkg.name.toLowerCase() === path.node.source.value.toLowerCase());
+        const moduleNode = modules.find((pkg) => pkg.name.toLowerCase() === path.node.source.value.toLowerCase());
 
-        const gqlImportSpecifier = path.node.specifiers.find(importSpecifier => {
+        const gqlImportSpecifier = path.node.specifiers.find((importSpecifier: any) => {
           // When it's a default import and registered package has no named identifier
           if (isImportDefaultSpecifier(importSpecifier) && !moduleNode.identifier) {
             return true;
@@ -225,7 +225,7 @@ export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
     },
 
     ExpressionStatement: {
-      exit(path) {
+      exit(path: any) {
         // Push all template literals leaded by graphql magic comment
         // e.g. /* GraphQL */ `query myQuery {}` -> query myQuery {}
 
@@ -238,13 +238,13 @@ export default (code: string, out, options: GraphQLTagPluckOptions = {}) => {
     },
 
     TemplateLiteral: {
-      exit(path) {
+      exit(path: any) {
         pluckMagicTemplateLiteral(path.node);
       },
     },
 
     TaggedTemplateExpression: {
-      exit(path) {
+      exit(path: any) {
         // Push all template literals provided to the found identifier name
         // e.g. gql `query myQuery {}` -> query myQuery {}
         if (!isIdentifier(path.node.tag) || !isValidIdentifier(path.node.tag.name)) {

@@ -5,14 +5,12 @@ import {
   print,
   getIntrospectionQuery,
   IntrospectionOptions,
-  introspectionFromSchema,
 } from 'graphql';
 import {
   SchemaPointerSingle,
   Source,
   DocumentLoader,
   SingleFileOptions,
-  parseGraphQLJSON,
   printSchemaWithDirectives,
 } from '@graphql-toolkit/common';
 import { isWebUri } from 'valid-url';
@@ -57,7 +55,7 @@ export class UrlLoader implements DocumentLoader<LoadFromUrlOptions> {
       if (options.customFetch) {
         if (typeof options.customFetch === 'string') {
           const [moduleName, fetchFnName] = options.customFetch.split('#');
-          fetch = await import(moduleName).then(module => (fetchFnName ? module[fetchFnName] : module));
+          fetch = await import(moduleName).then((module) => (fetchFnName ? module[fetchFnName] : module));
         }
       }
 

@@ -8,10 +8,11 @@ describe('loadFromCodeFile', () => {
 
   it('Should throw an error when a document is loaded using AST and the document is not valid', async () => {
     try {
-      const loaded = await loader.load('./tests/test-files/invalid-anon-doc.js', {
+      const loaded = await loader.load('./test-files/invalid-anon-doc.js', {
       noRequire: true,
       fs,
       path,
+      cwd: __dirname
     });
       const doc = parse(loaded.rawSDL);
 
@@ -22,10 +23,11 @@ describe('loadFromCodeFile', () => {
   });
 
   it('should load a vaild file', async () => {
-    const loaded = await loader.load('./tests/test-files/valid-doc.js', {
+    const loaded = await loader.load('./test-files/valid-doc.js', {
       noRequire: true,
       fs,
       path,
+      cwd: __dirname
     });
     const doc = parse(loaded.rawSDL);
 
@@ -45,10 +47,11 @@ describe('loadFromCodeFile', () => {
   });
 
   it('should load a TypeScript file using decorator', async () => {
-    const loaded = await loader.load('./tests/test-files/with-decorator-doc.ts', {
+    const loaded = await loader.load('./test-files/with-decorator-doc.ts', {
       noRequire: true,
       fs,
       path,
+      cwd: __dirname
     });
     const doc = parse(loaded.rawSDL);
 
@@ -56,9 +59,10 @@ describe('loadFromCodeFile', () => {
   });
 
   it('should support string interpolation', async () => {
-    const loaded = await loader.load('./tests/test-files/string-interpolation.js', {
+    const loaded = await loader.load('./test-files/string-interpolation.js', {
       fs,
       path,
+      cwd: __dirname
     });
     const doc = parse(loaded.rawSDL);
 
@@ -71,20 +75,22 @@ describe('loadFromCodeFileSync', () => {
 
   it('Should throw an error when a document is loaded using AST and the document is not valid', () => {
     expect(() => {
-      const loaded = loader.loadSync('./tests/test-files/invalid-anon-doc.js', {
+      const loaded = loader.loadSync('./test-files/invalid-anon-doc.js', {
         noRequire: true,
         fs,
         path,
+        cwd: __dirname
       });
       parse(loaded.rawSDL);
     }).toThrowError('Syntax Error: Unexpected Name "InvalidGetUser"')
   });
 
   it('should load a vaild file', () => {
-    const loaded = loader.loadSync('./tests/test-files/valid-doc.js', {
+    const loaded = loader.loadSync('./test-files/valid-doc.js', {
       noRequire: true,
       fs,
       path,
+      cwd: __dirname
     });
     const doc = parse(loaded.rawSDL);
 
@@ -104,9 +110,10 @@ describe('loadFromCodeFileSync', () => {
   });
 
   it('should support string interpolation', () => {
-    const loaded = loader.loadSync('./tests/test-files/string-interpolation.js', {
+    const loaded = loader.loadSync('./test-files/string-interpolation.js', {
       fs,
       path,
+      cwd: __dirname
     });
 
     const doc = parse(loaded.rawSDL);

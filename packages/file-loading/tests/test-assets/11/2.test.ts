@@ -1,1 +1,3 @@
-it('dummy', () => {});
+function foo() {}
+
+foo('dummy', () => {});

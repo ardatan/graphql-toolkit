@@ -1,7 +1,6 @@
-jest.mock('cross-fetch');
-
 import { printSchema, buildSchema, parse, print } from 'graphql';
 import { GithubLoader } from '../src';
+import nock from 'nock'
 
 const owner = 'kamilkisiela';
 const name = 'graphql-inspector-example';
@@ -11,7 +10,7 @@ const token = 'MY-SECRET-TOKEN';
 
 const pointer = `github:${owner}/${name}#${ref}:${path}`;
 
-const typeDefs = `
+const typeDefs = /* GraphQL */`
   type Post {
     id: ID
     title: String @deprecated(reason: "No more used")
@@ -29,47 +28,43 @@ function normalize(doc: string): string {
 }
 
 test('load schema from Github', async () => {
-
-    const loader = new GithubLoader();
-    const resetMocks = () => require('cross-fetch').__resetMocks();
-    const mockRequest = (url: string, content: string) => require('cross-fetch').__registerUrlRequestMock(url, content);
-    const getMockedCalls = (url: string) => require('cross-fetch').__getCalls(url);
-
-    beforeEach(() => {
-        resetMocks();
-    });
-
-    mockRequest('https://api.github.com/graphql', JSON.stringify({
-        data: {
-            repository: {
-                object: {
-                    text: typeDefs
-                }
-            }
+  let headers: Record<string, string> = {};
+  let query: string;
+  let variables: {};
+  let operationName: string;
+  
+  const server = nock('https://api.github.com').post('/graphql').reply(function reply(_, body: any) {
+    headers = this.req.headers;
+    query = body.query;
+    variables = body.variables;
+    operationName = body.operationName;
+    
+    return [200, {
+      data: {
+        repository: {
+          object: {
+            text: typeDefs
+          }
         }
-    }));
+      }
+    }];
+  });
+  
+  const loader = new GithubLoader();
 
-    const schema = await loader.load(pointer, {
-        token,
-    });
+  const schema = await loader.load(pointer, {
+    token,
+  });
 
-    const calls = getMockedCalls('https://api.github.com/graphql');
-    expect(calls.length).toBe(1);
+  server.done();
 
-    const init = calls[0];
+  // headers
+  expect(headers['content-type']).toContain('application/json; charset=utf-8');
+  expect(headers.authorization).toContain(`bearer ${token}`);
 
-    // settings
-    expect(init.method).toEqual('POST');
-    expect(init.headers).toEqual({
-        'Content-Type': 'application/json; charset=utf-8',
-        Authorization: `bearer ${token}`,
-    });
-
-    const body = JSON.parse(init.body);
-
-    // query
-    expect(normalize(body.query)).toEqual(
-        normalize(`
+  // query
+  expect(normalize(query)).toEqual(
+    normalize(`
       query GetGraphQLSchemaForGraphQLToolkit($owner: String!, $name: String!, $expression: String!) {
         repository(owner: $owner, name: $name) {
           object(expression: $expression) {
@@ -80,18 +75,18 @@ test('load schema from Github', async () => {
         }
       }
     `),
-    );
+  );
 
-    // variables
-    expect(body.variables).toEqual({
-        owner,
-        name,
-        expression: ref + ':' + path,
-    });
+  // variables
+  expect(variables).toEqual({
+    owner,
+    name,
+    expression: ref + ':' + path,
+  });
 
-    // name
-    expect(body.operationName).toEqual('GetGraphQLSchemaForGraphQLToolkit');
+  // name
+  expect(operationName).toEqual('GetGraphQLSchemaForGraphQLToolkit');
 
-    // schema
-    expect(print(schema.document)).toEqual(printSchema(buildSchema(typeDefs)));
+  // schema
+  expect(print(schema.document)).toEqual(printSchema(buildSchema(typeDefs)));
 });

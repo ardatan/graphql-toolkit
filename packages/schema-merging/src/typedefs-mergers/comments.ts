@@ -4,7 +4,6 @@ import {
   TypeDefinitionNode,
   FieldDefinitionNode,
   InputValueDefinitionNode,
-  DocumentNode,
   ASTNode,
   NameNode,
   TypeNode,
@@ -26,7 +25,7 @@ export function collectComment(node: TypeDefinitionNode): void {
 
   switch (node.kind) {
     case 'EnumTypeDefinition':
-      node.values.forEach(value => {
+      node.values.forEach((value) => {
         pushComment(value, entityName, value.name.value);
       });
       break;
@@ -39,7 +38,7 @@ export function collectComment(node: TypeDefinitionNode): void {
           pushComment(field, entityName, field.name.value);
 
           if (isFieldDefinitionNode(field) && field.arguments) {
-            field.arguments.forEach(arg => {
+            field.arguments.forEach((arg) => {
               pushComment(arg, entityName, field.name.value, arg.name.value);
             });
           }
@@ -103,7 +102,7 @@ export function printComment(comment: string): string {
  * print all items together separated by separator if provided
  */
 function join(maybeArray?: readonly any[], separator?: string) {
-  return maybeArray ? maybeArray.filter(x => x).join(separator || '') : '';
+  return maybeArray ? maybeArray.filter((x) => x).join(separator || '') : '';
 }
 
 function addDescription(cb: VisitFn<any, any>): VisitFn<any, any> {
@@ -173,18 +172,18 @@ function printBlockString(value: string, isDescription: boolean) {
 export function printWithComments(ast: ASTNode) {
   return visit(ast, {
     leave: {
-      Name: node => node.value,
-      Variable: node => `$${node.name}`,
+      Name: (node) => node.value,
+      Variable: (node) => `$${node.name}`,
 
       // Document
 
-      Document: node =>
+      Document: (node) =>
         `${node.definitions
-          .map(defNode => `${defNode}\n${defNode[0] === '#' ? '' : '\n'}`)
+          .map((defNode) => `${defNode}\n${defNode[0] === '#' ? '' : '\n'}`)
           .join('')
           .trim()}\n`,
 
-      OperationTypeDefinition: node => `${node.operation}: ${node.type}`,
+      OperationTypeDefinition: (node) => `${node.operation}: ${node.type}`,
 
       VariableDefinition: ({ variable, type, defaultValue }) => `${variable}: ${type}${wrap(' = ', defaultValue)}`,
 

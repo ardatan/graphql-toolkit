@@ -1,3 +1,8 @@
+import { GraphQLSchema, execute, parse } from 'graphql';
+import { resolve } from 'path';
+import { existsSync } from 'fs';
+import nock from 'nock';
+
 type PromiseOf<T extends (...args: any[]) => any> = T extends (...args: any[]) => Promise<infer R> ? R : ReturnType<T>;
 
 export function runTests<
@@ -34,4 +39,72 @@ export function runTests<
       });
     }
   };
+}
+
+export function useMonorepo({ dirname }: { dirname: string }) {
+  const cwd = findProjectDir(dirname);
+
+  return {
+    correctCWD() {
+      let spyProcessCwd: jest.SpyInstance;
+      beforeEach(() => {
+        spyProcessCwd = jest.spyOn(process, 'cwd').mockReturnValue(cwd);
+      });
+      afterEach(() => {
+        spyProcessCwd.mockRestore();
+      });
+    },
+  };
+}
+
+function findProjectDir(dirname: string): string | never {
+  const originalDirname = dirname;
+  const cwd = process.cwd();
+  const stopDir = resolve(cwd, '..');
+
+  while (dirname !== stopDir) {
+    try {
+      if (existsSync(resolve(dirname, 'package.json'))) {
+        return dirname;
+      }
+
+      dirname = resolve(dirname, '..');
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  throw new Error(`Coudn't find project's root from: ${originalDirname}`);
+}
+
+export function mockGraphQLServer({
+  schema,
+  host,
+  path,
+  intercept,
+}: {
+  schema: GraphQLSchema;
+  host: string;
+  path: string;
+  intercept?: (obj: nock.ReplyFnContext) => void;
+}) {
+  return nock(host)
+    .post(path)
+    .reply(async function (_, body: any) {
+      try {
+        if (intercept) {
+          intercept(this);
+        }
+
+        const result = await execute({
+          schema,
+          document: parse(body.query),
+          operationName: body.operationName,
+          variableValues: body.variables,
+        });
+        return [200, result];
+      } catch (error) {
+        return [500, error];
+      }
+    });
 }

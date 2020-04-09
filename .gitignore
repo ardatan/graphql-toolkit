@@ -65,6 +65,7 @@ dist
 build
 temp
 .idea
+.bob
 
 test-results/
 junit.xml

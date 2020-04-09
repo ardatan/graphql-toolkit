@@ -52,8 +52,16 @@ export const gqlPluckFromCodeStringSync = (
   return parseCode({ code, filePath, options });
 };
 
-function parseCode({ code, filePath, options }: { code: string; filePath: string; options: GraphQLTagPluckOptions }) {
-  const out = { returnValue: null };
+function parseCode({
+  code,
+  filePath,
+  options,
+}: {
+  code: string;
+  filePath: string;
+  options: GraphQLTagPluckOptions;
+}): any {
+  const out: any = { returnValue: null };
   const ast = parse(code, generateConfig(filePath, code, options));
   const visitor = createVisitor(code, out, options);
 

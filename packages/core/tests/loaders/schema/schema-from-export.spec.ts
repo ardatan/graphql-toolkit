@@ -1,9 +1,15 @@
 import { isSchema } from 'graphql';
 import { loadSchema, loadSchemaSync } from '@graphql-toolkit/core';
 import { CodeFileLoader } from '@graphql-toolkit/code-file-loader';
-import { runTests } from '../../../../testing/utils';
+import { runTests, useMonorepo } from '../../../../testing/utils';
+
+const monorepo = useMonorepo({
+  dirname: __dirname
+});
 
 describe('Schema From Export', () => {
+  monorepo.correctCWD();
+
   runTests({
     async: loadSchema,
     sync: loadSchemaSync

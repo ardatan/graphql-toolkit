@@ -1,23 +1,13 @@
-jest.mock('cross-fetch');
 import { makeExecutableSchema } from 'graphql-tools-fork';
 import { UrlLoader } from '../src';
 import { printSchemaWithDirectives } from '@graphql-toolkit/common';
-import { ApolloServer } from 'apollo-server-express';
-import * as express from 'express';
-import * as request from 'supertest';
+import nock from 'nock';
+import { mockGraphQLServer } from '../../../testing/utils';
 
 const SHOULD_NOT_GET_HERE_ERROR = 'SHOULD_NOT_GET_HERE';
-type MockHandler = (options: Parameters<WindowOrWorkerGlobalScope['fetch']>[1]) => ReturnType<WindowOrWorkerGlobalScope['fetch']>;
 
 describe('Schema URL Loader', () => {
   const loader = new UrlLoader();
-  const resetMocks = () => require('cross-fetch').__resetMocks();
-  const mockRequest = (url: string, handler: MockHandler) => require('cross-fetch').__registerUrlRequestMock(url, handler);
-  const getMockedCalls = (url: string) => require('cross-fetch').__getCalls(url);
-
-  beforeEach(() => {
-    resetMocks();
-  });
 
   const testTypeDefs = /* GraphQL */`
 schema { query: CustomQuery }
@@ -30,19 +20,13 @@ type CustomQuery {
 
   const testSchema = makeExecutableSchema({ typeDefs: testTypeDefs });
 
-  const testUrl = 'http://localhost:3000/graphql';
+  const testHost = `http://localhost:3000`;
+  const testPath = `/graphql`;
+  const testUrl = `${testHost}${testPath}`;
 
   describe('handle', () => {
     it('Should throw an error when introspection is not valid', async () => {
-      mockRequest(testUrl, async () => {
-        return {
-          async json() {
-            return {
-              data: {}
-            };
-          }
-        } as any;
-      });
+      const scope = nock(testHost).post(testPath).reply(200, {data: {}});
 
       try {
         await loader.load(testUrl, {});
@@ -52,83 +36,76 @@ type CustomQuery {
         expect(e.message).toBe('Invalid schema provided!');
       }
 
-      const calls = getMockedCalls(testUrl);
-      expect(calls.length).toBe(1);
+      scope.done();
     });
 
-    function setupFakedGraphQLServer() {
-      const apollo = new ApolloServer({
-        schema: testSchema,
-        introspection: true,
-      });
-      const app = express();
-      apollo.applyMiddleware({ app });
-      const mockServer = request(app);
-      mockRequest(testUrl, async options => {
-        const mockResponse = mockServer
-        .post('/graphql')
-        .send(options.body);
-        for (const header in options.headers) {
-          mockResponse.set(header, options.headers[header]);
-        }
-        const actualResponse = await mockResponse;
-        return {
-          ...actualResponse,
-          async json() {
-            return actualResponse.body;
-          }
-        } as any;
-      });
-    }
-
     it('Should return a valid schema when request is valid', async () => {
-      setupFakedGraphQLServer();
+      const server = mockGraphQLServer({schema: testSchema, host: testHost, path: testPath});
+      
       const schema = await loader.load(testUrl, {});
+      
+      server.done();
+      
       expect(schema.schema).toBeDefined();
       expect(printSchemaWithDirectives(schema.schema)).toBe(testTypeDefs);
     });
 
     it('Should pass default headers', async () => {
-      setupFakedGraphQLServer();
+      let headers: Record<string, string> = {}
+      
+      const server = mockGraphQLServer({schema: testSchema, host: testHost, path: testPath, intercept(ctx) {
+        headers = ctx.req.headers
+      }});
+
       const schema = await loader.load(testUrl, {});
+
+      server.done();
+      
       expect(schema).toBeDefined();
       expect(schema.schema).toBeDefined();
       expect(printSchemaWithDirectives(schema.schema)).toBe(testTypeDefs);
-      const calls = getMockedCalls(testUrl);
-      expect(calls.length).toBe(1);
-      const call = await calls[0];
-      expect(call.req._header).toContain(`Accept: application/json`);
-      expect(call.req._header).toContain(`Content-Type: application/json`);
+      
+      expect(headers.accept).toContain(`application/json`);
+      expect(headers['content-type']).toContain(`application/json`);
     });
 
     it('Should pass extra headers when they are specified as object', async () => {
-      setupFakedGraphQLServer();
+      let headers: Record<string, string> = {}
+      const server = mockGraphQLServer({schema: testSchema, host: testHost, path: testPath, intercept(ctx) {
+        headers = ctx.req.headers
+      }});
+      
       const schema = await loader.load(testUrl, { headers: { Auth: '1' } });
+
+      server.done();
+      
       expect(schema).toBeDefined();
       expect(schema.schema).toBeDefined();
       expect(printSchemaWithDirectives(schema.schema)).toBe(testTypeDefs);
-      const calls = getMockedCalls(testUrl);
-      expect(calls.length).toBe(1);
-      const call = await calls[0];
-      expect(call.req._header).toContain(`Accept: application/json`);
-      expect(call.req._header).toContain(`Content-Type: application/json`);
-      expect(call.req._header).toContain(`Auth: 1`);
+      
+      expect(headers.accept).toContain(`application/json`);
+      expect(headers['content-type']).toContain(`application/json`);
+      expect(headers.auth).toContain(`1`);
     });
 
     it('Should pass extra headers when they are specified as array', async () => {
-      setupFakedGraphQLServer();
+      let headers: Record<string, string> = {}
+      const server = mockGraphQLServer({schema: testSchema, host: testHost, path: testPath, intercept(ctx) {
+        headers = ctx.req.headers
+      }});
       const schema = await loader.load(testUrl, { headers: [{ A: '1' }, { B: '2', C: '3' }] });
+      
+      server.done();
+      
       expect(schema).toBeDefined();
       expect(schema.schema).toBeDefined();
       expect(printSchemaWithDirectives(schema.schema)).toBe(testTypeDefs);
-      const calls = getMockedCalls(testUrl);
-      expect(calls.length).toBe(1);
-      const call = await calls[0];
-      expect(call.req._header).toContain(`Accept: application/json`);
-      expect(call.req._header).toContain(`Content-Type: application/json`);
-      expect(call.req._header).toContain(`A: 1`);
-      expect(call.req._header).toContain(`B: 2`);
-      expect(call.req._header).toContain(`C: 3`);
+      
+      expect(headers.accept).toContain(`application/json`);
+      expect(headers['content-type']).toContain(`application/json`);
+      expect(headers.a).toContain(`1`);
+      expect(headers.b).toContain(`2`);
+      expect(headers.c).toContain(`3`);
     });
 
     it('Absolute file path should not be accepted as URL', async () => {

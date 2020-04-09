@@ -165,14 +165,14 @@ const checkExtension = (
     }
   }
 
-  if (extensions) {
-    for (const extension of extensions) {
-      if (path.endsWith(extension)) {
-        return true;
-      }
-    }
-  } else {
+  if (!extensions) {
     return true;
+  }
+
+  for (const extension of extensions) {
+    if (path.endsWith(extension)) {
+      return true;
+    }
   }
 
   return false;
