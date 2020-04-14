@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@apollo/federation@0.13.2":
-  version "0.13.2"
-  resolved "https://registry.yarnpkg.com/@apollo/federation/-/federation-0.13.2.tgz#a9f842abd1619fe5cd732c56cfbc45dab0ae784a"
-  integrity sha512-62uXIIHxHXG71gSwROFt8yxtYeUZ2BaIgAkxZ1H82GB4+s1gt4xwizcmmCWqQhK3KBy4LbPOfI1YyHW4Wv5ZpQ==
+"@apollo/federation@0.14.0":
+  version "0.14.0"
+  resolved "https://registry.yarnpkg.com/@apollo/federation/-/federation-0.14.0.tgz#c1fa14610fc1d7193688cfed3f2989a27f77c7cd"
+  integrity sha512-JNIWj8p9vd4c1kZFl70B1wUt2RwttSUHVef4UfTAyhN7PHX5D4J+IHTYurgOIC/yUqIURi7iVh8vAtudhpxtEA==
   dependencies:
     apollo-graphql "^0.4.0"
     apollo-server-env "^2.4.3"
@@ -2492,12 +2492,12 @@ apollo-graphql@^0.4.1:
     apollo-env "^0.6.2"
     lodash.sortby "^4.7.0"
 
-apollo-language-server@1.21.0:
-  version "1.21.0"
-  resolved "https://registry.yarnpkg.com/apollo-language-server/-/apollo-language-server-1.21.0.tgz#01ce45b90c67a7f7f0acc3d163253f01ec1d8114"
-  integrity sha512-MWTHX1ckIbbq7h3lL+2Axs7NPJrkKwvHNGpx0XdcQIW93NeZWaD8XlmXzAUNOb2EmEmSP/FI1kkRjDmQb1ehXA==
+apollo-language-server@1.21.1:
+  version "1.21.1"
+  resolved "https://registry.yarnpkg.com/apollo-language-server/-/apollo-language-server-1.21.1.tgz#c89df8bd0691f3f2131a0d8c54ad2e715ff79060"
+  integrity sha512-Yu5nw+0lGWNY9PmgogzXVRvnCNluGImeNmg4jQkXQlBR2TsQ9P3YSwujDIJ5cWWKjyi/0+3PtRYvIna58xZ/fg==
   dependencies:
-    "@apollo/federation" "0.13.2"
+    "@apollo/federation" "0.14.0"
     "@apollographql/apollo-tools" "^0.4.5"
     "@apollographql/graphql-language-service-interface" "^2.0.2"
     "@endemolshinegroup/cosmiconfig-typescript-loader" "^1.0.0"
