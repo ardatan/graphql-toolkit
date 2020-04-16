@@ -9,7 +9,7 @@ import {
   isEnumType,
   isUnionType,
 } from 'graphql';
-import { IResolvers } from 'graphql-tools-fork';
+import { IResolvers } from 'graphql-tools';
 import { extractFieldResolversFromObjectType } from './extract-field-resolvers-from-object-type';
 
 export interface ExtractResolversFromSchemaOptions {

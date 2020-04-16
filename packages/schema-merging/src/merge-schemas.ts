@@ -6,7 +6,7 @@ import {
   ILogger,
   addResolveFunctionsToSchema,
   addErrorLoggingToSchema,
-} from 'graphql-tools-fork';
+} from 'graphql-tools';
 import { mergeTypeDefs, Config } from './typedefs-mergers/merge-typedefs';
 import { mergeResolvers } from './merge-resolvers';
 import {

@@ -15,7 +15,7 @@ import {
 } from '@graphql-toolkit/common';
 import { isWebUri } from 'valid-url';
 import { fetch as crossFetch } from 'cross-fetch';
-import { makeRemoteExecutableSchema, Fetcher } from 'graphql-tools-fork';
+import { makeRemoteExecutableSchema, Fetcher } from 'graphql-tools';
 
 export type FetchFn = typeof import('cross-fetch').fetch;
 

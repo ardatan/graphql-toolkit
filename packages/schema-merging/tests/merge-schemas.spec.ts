@@ -1,4 +1,4 @@
-import { makeExecutableSchema } from 'graphql-tools-fork';
+import { makeExecutableSchema } from 'graphql-tools';
 import { graphql, buildSchema, GraphQLScalarType, Kind, buildASTSchema, GraphQLSchema, ListValueNode } from 'graphql';
 import { mergeSchemas, mergeSchemasAsync } from '../src/merge-schemas';
 

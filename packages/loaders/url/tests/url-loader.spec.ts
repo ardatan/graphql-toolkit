@@ -1,4 +1,4 @@
-import { makeExecutableSchema } from 'graphql-tools-fork';
+import { makeExecutableSchema } from 'graphql-tools';
 import { UrlLoader } from '../src';
 import { printSchemaWithDirectives } from '@graphql-toolkit/common';
 import nock from 'nock';

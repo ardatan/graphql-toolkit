@@ -1,4 +1,4 @@
-import { makeExecutableSchema, RenameTypes, transformSchema } from 'graphql-tools-fork';
+import { makeExecutableSchema, RenameTypes, transformSchema } from 'graphql-tools';
 import { buildSchema, printSchema } from 'graphql';
 import { printSchemaWithDirectives } from '../src';
 import GraphQLJSON from 'graphql-type-json';

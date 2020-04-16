@@ -1,4 +1,4 @@
-import { IResolvers } from 'graphql-tools-fork';
+import { IResolvers } from 'graphql-tools';
 import * as deepMerge from 'deepmerge';
 import { isScalarType } from 'graphql';
 
@@ -60,7 +60,7 @@ export function mergeResolvers<TContext, T extends ResolversDefinition<TContext>
   let result: T = {} as T;
   if (resolversFactories.length) {
     result = ((...args: any[]) => {
-      const resultsOfFactories = resolversFactories.map(factory => factory(...args));
+      const resultsOfFactories = resolversFactories.map((factory) => factory(...args));
       return deepMerge.all([...resolvers, ...resultsOfFactories], { isMergeableObject }) as any;
     }) as any;
   } else {

@@ -1,5 +1,5 @@
 import { GraphQLSchema } from 'graphql';
-import { makeExecutableSchema } from 'graphql-tools-fork';
+import { makeExecutableSchema } from 'graphql-tools';
 import { getDirectives } from '../src';
 
 describe('getDirectives', () => {
