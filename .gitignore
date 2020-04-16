@@ -71,3 +71,6 @@ test-results/
 junit.xml
 
 *.tgz
+
+yarn.lock
+package-lock.json
