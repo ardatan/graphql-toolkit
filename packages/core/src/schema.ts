@@ -1,9 +1,19 @@
 import { loadTypedefs, LoadTypedefsOptions, UnnormalizedTypeDefPointer, loadTypedefsSync } from './load-typedefs';
-import { GraphQLSchema, BuildSchemaOptions, DocumentNode } from 'graphql';
+import { GraphQLSchema, BuildSchemaOptions, DocumentNode, Source as GraphQLSource, print } from 'graphql';
 import { OPERATION_KINDS } from './documents';
 import { mergeSchemasAsync, mergeSchemas, MergeSchemasConfig } from '@graphql-toolkit/schema-merging';
+import { Source } from '@graphql-toolkit/common';
 
-export type LoadSchemaOptions = BuildSchemaOptions & LoadTypedefsOptions & Partial<MergeSchemasConfig>;
+export type LoadSchemaOptions = BuildSchemaOptions &
+  LoadTypedefsOptions &
+  Partial<MergeSchemasConfig> & {
+    /**
+     * Adds a list of Sources in to `extensions.sources`
+     *
+     * Disabled by default.
+     */
+    includeSources?: boolean;
+  };
 
 export async function loadSchema(
   schemaPointers: UnnormalizedTypeDefPointer | UnnormalizedTypeDefPointer[],
@@ -14,24 +24,20 @@ export async function loadSchema(
     ...options,
   });
 
-  const schemas: GraphQLSchema[] = [];
-  const typeDefs: DocumentNode[] = [];
-
-  sources.forEach(source => {
-    if (source.schema) {
-      schemas.push(source.schema);
-    } else {
-      typeDefs.push(source.document);
-    }
-  });
-
+  const { schemas, typeDefs } = collectSchemasAndTypeDefs(sources);
   const mergeSchemasOptions: MergeSchemasConfig = {
     schemas,
     typeDefs,
     ...options,
   };
 
-  return mergeSchemasAsync(mergeSchemasOptions);
+  const schema = await mergeSchemasAsync(mergeSchemasOptions);
+
+  if (options.includeSources) {
+    includeSources(schema, sources);
+  }
+
+  return schema;
 }
 
 export function loadSchemaSync(
@@ -43,10 +49,36 @@ export function loadSchemaSync(
     ...options,
   });
 
+  const { schemas, typeDefs } = collectSchemasAndTypeDefs(sources);
+  const mergeSchemasOptions: MergeSchemasConfig = {
+    schemas,
+    typeDefs,
+    ...options,
+  };
+
+  const schema = mergeSchemas(mergeSchemasOptions);
+
+  if (options.includeSources) {
+    includeSources(schema, sources);
+  }
+
+  return schema;
+}
+
+function includeSources(schema: GraphQLSchema, sources: Source[]) {
+  schema.extensions = {
+    ...schema.extensions,
+    sources: sources
+      .filter((source) => source.rawSDL || source.document)
+      .map((source) => new GraphQLSource(source.rawSDL || print(source.document), source.location)),
+  };
+}
+
+function collectSchemasAndTypeDefs(sources: Source[]) {
   const schemas: GraphQLSchema[] = [];
   const typeDefs: DocumentNode[] = [];
 
-  sources.forEach(source => {
+  sources.forEach((source) => {
     if (source.schema) {
       schemas.push(source.schema);
     } else {
@@ -54,11 +86,8 @@ export function loadSchemaSync(
     }
   });
 
-  const mergeSchemasOptions: MergeSchemasConfig = {
+  return {
     schemas,
     typeDefs,
-    ...options,
   };
-
-  return mergeSchemas(mergeSchemasOptions);
 }
