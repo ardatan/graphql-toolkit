@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@graphql-toolkit/common": "0.10.5",
-    "relay-compiler": "9.0.0"
+    "relay-compiler": "9.1.0"
   },
   "devDependencies": {
     "@types/relay-compiler": "8.0.0"
