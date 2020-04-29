@@ -1,6 +1,6 @@
 {
   "name": "@graphql-toolkit/relay-operation-optimizer",
-  "version": "0.10.5",
+  "version": "0.10.6",
   "description": "Package for optimizing your GraphQL operations relay style.",
   "author": {
     "name": "Laurin Quast",
@@ -30,7 +30,7 @@
     "graphql": "^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0"
   },
   "dependencies": {
-    "@graphql-toolkit/common": "0.10.5",
+    "@graphql-toolkit/common": "0.10.6",
     "relay-compiler": "9.1.0"
   },
   "devDependencies": {
