@@ -1,6 +1,6 @@
 {
   "name": "@graphql-toolkit/graphql-file-loader",
-  "version": "0.10.6",
+  "version": "0.10.7",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": "git@github.com:ardatan/graphql-toolkit.git",
   "author": "Dotan Simha <dotansimha@gmail.com>",
@@ -22,7 +22,7 @@
     "input": "./src/index.ts"
   },
   "dependencies": {
-    "@graphql-toolkit/common": "0.10.6",
+    "@graphql-toolkit/common": "0.10.7",
     "tslib": "1.11.2"
   },
   "publishConfig": {
