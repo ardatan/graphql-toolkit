@@ -1,5 +1,0 @@
-# import B from 'b.graphql'
-
-type Query {
-  b: B
-}

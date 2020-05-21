@@ -1,3 +1,0 @@
-type MyQuery {
-    b: String
-}

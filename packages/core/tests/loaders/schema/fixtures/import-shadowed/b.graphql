@@ -1,5 +1,0 @@
-# import X from './c.graphql'
-
-type B {
-    x: X
-}

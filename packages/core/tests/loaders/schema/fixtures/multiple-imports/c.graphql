@@ -1,9 +1,0 @@
-# import B from "b.graphql"
-
-type Query {
-  c: B
-}
-
-type Mutation {
-  c: B
-} 
